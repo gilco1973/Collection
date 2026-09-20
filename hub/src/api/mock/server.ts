@@ -99,7 +99,8 @@ route("GET", "/consumers/:slug", ({ params, principal }) => {
   const detail = DETAILS[params.slug];
   const youActAt = principal.ladder === "L0" ? "L0" : (detail?.youActAt ?? "L1");
   // Access is resolved per person: an "open" listing the person is not entitled to is one they may request.
-  const resolve = (id: string, access: ConsumerDetail["access"]) => (principal.entitlements.includes(id) ? "open" : access === "open" ? "request" : access);
+  const resolve = (id: string, access: ConsumerDetail["access"]) =>
+    summary.collection ? access : principal.entitlements.includes(id) ? "open" : access === "open" ? "request" : access;
   return json(
     detail
       ? { ...detail, youActAt, access: resolve(detail.id, detail.access) }

@@ -20,8 +20,7 @@ a reviewer. It mirrors the intake brief's six sections; the answers here are the
 
 ## 2. The road and the model
 
-- **Road.** Tools and knowledge, internal agent, retrieval service, batch with a review queue; pick one from the
-  [paved roads](../paved-roads/README.md).
+- **Road.** Tools and knowledge, internal agent, retrieval service, batch with a review queue; pick one from the [paved roads](../paved-roads/README.md).
 - **Model use.** What the model reads, what it produces, what it never does.
 - **Increments.** Three at most, each ending in a demonstration a teammate uses.
 

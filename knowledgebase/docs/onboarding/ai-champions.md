@@ -22,10 +22,8 @@ what they learn.
 
 ## Who
 
-- **A champion** is an engineer on the team, chosen by the team, with two to four hours a week for the programme.
-  Not necessarily the most senior; the one who will actually try things and write them down.
-- **The enablement lead** runs the meetings, keeps this page and the collection's contributing guide, and clears
-  blockers with the platform and security teams.
+- **A champion** is an engineer on the team, chosen by the team, with two to four hours a week for the programme. Not necessarily the most senior; the one who will actually try things and write them down.
+- **The enablement lead** runs the meetings, keeps this page and the collection's contributing guide, and clears blockers with the platform and security teams.
 - **Reviewers** from architecture, security and model risk attend when an initiative reaches a gate.
 
 ## The cadence
@@ -33,10 +31,8 @@ what they learn.
 Every two weeks, forty-five minutes, always the same three parts:
 
 1. **Ten minutes: what shipped.** Each champion in one sentence: what moved, what is blocked, what they need.
-2. **Twenty minutes: one deep dive.** One champion shows a working thing (a demonstration, a component, a page), the
-   room asks how to reuse it, and the enablement lead notes what becomes a collection entry.
-3. **Fifteen minutes: the collection.** New components and pages since last time, one practice explained in five
-   minutes, the next deep dive chosen.
+2. **Twenty minutes: one deep dive.** One champion shows a working thing (a demonstration, a component, a page), the room asks how to reuse it, and the enablement lead notes what becomes a collection entry.
+3. **Fifteen minutes: the collection.** New components and pages since last time, one practice explained in five minutes, the next deep dive chosen.
 
 Between meetings: the champions channel for questions, an office hour with the enablement lead, and the
 [contributing guide](../components/README.md#contributing-one) for anything that becomes reusable.
@@ -49,8 +45,7 @@ through the hub's intake so it gets a road, a risk tier and a reviewer. A good f
 - solves a problem the champion's own team feels this month;
 - reuses at least one component and one skill from the collection;
 - ends in a demonstration that runs offline with numbers, within six weeks;
-- returns at least one thing to the collection: a component, a fake for a system others use, a practice page, a
-  corpus entry, a template.
+- returns at least one thing to the collection: a component, a fake for a system others use, a practice page, a corpus entry, a template.
 
 Examples of the right size: a bot that answers the team's runbook questions with citations (guard, engine, a
 connector); a review agent for the team's pull requests under a W1 confirmation (the action loop, ids-only logs);
@@ -59,11 +54,8 @@ a knowledge-base section for the team's paved road, kept healthy by the libraria
 ## The first meeting
 
 1. Why we are here (five minutes): the two use cases and what they left behind.
-2. The collection on the hub (ten minutes): Discover's Tools and Knowledge tabs, one listing page, the README, the
-   tests running in a terminal.
-3. Three practices in fifteen minutes: [action tiers](../best-practices/action-tiers-and-confirmation.md),
-   [untrusted input](../best-practices/untrusted-input-and-taint.md),
-   [demonstrations as acceptance](../best-practices/demonstrations-as-acceptance.md).
+2. The collection on the hub (ten minutes): Discover's Tools and Knowledge tabs, one listing page, the README, the tests running in a terminal.
+3. Three practices in fifteen minutes: [action tiers](../best-practices/action-tiers-and-confirmation.md), [untrusted input](../best-practices/untrusted-input-and-taint.md), [demonstrations as acceptance](../best-practices/demonstrations-as-acceptance.md).
 4. Picking initiatives (ten minutes): each champion names one problem; the room matches it to components.
 5. Close (five minutes): the brief is due before the next meeting; the first deep dive is chosen.
 

@@ -23,15 +23,11 @@ source that caused it. There is no prompt involved: the check is in the policy l
 
 ## The five steps on every turn
 
-1. **Tag.** Each piece of upstream text becomes a source: a stable id, a kind, a reference a reviewer can open, the
-   producing tool.
-2. **Score.** A marker heuristic scores the text; two hits reach the threshold. Code is scored on its comments and
-   string literals only, so identifiers never trip it.
-3. **Fence and mask.** The model sees every source inside a tagged block with `suspicious="true"` where it applies,
-   and PII masked to class tokens. It never sees raw upstream text interpolated into a prompt.
+1. **Tag.** Each piece of upstream text becomes a source: a stable id, a kind, a reference a reviewer can open, the producing tool.
+2. **Score.** A marker heuristic scores the text; two hits reach the threshold. Code is scored on its comments and string literals only, so identifiers never trip it.
+3. **Fence and mask.** The model sees every source inside a tagged block with `suspicious="true"` where it applies, and PII masked to class tokens. It never sees raw upstream text interpolated into a prompt.
 4. **Withhold from people.** A suspicious source is never quoted in a room or a card; its id stays citable.
-5. **Cite or drop.** Every claim the model returns must cite source ids that exist; a claim that does not is dropped.
-   Confidence is the cited share damped by the injection score, never a number the model asserts.
+5. **Cite or drop.** Every claim the model returns must cite source ids that exist; a claim that does not is dropped. Confidence is the cited share damped by the injection score, never a number the model asserts.
 
 ## The corpus
 

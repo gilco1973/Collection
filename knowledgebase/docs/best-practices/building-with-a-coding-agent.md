@@ -13,19 +13,12 @@ the controls in the process rather than in the person's attention.
 
 ## The shape of a delivery
 
-1. **A use case first.** A written specification with increments, acceptance criteria and open questions, rendered
-   from source; the backlog builds from the same plan file (the `use-case-to-backlog` skill).
-2. **A plan pull request before code.** The plan is docs only, names its hard constraints ("preserved, never
-   weakened") and the questions only the owner can answer, and is reviewed as a pull request. Code follows in
-   increment pull requests, each with its own acceptance criteria and tests.
+1. **A use case first.** A written specification with increments, acceptance criteria and open questions, rendered from source; the backlog builds from the same plan file (the `use-case-to-backlog` skill).
+2. **A plan pull request before code.** The plan is docs only, names its hard constraints ("preserved, never weakened") and the questions only the owner can answer, and is reviewed as a pull request. Code follows in increment pull requests, each with its own acceptance criteria and tests.
 3. **Tests seen failing first.** Every behaviour ships with a test that failed before the change and a note of which.
-4. **Demonstrations, not demos.** Each increment ends in a command that writes a report with numbers
-   ([demonstrations as acceptance](demonstrations-as-acceptance.md)).
-5. **A pre-ship verdict.** Before merge, a second agent (or a review panel of several lenses: security, backend,
-   product, adversarial) judges the change against the plan and the acceptance criteria and ranks the gaps. Gaps
-   resolved on merge are named in the merge; the rest become follow-ups with owners.
-6. **A versioned handover.** Every delivery ends in a handover document and package (the `handover` skill), so the
-   next person can run, verify and continue without the author.
+4. **Demonstrations, not demos.** Each increment ends in a command that writes a report with numbers ([demonstrations as acceptance](demonstrations-as-acceptance.md)).
+5. **A pre-ship verdict.** Before merge, a second agent (or a review panel of several lenses: security, backend, product, adversarial) judges the change against the plan and the acceptance criteria and ranks the gaps. Gaps resolved on merge are named in the merge; the rest become follow-ups with owners.
+6. **A versioned handover.** Every delivery ends in a handover document and package (the `handover` skill), so the next person can run, verify and continue without the author.
 
 ## Rules for the agent
 

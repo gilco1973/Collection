@@ -16,13 +16,10 @@ reusable components in the [collection](../components/README.md) come from.
 
 ## 1. Idea (use-case brief)
 
-- **Problem.** A page means four tools and one tired person; the first ten minutes go to finding context; updates
-  are late; the postmortem is written from memory days later.
+- **Problem.** A page means four tools and one tired person; the first ten minutes go to finding context; updates are late; the postmortem is written from memory days later.
 - **Users.** Duty engineers (commanders), service owners (approvers), the communications role, reviewers.
-- **Data involved.** Incident metadata and text (Internal), customer data that leaks into logs (masked before the
-  model and the room), credentials (by name only), the record (append-only, chained).
-- **Impact if wrong.** A wrong first read costs minutes (low; every claim is cited); an unconfirmed action is
-  structurally impossible (W1 once, W2 dual control); an injected instruction taints the session and caps it to reads.
+- **Data involved.** Incident metadata and text (Internal), customer data that leaks into logs (masked before the model and the room), credentials (by name only), the record (append-only, chained).
+- **Impact if wrong.** A wrong first read costs minutes (low; every claim is cited); an unconfirmed action is structurally impossible (W1 once, W2 dual control); an injected instruction taints the session and caps it to reads.
 
 ## 2. Pre-assessment (risk tier)
 

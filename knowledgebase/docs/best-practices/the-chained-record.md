@@ -18,10 +18,8 @@ the first broken link; `export` writes JSON lines with the head for reviewers an
 
 Two consequences:
 
-- **The timeline is a projection.** What people see in the room or on the console is rendered from the chain, and
-  the projection is verified against it. Nothing is shown that is not on the record.
-- **The postmortem is an export.** The incident record is the input; the draft cites source ids from it and carries
-  the chain head at drafting.
+- **The timeline is a projection.** What people see in the room or on the console is rendered from the chain, and the projection is verified against it. Nothing is shown that is not on the record.
+- **The postmortem is an export.** The incident record is the input; the draft cites source ids from it and carries the chain head at drafting.
 
 A signature from the key service anchors the head in production; until then the export is marked unsigned, and the
 readiness page says so.

@@ -83,8 +83,8 @@ export default function Learn() {
                 <span className="chip line">R1</span>
               </div>
               <div className="cb" style={{ fontSize: 13 }}>
-                Tools, integrations and patterns lifted from products in production: a governed action loop, an untrusted-input guard, connectors, an API client. Each with a five-minute README and tests. Under the Tools and Knowledge tabs of{" "}
-                <Link to={ROUTES.discover}>Discover</Link>, and in search.
+                Tools, integrations and patterns lifted from products in production: a governed action loop, an untrusted-input guard, connectors, an API client. Each with a five-minute README and tests, under the Tools and Knowledge tabs and in search.{" "}
+                <Link to={ROUTES.discover}>Open Discover</Link>
               </div>
             </div>
             <div className="card">
@@ -103,8 +103,8 @@ export default function Learn() {
                 <span className="sp"></span>
               </div>
               <div className="cb" style={{ fontSize: 13 }}>
-                One engineer per team, meeting every two weeks to pick one initiative each, build it from the collection on a paved road, and bring the result back. The charter and the initiative brief are in the knowledge base under onboarding; file the brief here with{" "}
-                <Link to={ROUTES.intake}>Start a brief</Link>.
+                One engineer per team, meeting every two weeks to pick one initiative each, build it from the collection on a paved road, and bring the result back. The charter and the initiative brief are in the knowledge base under onboarding.{" "}
+                <Link to={ROUTES.intake}>Start a brief</Link>
               </div>
             </div>
           </div>

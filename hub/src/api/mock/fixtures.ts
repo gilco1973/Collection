@@ -316,7 +316,7 @@ export function catalogFor(p: Principal): Catalog {
   return {
     availableCount: 4,
     available,
-    listings: ALL_LISTINGS.map((l) => ({ ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access })),
+    listings: ALL_LISTINGS.map((l) => (l.collection ? l : { ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access })),
     counts: { all: 9, assistants: 2, agents: 3, knowledge: 1, tools: 1, roads: 2 },
     changes: [
       { date: "12 Sep", kind: { text: "new version", kind: "accent" }, text: "Investigation triage 1.4 — claim-support marks on every answer" },

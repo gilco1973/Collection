@@ -28,11 +28,8 @@ read and its undo on the catalog entry, so the proposal card can show them.
 
 ## How a confirmation works
 
-1. The agent (or a person's command) asks for a W1 call. The loop looks the tool up, validates the arguments,
-   evaluates the rules, and, finding no confirmation reference, parks the call with a hash of the tool and its
-   arguments. The person sees a card: exactly what will happen, and the hash.
-2. Only the acting person can confirm, and only that hash. The confirmation is consumed once; a second click, or a
-   click by anyone else, is refused and recorded.
+1. The agent (or a person's command) asks for a W1 call. The loop looks the tool up, validates the arguments, evaluates the rules, and, finding no confirmation reference, parks the call with a hash of the tool and its arguments. The person sees a card: exactly what will happen, and the hash.
+2. Only the acting person can confirm, and only that hash. The confirmation is consumed once; a second click, or a click by anyone else, is refused and recorded.
 3. The call runs with the reference, the result is verified with a read, and everything lands on the record.
 
 A W2 call is the same shape with two people: the requester proposes (expected effect, risk, undo, verification), a
