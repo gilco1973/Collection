@@ -1,0 +1,25 @@
+{
+  "name": "untrusted-input-guard",
+  "kind": "tool",
+  "language": "python",
+  "summary": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/guard.py + crai/dataguard.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security",
+    "agents",
+    "prompting"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "governed-action-loop",
+    "cited-llm-engine"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}

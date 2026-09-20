@@ -1,0 +1,22 @@
+{
+  "name": "rs256-jwt-verify",
+  "kind": "tool",
+  "language": "python",
+  "summary": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/jwt.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "governed-action-loop"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}

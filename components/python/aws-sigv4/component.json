@@ -1,0 +1,25 @@
+{
+  "name": "aws-sigv4",
+  "kind": "integration",
+  "language": "python",
+  "summary": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/sigv4.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security",
+    "cost"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "stdlib-http-client",
+    "bedrock-converse-adapter",
+    "secrets-by-name"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}

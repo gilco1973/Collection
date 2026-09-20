@@ -1,0 +1,25 @@
+{
+  "name": "stdlib-http-client",
+  "kind": "tool",
+  "language": "python",
+  "summary": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/httpclient.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "agents",
+    "observability"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "teams-graph-connector",
+    "bedrock-converse-adapter",
+    "aws-sigv4"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}

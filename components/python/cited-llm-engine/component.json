@@ -1,0 +1,31 @@
+{
+  "name": "cited-llm-engine",
+  "kind": "pattern",
+  "language": "python",
+  "summary": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/think.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "agents",
+    "prompting",
+    "evaluation"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "untrusted-input-guard",
+    "governed-action-loop",
+    "bedrock-converse-adapter"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": [
+    {
+      "path": "guard.py",
+      "from": "components/python/untrusted-input-guard/guard.py"
+    }
+  ]
+}

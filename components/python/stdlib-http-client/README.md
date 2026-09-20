@@ -1,0 +1,48 @@
+# stdlib-http-client
+
+One HTTP client for every upstream, on `urllib` only: timeouts, bounded retries with exponential backoff on 429 and
+5xx, a response-size ceiling, error messages that never carry the query string (tokens travel there), and a
+`RecordingTransport` that replays canned responses so client code is tested without a network.
+
+## Five-minute start
+
+```python
+from httpclient import Http, RecordingTransport
+t = RecordingTransport({("GET", "https://api.example/incidents"): (200, {"incidents": []})})
+http = Http(t, timeout=10, retries=3, sleep=lambda s: None)
+print(http.json("GET", "https://api.example/incidents?limit=5", {"Authorization": "Token x"}))
+print(t.calls[0]["headers"]["Authorization"])        # "[secret]": the recording never keeps a credential
+```
+
+Production: `Http()` with the default `UrllibTransport`.
+
+```
+python3 -m unittest discover -s tests -t . -v
+```
+
+## What is inside
+
+| File | What it is |
+| --- | --- |
+| `httpclient.py` | `Http.request/json/form`, `HttpError(status, url, body)`, `UrllibTransport`, `RecordingTransport` |
+| `tests/test_httpclient.py` | Retry then succeed, redaction, non-retryable errors, bounded backoff, form posts |
+
+## How to reuse it
+
+Copy `httpclient.py`. Every client in your service takes an `Http` in its constructor and nothing else touches the
+network. In tests, hand the same client a `RecordingTransport` keyed by `(METHOD, url_prefix)`; a route may be a tuple
+or a callable `(method, url, body) -> (status, payload)`.
+
+## Rules it enforces
+
+Retries only on 429, 500, 502, 503, 504 and only up to `retries`; a body above 4 MB is a 413; the URL in an error is
+stripped of its query; recorded headers named `authorization`, `api-key` or `x-api-key` are replaced.
+
+## Where it came from
+
+Meg (`meg/responder/httpclient.py`, snapshot 2026-09-19), used by every live connector there.
+
+## Known limits
+
+Synchronous. No connection pooling (urllib opens a connection per request); fine for a service making tens of calls
+per turn, not for a high-throughput proxy.

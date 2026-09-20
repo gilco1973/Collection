@@ -1,0 +1,23 @@
+{
+  "name": "fail-closed-config",
+  "kind": "pattern",
+  "language": "python",
+  "summary": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/config.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security",
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "secrets-by-name"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}

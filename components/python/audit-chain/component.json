@@ -1,0 +1,14 @@
+{
+  "name": "audit-chain",
+  "kind": "tool",
+  "language": "python",
+  "summary": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
+  "status": "ready",
+  "source": {"project": "meg-first-responder", "path": "meg/crai/audit.py", "snapshot": "2026-09-19"},
+  "owner": "gil.klainert",
+  "tags": ["governance", "observability", "security"],
+  "requires": [],
+  "pairs_with": ["governed-action-loop"],
+  "test": "python3 -m unittest discover -s tests -t . -v",
+  "vendored": []
+}
