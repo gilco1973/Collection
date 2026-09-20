@@ -28,8 +28,29 @@ tags:
   - name: requests
   - name: workspace
   - name: conversations
+  - name: ops
 
 paths:
+  /health:
+    get:
+      tags: [ops]
+      summary: The wiring by name (environment, identity, assistant, components, record); anonymous
+      responses:
+        "200": { description: OK }
+  /ready:
+    get:
+      tags: [ops]
+      summary: Whether this process should receive traffic; anonymous, for the load balancer
+      description: >-
+        200 with each check named (`record`, `identity`, `catalog`, `guide`) when the record answers a write, the identity
+        provider's keys are cached or reachable and the catalog and guide are loaded; 503 with the failing check's
+        exception class otherwise. Every response of the API carries `X-Request-Id`: the caller's own when it sent a plain
+        token of at most 64 characters, else one minted by the service; a person's support line quotes it and every log
+        line for the request carries it. Any authenticated route may answer `429` with `Retry-After` when one person
+        exceeds the per-minute limit.
+      responses:
+        "200": { description: Ready }
+        "503": { $ref: "#/components/responses/Problem" }
   /me:
     get:
       tags: [me]

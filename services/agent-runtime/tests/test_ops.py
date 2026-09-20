@@ -43,6 +43,9 @@ class Ops(unittest.TestCase):
         self.assertEqual([run()[0] for _ in range(2)], [200, 200])
         s, body, h = run()
         self.assertEqual((s, body["title"]), (429, "Too many requests")); self.assertGreaterEqual(int(h["Retry-After"]), 1)
+        # The MCP transport shares the bucket: a tool call from the same person is refused the same way.
+        init = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}}}
+        self.assertEqual(self.req("POST", "/mcp", init)[0], 429)
         # Another person has their own bucket; an anonymous caller is refused before any bucket is touched.
         self.assertEqual(self.req("POST", "/runs", {"ticket_key": "INC-7", "service": "checkout"}, token=self.w.token("u_ana"))[0], 200)
         self.assertEqual(self.req("POST", "/runs", {"ticket_key": "INC-7", "service": "checkout"}, token=None)[0], 401)

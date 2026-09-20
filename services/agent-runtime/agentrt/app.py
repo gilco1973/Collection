@@ -10,7 +10,7 @@ Every route but /health and /ready carries the person's bearer. Logs are ids onl
 the caller sent (or one minted here) so a report and a log line meet. Runs are rate-limited per person.
 """
 from __future__ import annotations
-import hashlib, json, logging, threading, time
+import collections, hashlib, json, logging, threading, time
 from http.server import ThreadingHTTPServer
 from . import vendor  # noqa: F401
 from .ops import RateLimiter, current_request_id, readiness, request_id
@@ -22,8 +22,9 @@ log = logging.getLogger("agentrt")
 
 def make_handler(w, resource: str):
     Base = make_http_handler(w.server, resource=resource)
-    runs: dict[str, dict] = {}
+    runs: collections.OrderedDict[str, dict] = collections.OrderedDict()   # the newest MAX_RUNS; the chain holds every run for good
     lock = threading.Lock()
+    MAX_RUNS = 2000
     limiter = RateLimiter(getattr(w.settings, "runs_per_minute", 0))
 
     def idp_ready():
@@ -97,6 +98,7 @@ def make_handler(w, resource: str):
                 self._json(400, {"title": "Bad request", "detail": "the body is not JSON"}); return None
 
         def do_POST(self):
+            if self.path.startswith("/mcp") and self._limited(): return
             if self.path == "/runs":
                 if self._limited(): return
                 t0 = time.time(); body = self._body()
@@ -113,6 +115,8 @@ def make_handler(w, resource: str):
                 out = {"session": s.id, "ticket_key": body.get("ticket_key"), "first_read": r["first_read"], "proposal": r["proposal"], "comment": r["comment"], "parked": r["parked"], "blocked": r["blocked"], "tainted": r["tainted"], "posted": None}
                 with lock:
                     runs[s.id] = out
+                    while len(runs) > MAX_RUNS:
+                        runs.popitem(last=False)
                 log.info("run session=%s tainted=%s parked=%s blocked=%s ms=%d", s.id, r["tainted"], bool(r["parked"]), r["blocked"], int((time.time() - t0) * 1000))
                 return self._json(200, out)
             if self.path.startswith("/runs/") and self.path.endswith("/confirm"):

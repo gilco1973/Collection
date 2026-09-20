@@ -95,3 +95,24 @@ describe("errors", () => {
     expect(isTransient(errorFromResponse(404, undefined, undefined))).toBe(false);
   });
 });
+
+describe("rate limits", () => {
+  it("names a 429 with the wait and never retries it", async () => {
+    const { ApiClient } = await import("./client");
+    const { RateLimitedError } = await import("./errors");
+    let calls = 0;
+    const transport = async () => {
+      calls++;
+      return new Response(JSON.stringify({ status: 429, title: "Too many requests", code: "rate.limited" }), {
+        status: 429,
+        headers: { "Content-Type": "application/problem+json", "Retry-After": "7", "X-Request-Id": "r1" },
+      });
+    };
+    const api = new ApiClient("/api", transport, async () => "t");
+    const err = await api.get("/me").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(RateLimitedError);
+    expect((err as InstanceType<typeof RateLimitedError>).retryAfterS).toBe(7);
+    expect((err as InstanceType<typeof RateLimitedError>).requestId).toBe("r1");
+    expect(calls).toBe(1);
+  });
+});

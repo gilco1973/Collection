@@ -83,6 +83,16 @@ export class ValidationError extends ApiError {
   }
 }
 
+export class RateLimitedError extends ApiError {
+  /** Seconds the server asked the client to wait, from Retry-After when it sent one. */
+  readonly retryAfterS: number | undefined;
+  constructor(problem?: Problem, requestId?: string, retryAfterS?: number) {
+    super(problem?.detail ?? "You are sending requests faster than the platform allows. Wait a moment and try again.", 429, problem, requestId);
+    this.name = "RateLimitedError";
+    this.retryAfterS = retryAfterS;
+  }
+}
+
 export class ServerError extends ApiError {
   constructor(status: number, problem?: Problem, requestId?: string) {
     super(problem?.detail ?? "The platform hit a problem. It has been recorded; try again in a moment.", status, problem, requestId);
@@ -90,8 +100,10 @@ export class ServerError extends ApiError {
   }
 }
 
-export function errorFromResponse(status: number, problem: Problem | undefined, requestId: string | undefined): ApiError {
+export function errorFromResponse(status: number, problem: Problem | undefined, requestId: string | undefined, retryAfterS?: number): ApiError {
   switch (status) {
+    case 429:
+      return new RateLimitedError(problem, requestId, retryAfterS);
     case 401:
       return new UnauthorizedError(problem, requestId);
     case 403:

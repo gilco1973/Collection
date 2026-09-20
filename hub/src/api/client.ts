@@ -109,7 +109,7 @@ export class ApiClient {
       const ct = res.headers.get("content-type") ?? "";
       const problem = ct.includes("json") ? ((await res.json().catch(() => undefined)) as Problem | undefined) : undefined;
       if (res.status === 401) this.hooks.onUnauthorized?.();
-      throw errorFromResponse(res.status, problem, res.headers.get("x-request-id") ?? requestId);
+      throw errorFromResponse(res.status, problem, res.headers.get("x-request-id") ?? requestId, retryAfter(res));
     }
     return res;
   }
@@ -152,7 +152,7 @@ export class ApiClient {
       let problem: Problem | undefined;
       const ct = res.headers.get("content-type") ?? "";
       if (ct.includes("json")) problem = (await res.json().catch(() => undefined)) as Problem | undefined;
-      const err = errorFromResponse(res.status, problem, res.headers.get("x-request-id") ?? requestId);
+      const err = errorFromResponse(res.status, problem, res.headers.get("x-request-id") ?? requestId, retryAfter(res));
       if (res.status === 401) this.hooks.onUnauthorized?.();
       throw err;
     };
@@ -167,6 +167,13 @@ export class ApiClient {
       throw e;
     }
   }
+}
+
+/** `Retry-After` in seconds when the server sent one; the client shows it and never retries a 429 on its own. */
+function retryAfter(res: Response): number | undefined {
+  const v = res.headers.get("retry-after");
+  const n = v ? Number(v) : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
 }
 
 /** The browser's own fetch, as a Transport. */
