@@ -1,0 +1,23 @@
+{
+  "name": "handover",
+  "kind": "skill",
+  "language": "markdown",
+  "summary": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/HANDOVER.md",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "governance",
+    "onboarding"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "use-case-to-backlog"
+  ],
+  "test": "",
+  "vendored": []
+}

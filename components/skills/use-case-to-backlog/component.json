@@ -1,0 +1,21 @@
+{
+  "name": "use-case-to-backlog",
+  "kind": "skill",
+  "language": "mixed",
+  "summary": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "usecases/meg/build/meg_plan.py + jira/",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "paved-road",
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [],
+  "test": "python3 -m unittest discover -s tests -t . -v && python3 build_backlog.py example_plan.py /tmp/backlog-example",
+  "vendored": []
+}

@@ -1,0 +1,23 @@
+{
+  "name": "security-notes",
+  "kind": "skill",
+  "language": "markdown",
+  "summary": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/SECURITY.md",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security",
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "untrusted-input-guard"
+  ],
+  "test": "",
+  "vendored": []
+}

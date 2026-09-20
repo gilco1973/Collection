@@ -1,0 +1,20 @@
+{
+  "name": "pixel-parity-screenshots",
+  "kind": "skill",
+  "language": "mixed",
+  "summary": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
+  "status": "ready",
+  "source": {
+    "project": "crossriver-ai-hub",
+    "path": "tools/shoot.cjs + tools/diff.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "evaluation"
+  ],
+  "requires": [],
+  "pairs_with": [],
+  "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
+  "vendored": []
+}

@@ -1,0 +1,23 @@
+{
+  "name": "runbook",
+  "kind": "skill",
+  "language": "markdown",
+  "summary": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/RUNBOOK.md",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "observability",
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "fail-closed-config"
+  ],
+  "test": "",
+  "vendored": []
+}

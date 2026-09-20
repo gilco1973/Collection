@@ -1,0 +1,4 @@
+[
+  {"name": "Home", "route": "/discover", "artboard": "Home.html", "height": 1660, "readySelector": ".app:not([data-loading])"},
+  {"name": "Listing", "route": "/discover/agents/example", "artboard": "Listing.html", "height": 1400, "readySelector": ".app:not([data-loading])"}
+]

@@ -1,0 +1,20 @@
+{
+  "name": "production-readiness",
+  "kind": "skill",
+  "language": "markdown",
+  "summary": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
+  "status": "ready",
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/PRODUCTION-READINESS.md",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [],
+  "test": "",
+  "vendored": []
+}
