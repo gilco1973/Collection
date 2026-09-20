@@ -314,6 +314,7 @@ function BriefEditor({ id }: { id: string }) {
           {/* Section */}
           <form
             className="card"
+            data-guide="intake-form"
             onSubmit={(e) => {
               e.preventDefault();
               void onContinue();

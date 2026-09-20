@@ -73,7 +73,7 @@ export default function SignOffs() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 380px", gap: "24px", minHeight: "0" }}>
           <div className="col" style={{ gap: 16, minWidth: 0 }}>
-            <div className="card">
+            <div className="card" data-guide="signoff-queue">
               <div className="ch">
                 <h3>The queue</h3>
                 <span className="sp"></span>

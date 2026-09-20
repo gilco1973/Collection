@@ -138,7 +138,7 @@ export default function Workspace() {
             </div>
           </div>
           <div className="col" style={{ gap: "16px" }}>
-            <div className="card " style={{}}>
+            <div className="card " style={{}} data-guide="workspace-requests">
               <div className="ch">
                 <h3>Your requests</h3>
                 <span className="sp"></span>
@@ -162,7 +162,7 @@ export default function Workspace() {
                 )}
               </div>
             </div>
-            <div className="card " style={{}}>
+            <div className="card " style={{}} data-guide="workspace-usage">
               <div className="ch">
                 <h3>Usage and budget</h3>
                 <span className="sp"></span>

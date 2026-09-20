@@ -20,6 +20,8 @@ import {
   REGISTRY_SYSTEMS,
   REGISTRY_TOOLS,
 } from "./fixtures";
+import { ask as guideAsk } from "./guideRules";
+import type { GuideAudience } from "../types";
 
 /**
  * An in-process Hub API for development, demos and tests.
@@ -375,6 +377,18 @@ route("POST", "/briefs/:id/file", ({ params, principal, req }) => {
   b.etag = bump(b.etag);
   b.updatedAt = nowIso();
   return json(b);
+});
+
+/* ---------- the guide ---------- */
+
+route("POST", "/guide/ask", ({ body, principal }) => {
+  const b = (body ?? {}) as { question?: unknown; audience?: unknown; page?: unknown };
+  const question = typeof b.question === "string" ? b.question.slice(0, 2000) : "";
+  const audiences: GuideAudience[] = ["engineer", "leadership", "employee"];
+  // The same default the service applies: a lead with no team of their own is treated as leadership, everyone else as an engineer.
+  const fallback: GuideAudience = principal.roles.includes("platform.lead") && !principal.teams.length ? "leadership" : "engineer";
+  const audience = audiences.includes(b.audience as GuideAudience) ? (b.audience as GuideAudience) : fallback;
+  return json(guideAsk(question, audience, typeof b.page === "string" ? b.page : undefined));
 });
 
 route("GET", "/conversations", ({ principal }) =>

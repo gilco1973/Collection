@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import HubShell from "./HubShell";
 import { ROUTES, SCREEN_TITLES } from "./routes";
 import Assistant from "./features/assistant/Assistant";
+import { GuideProvider } from "./features/guide/GuideProvider";
 import Discover from "./features/discover/Discover";
 import Listing from "./features/discover/Listing";
 import IntakeBrief from "./features/intake/IntakeBrief";
@@ -57,35 +58,37 @@ export default function App() {
           <AuthProvider>
             <ThemeProvider>
               <PaletteProvider>
-                <DocumentTitle />
-                <FocusOnNavigate />
-                <a className="skip-link" href="#main">
-                  Skip to content
-                </a>
-                <ErrorBoundary>
-                  <div id="main" tabIndex={-1} style={{ display: "contents" }}>
-                    <HubShell>
-                      <Routes>
-                        <Route path="/" element={<Navigate to={ROUTES.discover} replace />} />
-                        <Route path="/signin" element={<SignIn />} />
-                        <Route path={CALLBACK_PATH} element={<PageState kind="loading" text="Finishing sign-in…" />} />
-                        <Route path="/403" element={<Forbidden />} />
-                        <Route path={ROUTES.discover} element={guarded(<Discover />)} />
-                        <Route path="/discover/:kind/:slug" element={guarded(<Listing />)} />
-                        <Route path={ROUTES.assistant} element={guarded(<Assistant />)} />
-                        <Route path={`${ROUTES.assistant}/:consumerId`} element={guarded(<Assistant />)} />
-                        <Route path={ROUTES.workspace} element={guarded(<Workspace />)} />
-                        <Route path={ROUTES.intake} element={guarded(<IntakeBrief />)} />
-                        <Route path={`${ROUTES.intake}/:briefId`} element={guarded(<IntakeBrief />)} />
-                        <Route path={ROUTES.shelfSignoffs} element={guarded(<SignOffs />)} />
-                        <Route path={ROUTES.shelfOnboarding} element={guarded(<Onboarding />)} />
-                        <Route path={ROUTES.learn} element={guarded(<Learn />)} />
-                        <Route path={ROUTES.settings} element={guarded(<Settings />)} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </HubShell>
-                  </div>
-                </ErrorBoundary>
+                <GuideProvider>
+                  <DocumentTitle />
+                  <FocusOnNavigate />
+                  <a className="skip-link" href="#main">
+                    Skip to content
+                  </a>
+                  <ErrorBoundary>
+                    <div id="main" tabIndex={-1} style={{ display: "contents" }}>
+                      <HubShell>
+                        <Routes>
+                          <Route path="/" element={<Navigate to={ROUTES.discover} replace />} />
+                          <Route path="/signin" element={<SignIn />} />
+                          <Route path={CALLBACK_PATH} element={<PageState kind="loading" text="Finishing sign-in…" />} />
+                          <Route path="/403" element={<Forbidden />} />
+                          <Route path={ROUTES.discover} element={guarded(<Discover />)} />
+                          <Route path="/discover/:kind/:slug" element={guarded(<Listing />)} />
+                          <Route path={ROUTES.assistant} element={guarded(<Assistant />)} />
+                          <Route path={`${ROUTES.assistant}/:consumerId`} element={guarded(<Assistant />)} />
+                          <Route path={ROUTES.workspace} element={guarded(<Workspace />)} />
+                          <Route path={ROUTES.intake} element={guarded(<IntakeBrief />)} />
+                          <Route path={`${ROUTES.intake}/:briefId`} element={guarded(<IntakeBrief />)} />
+                          <Route path={ROUTES.shelfSignoffs} element={guarded(<SignOffs />)} />
+                          <Route path={ROUTES.shelfOnboarding} element={guarded(<Onboarding />)} />
+                          <Route path={ROUTES.learn} element={guarded(<Learn />)} />
+                          <Route path={ROUTES.settings} element={guarded(<Settings />)} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </HubShell>
+                    </div>
+                  </ErrorBoundary>
+                </GuideProvider>
               </PaletteProvider>
             </ThemeProvider>
           </AuthProvider>

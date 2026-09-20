@@ -106,7 +106,7 @@ export default function Discover() {
               onChange={setView}
             />
           </div>
-          <div className="tabs" role="tablist">
+          <div className="tabs" role="tablist" data-guide="discover-tabs">
             {TABS.map((t) => (
               <button
                 key={t.key}

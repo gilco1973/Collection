@@ -1,0 +1,580 @@
+/* The guide: launcher, panel and tour. Everything sits on the hub's tokens so
+ * it follows the theme and density the person chose. Nothing here touches the
+ * artboard screens' own rules; the guide is drawn over them, never inside. */
+
+.guide-launcher,
+.guide-panel,
+.guide-callout {
+  font-size: 14px;
+  color: var(--ink);
+}
+.guide-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+body[data-guide-on] .toasts {
+  bottom: 88px;
+}
+.guide-fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  position: relative;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.guide-fab:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3);
+}
+.guide-fab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.guide-fab.on {
+  background: var(--surface);
+  color: var(--ink);
+}
+.guide-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--warn);
+  border: 2px solid var(--surface);
+}
+.guide-peek {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-3);
+  padding: 10px 10px 10px 14px;
+  animation: guide-in 180ms ease-out;
+}
+.guide-peek-body {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.guide-peek-kicker,
+.guide-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.guide-peek-x {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 6px;
+}
+.guide-peek-x:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+/* ---------- panel ---------- */
+.guide-panel {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  bottom: 88px;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  z-index: 69;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  animation: guide-in 180ms ease-out;
+}
+.guide-panel:focus {
+  outline: none;
+}
+.guide-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface-2);
+}
+.guide-head b {
+  font-size: 14px;
+}
+.guide-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.guide-sub {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.guide-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.guide-sec {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guide-sec:last-child {
+  border-bottom: 0;
+}
+.guide-sec h3 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.guide-p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.guide-p.muted {
+  color: var(--muted);
+}
+.guide-nudge {
+  background: var(--accent-soft);
+}
+.guide-nudge .guide-kicker {
+  color: var(--accent-ink);
+}
+.guide-nudge .guide-p {
+  color: var(--ink);
+}
+.guide-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+.guide-foot {
+  padding: 10px 16px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface-2);
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* choices on first open */
+.guide-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guide-choice {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m, 10px);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+.guide-choice:hover,
+.guide-choice:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-2);
+  outline: none;
+}
+.guide-choice.suggested {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.guide-choice b {
+  font-size: 14px;
+}
+.guide-choice span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.guide-choice em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--accent-ink);
+  margin-top: 2px;
+}
+
+/* the path */
+.guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.guide-step {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  position: relative;
+}
+.guide-step + .guide-step::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: -8px;
+  height: 16px;
+  border-left: 1px solid var(--rule-2);
+}
+.guide-dot {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  border-radius: 999px;
+  border: 1.5px solid var(--rule-2);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  z-index: 1;
+}
+.guide-step.done .guide-dot {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+.guide-step.on .guide-dot {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.guide-step-title {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button.guide-step-title:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.guide-step.done .guide-step-title {
+  color: var(--muted);
+  font-weight: 400;
+}
+.guide-step.todo .guide-step-title {
+  color: var(--ink-2);
+}
+.guide-step-why {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.guide-step.todo .guide-step-why {
+  display: none;
+}
+.guide-cmd {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 11.5px;
+  background: var(--surface-3);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--ink);
+}
+.guide-tick {
+  font-size: 12px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+/* ask */
+.guide-ask {
+  flex: 1;
+}
+.guide-starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.guide-starter {
+  cursor: pointer;
+  height: auto;
+  padding: 5px 10px;
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+  font: inherit;
+  font-size: 12.5px;
+}
+.guide-starter:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.guide-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 46vh;
+  overflow: auto;
+  padding-right: 2px;
+}
+.guide-x {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.guide-q {
+  align-self: flex-end;
+  max-width: 88%;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 12px 12px 3px 12px;
+  padding: 7px 11px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.guide-a {
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 12px 12px 12px 3px;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guide-a p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.guide-a cite {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.guide-a.refused {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+.guide-a.crit {
+  border-color: var(--crit);
+  background: var(--crit-soft);
+}
+.guide-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.guide-sources .guide-kicker {
+  margin-right: 4px;
+}
+.guide-go {
+  align-self: flex-start;
+}
+.guide-note {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.guide-compose {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.guide-compose .ctl {
+  flex: 1;
+}
+.guide-link {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---------- tour ---------- */
+.guide-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+.guide-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.45);
+  pointer-events: auto;
+}
+.guide-spot {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 9999px rgba(16, 24, 40, 0.45),
+    0 0 0 2px var(--accent);
+  pointer-events: auto;
+  transition:
+    top 160ms ease,
+    left 160ms ease,
+    width 160ms ease,
+    height 160ms ease;
+  animation: guide-pulse 1.6s ease-in-out infinite;
+}
+.guide-callout {
+  position: fixed;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-3);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+  animation: guide-in 180ms ease-out;
+}
+.guide-callout:focus {
+  outline: none;
+}
+.guide-callout h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.guide-callout::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border-left: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  transform: rotate(45deg);
+}
+.guide-callout.arrow-up::before {
+  top: -7px;
+}
+.guide-callout.arrow-down::before {
+  bottom: -7px;
+  transform: rotate(225deg);
+}
+.guide-callout.arrow-none::before {
+  display: none;
+}
+
+@keyframes guide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes guide-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 9999px rgba(16, 24, 40, 0.45),
+      0 0 0 2px var(--accent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 9999px rgba(16, 24, 40, 0.45),
+      0 0 0 6px var(--accent-soft),
+      0 0 0 2px var(--accent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-panel,
+  .guide-peek,
+  .guide-callout,
+  .guide-spot {
+    animation: none;
+    transition: none;
+  }
+}
+@media (max-width: 720px) {
+  .guide-panel {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    bottom: 84px;
+    width: auto;
+    max-width: none;
+  }
+}

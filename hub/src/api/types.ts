@@ -331,3 +331,32 @@ export interface Conversation {
   assistant: { name: string; sub: string; chips: Chip[] };
   turns: Turn[];
 }
+
+/* ---------- The guide: grounded answers and the next step ---------- */
+
+/** Who the guide is talking to; the hub maps its own persona choice onto this. */
+export type GuideAudience = "engineer" | "leadership" | "employee";
+
+export interface GuideSource {
+  id: string;
+  source: string;
+  title: string;
+  section: string;
+}
+export interface GuideSuggestion {
+  label: string;
+  route: string;
+  why: string;
+}
+/** `POST /guide/ask`: an answer from the repository's own pages, its sources, and where the hub can walk the person next. */
+export interface GuideAnswer {
+  /** model: an adapter answered, cite-or-drop; rules: the best passages themselves, attributed. */
+  mode: "model" | "rules";
+  audience: GuideAudience;
+  answer: string;
+  sources: GuideSource[];
+  suggestions: GuideSuggestion[];
+  /** Set when the question was refused: `taint` means it read as an instruction, not a question. */
+  refused?: "taint" | "empty";
+  note?: string;
+}

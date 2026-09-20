@@ -53,7 +53,7 @@ export default function Onboarding() {
           </span>
         </div>
 
-        <div className="card">
+        <div className="card" data-guide="onboarding-tracker">
           <div className="ch">
             <h3>A component's way to the shelf</h3>
             <span className="sp"></span>

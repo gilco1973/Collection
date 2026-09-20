@@ -62,6 +62,20 @@ of the same API contract.
 
 See `ARCHITECTURE.md` for the module map and the request/state design.
 
+## The guide
+
+A companion drawn over every signed-in screen (`src/features/guide/`): the button at the bottom right, Alt+G, or
+the "Next step" peek it shows when something is waiting. On first open it asks what the person is here for
+(build, understand and decide, or use), suggesting from their role, and keeps to that: a one-line note on the
+page they are on, one suggested next step, a path of steps ticked from the hub's own records (briefs, the shelf,
+requests, pages visited) or by hand, a spotlight tour of the parts that matter for them, and a place to ask.
+Answers come from `POST /guide/ask`, which quotes the repository's pages and names them; a question that reads as
+an instruction is refused, and a question the pages do not answer is admitted. A leader is told what an agent
+cannot do on the pages where it matters; a builder is pointed at the reference agent, the brief and the queue.
+The guide never acts on the person's behalf and has no tools. Its state is theirs alone, in the browser under
+their principal id. Tour targets are `data-guide` attributes on the live screens; the pixel guard hides the
+launcher before it shoots, because the guide is drawn over the artboards, never inside them.
+
 ## Fidelity guarantee, and how it is kept
 
 The five artboards of the design canvas are committed under `artboards/`. The

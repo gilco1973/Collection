@@ -277,6 +277,7 @@ export default function Assistant() {
             <div className="cb" style={{ paddingTop: "0", gap: "8px", paddingBottom: "16px" }}>
               <form
                 className="compose"
+                data-guide="assistant-composer"
                 onSubmit={(e) => {
                   e.preventDefault();
                   doSend();

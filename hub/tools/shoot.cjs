@@ -82,6 +82,8 @@ async function settle(page) {
     await app.goto(BASE + (HASH ? "/#" : "") + s.route, { waitUntil: "load" });
     // Live screens carry data-loading while their queries resolve.
     await app.waitForSelector(".hub:not([data-loading])", { timeout: 15000 });
+    // The guide is drawn over every screen, never inside the artboard markup; hide it so the compare is page to page.
+    await app.addStyleTag({ content: ".guide-launcher, #hub-guide { display: none !important; }" });
     const appFonts = await settle(app);
     await app.screenshot({ path: path.join(OUT, `${s.name}.app.png`), fullPage: false });
     const box = await app.evaluate(() => {

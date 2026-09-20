@@ -111,7 +111,7 @@ export function SignoffForm({ entry, compact }: { entry: ShelfEntry; compact?: b
 /** The card on a component's listing page: version, both sign-offs, and the form when this person may sign. */
 export function SignoffPanel({ entry }: { entry: ShelfEntry }) {
   return (
-    <div className="card" id="signoff">
+    <div className="card" id="signoff" data-guide="signoff-form">
       <div className="ch">
         <h3>Sign-off</h3>
         <span className="sp"></span>

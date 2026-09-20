@@ -179,6 +179,29 @@ paths:
         "403": { $ref: "#/components/responses/Problem" }
         "409": { $ref: "#/components/responses/Problem" }
         "422": { $ref: "#/components/responses/Problem" }
+  /guide/ask:
+    post:
+      tags: [guide]
+      summary: Ask the guide; the answer quotes the collection's own pages and names them
+      description: >-
+        The hub's companion for engineers and leaders. The question is screened for instructions (a refusal carries
+        `refused: taint`), the corpus generated from the repository's pages is searched, and the answer is either the
+        best passages themselves (`mode: rules`) or a model's cite-or-drop answer over them (`mode: model`, only when
+        the service is configured with an adapter). `page` is where the person is, so it is never suggested back.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, maxLength: 2000 }
+                audience: { type: string, enum: [engineer, leadership, employee] }
+                page: { type: string }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/GuideAnswer" } } } }
+        "401": { $ref: "#/components/responses/Problem" }
   /conversations:
     get:
       tags: [conversations]
@@ -418,6 +441,21 @@ components:
         requests: { type: array, items: { $ref: "#/components/schemas/AccessRequest" } }
         usage: { type: object, properties: { sandboxMonth: { type: string }, sandboxNote: { type: string }, productionNote: { type: string }, playgroundToday: { type: string }, playgroundBudget: { type: string }, playgroundPct: { type: number } } }
         playground: { type: object, properties: { gateway: { type: string }, keyMasked: { type: string }, fixtures: { type: string }, example: { type: string } } }
+    GuideAnswer:
+      type: object
+      required: [mode, audience, answer, sources, suggestions]
+      properties:
+        mode: { type: string, enum: [model, rules] }
+        audience: { type: string, enum: [engineer, leadership, employee] }
+        answer: { type: string }
+        sources:
+          type: array
+          items: { type: object, required: [id, source, title, section], properties: { id: { type: string }, source: { type: string }, title: { type: string }, section: { type: string } } }
+        suggestions:
+          type: array
+          items: { type: object, required: [label, route, why], properties: { label: { type: string }, route: { type: string }, why: { type: string } } }
+        refused: { type: string, enum: [taint, empty] }
+        note: { type: string }
     ConversationSummary: { type: object, required: [id, title, when, assistantId], properties: { id: { type: string }, title: { type: string }, when: { type: string }, via: { type: string }, assistantId: { type: string } } }
     View:
       description: The closed, versioned descriptor set of specification §8.2. Model text is always a `text` leaf with provenance, never markup.

@@ -182,7 +182,7 @@ export default function Listing() {
                 ))}
               </div>
             </div>
-            <div className="card " style={{}}>
+            <div className="card " style={{}} data-guide="listing-catalog">
               <div className="ch">
                 <h3>What it can read and do</h3>
                 <span className="sp"></span>

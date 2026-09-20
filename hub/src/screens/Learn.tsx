@@ -38,7 +38,7 @@ export default function Learn() {
             <div>Enablement modules for each consumer (PLT-ONB-12) are reached from its listing; this page holds the platform's own material.</div>
           </div>
         </div>
-        <div className="hsec" id="roads">
+        <div className="hsec" id="roads" data-guide="learn-roads">
           <div className="hh">
             <h2>The six roads</h2>
             <span className="sub">pick one in the brief; the repository, gates and reviews follow from it</span>
@@ -69,7 +69,7 @@ export default function Learn() {
             </tbody>
           </table>
         </div>
-        <div className="hsec" id="collection">
+        <div className="hsec" id="collection" data-guide="learn-collection">
           <div className="hh">
             <h2>The collection and the knowledge base</h2>
             <span className="sub">reusable components, the practices behind them, and the AI champions programme</span>

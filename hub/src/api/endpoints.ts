@@ -9,6 +9,8 @@ import type {
   ConsumerDetail,
   Conversation,
   ConversationSummary,
+  GuideAnswer,
+  GuideAudience,
   Preferences,
   Principal,
   RegistrySystem,
@@ -75,6 +77,11 @@ export function endpoints(api: ApiClient) {
       estimate: (id: string, content: BriefContent, signal?: AbortSignal) => api.post<BriefEstimate>(`/briefs/${id}/estimate`, content, { signal }),
       road: (id: string, content: BriefContent, signal?: AbortSignal) => api.post<RoadRecommendation>(`/briefs/${id}/road`, content, { signal }),
       file: (id: string, etag: string, idempotencyKey: string) => api.post<Brief>(`/briefs/${id}/file`, undefined, { ifMatch: etag, idempotencyKey }),
+    },
+    guide: {
+      /** Ask the guide. The answer comes from the collection's own pages with sources; `page` lets it skip suggesting where the person already is. */
+      ask: (body: { question: string; audience?: GuideAudience; page?: string }, signal?: AbortSignal) =>
+        api.post<GuideAnswer>("/guide/ask", body, { signal }),
     },
     conversations: {
       list: (signal?: AbortSignal) => api.get<ConversationSummary[]>("/conversations", { signal }),
