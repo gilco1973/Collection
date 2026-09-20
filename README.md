@@ -13,7 +13,7 @@ meeting every two weeks, each carrying one initiative built from what is here an
 | `services/hub-api/` | The hub's API behind the bank's identity provider, on the standard library: every path of the contract plus sign-offs, the built hub served from the same process, a SQLite record | `cd services/hub-api && python3 -m unittest discover -s tests -t .` |
 | `services/agent-runtime/` | One agent of the collection over MCP and a run API, wired to the bank's identity provider, KMS, Bedrock, Jira and Azure DevOps by configuration; fakes in the sandbox, refused in production | `cd services/agent-runtime && python3 -m unittest discover -s tests -t .` |
 | `config/`, `CONFIGURATION.md` | Every system the collection touches, named once; settings that fail closed | `python3 -m hubapi check-config` |
-| `scripts/` | `verify.sh` (every gate, any runner) and `bundle.sh` (an offline release with the hub prebuilt) | `scripts/verify.sh python` |
+| `scripts/` | `verify.sh` (every gate, any runner), `bundle.sh` (an offline release with the hub prebuilt) and `package.sh` (the delivery zip: the bundle plus the PDFs, the video, the screenshots and the installation guide) | `scripts/verify.sh python` |
 | `deploy/`, `services/*/deploy/` | Compose for the sandbox; Dockerfiles, fail-closed entrypoints, ECS task definitions and task roles with placeholders | `docker compose -f deploy/compose.yaml up` |
 | `docs/pdf/` | The user manual (non-technical), the technical guide and the leadership brief as PDFs, built by `docs/pdf/build.py` | `python3 docs/pdf/build.py` |
 | `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |
@@ -37,6 +37,8 @@ names where each part came from and where the standalone products live.
 
 ## Start here
 
+- **Installing it inside the bank:** `INSTALL.md`, in order: check the delivery, run it with fakes, gather the
+  bank's values, build the images, staging, production, operations.
 - **A champion's first hour:** read `content/knowledgebase/docs/onboarding/ai-champions.md` (or the same page in
   the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.
 - **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in
