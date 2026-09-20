@@ -10,17 +10,42 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: python3 tools/catalog.py --check
-  python:
+  components-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: python3 tools/catalog.py --test --only python
-  typescript:
+      - run: python3 tools/catalog.py --test --only python && python3 tools/catalog.py --test --only skills
+  components-typescript:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - run: python3 tools/catalog.py --test --only typescript
+  hub:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: hub } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+  knowledgebase:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: knowledgebase } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pipx install poetry
+      - run: poetry install --no-interaction
+      - run: poetry run ruff check . && poetry run ruff format --check .
+      - run: poetry run pytest -q
+      - run: scripts/verify-layout.sh
+      - run: poetry run kb-librarian check
+      - run: poetry run python scripts/validate_k8s.py deploy/k8s
