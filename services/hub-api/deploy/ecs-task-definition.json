@@ -23,6 +23,7 @@
       {"name": "HUB_IDP_ISSUER", "value": "https://idp.bank.example/TENANT_ID/v2.0"}, {"name": "HUB_IDP_AUDIENCE", "value": "HUB_WEB_CLIENT_ID"},
       {"name": "HUB_IDENTITY_MAP", "value": "/app/config/identity-map.json"}, {"name": "HUB_CONSUMERS_FILE", "value": "/app/config/consumers.json"},
       {"name": "HUB_AI_SECURITY_GROUP", "value": "GROUP_ID_AI_SECURITY"},
+      {"name": "HUB_WEB_OIDC_AUTHORITY", "value": "https://idp.bank.example/TENANT_ID/v2.0"}, {"name": "HUB_WEB_OIDC_CLIENT_ID", "value": "HUB_WEB_CLIENT_ID"},
       {"name": "HUB_ASSISTANT", "value": "http"}, {"name": "HUB_ASSISTANT_URL", "value": "https://runtime.bank.example"}, {"name": "HUB_ASSISTANT_TOKEN_NAME", "value": "hub/assistant-token"},
       {"name": "HUB_BUILD_SHA", "value": "GIT_SHA"}, {"name": "HUB_LOG_LEVEL", "value": "INFO"}
     ],

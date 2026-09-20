@@ -48,6 +48,13 @@ class Settings:
     bedrock_max_output_tokens: int = 1500
     secrets: str = "env"                                   # env | file:<path> | aws
     ai_security_group: str = ""                            # the directory group whose members sign for AI security (oidc)
+    # the hub's own runtime configuration, served as /config.js so one built dist runs everywhere
+    web_oidc_authority: str = ""                           # the identity provider's OIDC authority for the browser (Authorization Code + PKCE)
+    web_oidc_client_id: str = ""
+    web_oidc_redirect_uri: str = ""                        # <HUB_PUBLIC_URL>/auth/callback when empty
+    web_oidc_post_logout_uri: str = ""                     # <HUB_PUBLIC_URL>/ when empty
+    web_oidc_scope: str = "openid profile email"
+    max_body_bytes: int = 1_000_000
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="HUB_", repr=False)
@@ -64,7 +71,9 @@ class Settings:
                    kb_search_url=e("KB_SEARCH_URL", ""), bedrock_region=e("BEDROCK_REGION", e("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""),
                    bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", str(d.bedrock_max_output_tokens))), secrets=e("SECRETS", d.secrets),
-                   ai_security_group=e("AI_SECURITY_GROUP", ""), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
+                   web_oidc_redirect_uri=e("WEB_OIDC_REDIRECT_URI", ""), web_oidc_post_logout_uri=e("WEB_OIDC_POST_LOGOUT_URI", ""), web_oidc_scope=e("WEB_OIDC_SCOPE", d.web_oidc_scope),
+                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
 
     @property
     def live(self) -> bool:
@@ -85,6 +94,10 @@ class Settings:
         if self.auth == "oidc" and (not self.idp_issuer or not self.idp_audience): p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")
         if self.auth == "oidc" and self.idp_issuer and not self.idp_issuer.startswith("https://"): p.append(f"{P}IDP_ISSUER must be https")
         if self.auth == "oidc" and not self.ai_security_group: p.append(f"{P}AI_SECURITY_GROUP is empty: nobody could sign for AI security")
+        if self.auth == "oidc" and self.static_dir and (not self.web_oidc_authority or not self.web_oidc_client_id):
+            p.append(f"{P}WEB_OIDC_AUTHORITY and {P}WEB_OIDC_CLIENT_ID are required to serve the hub with oidc (they become /config.js)")
+        if self.web_oidc_authority and not self.web_oidc_authority.startswith("https://"): p.append(f"{P}WEB_OIDC_AUTHORITY must be https")
+        if not 10_000 <= self.max_body_bytes <= 50_000_000: p.append(f"{P}MAX_BODY_BYTES out of range")
         if self.assistant == "http" and not self.assistant_url: p.append(f"{P}ASSISTANT_URL is required with the http assistant")
         if self.assistant == "bedrock":
             if not self.bedrock_region: p.append(f"{P}BEDROCK_REGION (or AWS_REGION) is required with the bedrock assistant")
@@ -102,6 +115,17 @@ class Settings:
         if p:
             raise ConfigError("; ".join(p))
         return self
+
+    def web_config(self) -> dict:
+        """What the browser needs, as VITE_ keys: never a secret (the client id and authority are public by design)."""
+        base = self.public_url.rstrip("/")
+        cfg = {"VITE_API_MODE": "http", "VITE_API_BASE": "/api", "VITE_AUTH_MODE": "oidc" if self.auth == "oidc" else "mock", "VITE_ROUTER": "browser",
+               "VITE_KB_URL": self.kb_url, "VITE_BUILD_SHA": self.build_sha}
+        if self.auth == "oidc":
+            cfg.update({"VITE_OIDC_AUTHORITY": self.web_oidc_authority, "VITE_OIDC_CLIENT_ID": self.web_oidc_client_id,
+                        "VITE_OIDC_REDIRECT_URI": self.web_oidc_redirect_uri or f"{base}/auth/callback", "VITE_OIDC_POST_LOGOUT_URI": self.web_oidc_post_logout_uri or f"{base}/",
+                        "VITE_OIDC_SCOPE": self.web_oidc_scope})
+        return cfg
 
     def diagnostics(self) -> dict:
         """Presence and shape only, never a value."""

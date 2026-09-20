@@ -109,3 +109,5 @@ class Refusals(unittest.TestCase):
                       targets=("tickets", "deploys"), jira_url="https://j", deploys_url="https://d", deploys_project="p", deploys_pipelines={"checkout": "1"}, db_path="/var/x.db", public_url="https://a/mcp", secrets="aws", audit_export="s3://b/p/")
         self.assertEqual(ok.validate(), [])
         self.assertTrue(any("template does not" in x for x in Settings(targets=("flags",)).validate()))
+        from agentrt.settings import template_targets
+        self.assertEqual(template_targets("incident-first-read-agent"), ("tickets", "deploys"))

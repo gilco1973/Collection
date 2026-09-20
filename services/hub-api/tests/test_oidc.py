@@ -59,5 +59,11 @@ class Oidc(unittest.TestCase):
         ok = Settings(env="production", auth="oidc", assistant="http", assistant_url="https://runtime.bank.example", db_path="/var/hub/hub.db", public_url="https://hub.bank.example",
                       secrets="aws", idp_issuer="https://idp.bank.example", idp_audience="hub-web", ai_security_group="GROUP")
         self.assertEqual(ok.validate(), [])
+        served = Settings(**{**{f: getattr(ok, f) for f in ok.__dataclass_fields__ if f != "prefix"}, "static_dir": os.path.dirname(__file__)})
+        self.assertTrue(any("WEB_OIDC_AUTHORITY" in p for p in served.validate()))
+        served.web_oidc_authority, served.web_oidc_client_id = "https://idp.bank.example/t/v2.0", "HUB_WEB"
+        self.assertEqual(served.validate(), [])
+        cfg = served.web_config()
+        self.assertEqual((cfg["VITE_AUTH_MODE"], cfg["VITE_OIDC_REDIRECT_URI"], cfg["VITE_OIDC_CLIENT_ID"]), ("oidc", "https://hub.bank.example/auth/callback", "HUB_WEB"))
         self.assertTrue(any("must be https" in p for p in Settings(env="staging", db_path="/x.db", secrets="aws", auth="oidc", idp_issuer="http://idp", idp_audience="a", ai_security_group="g").validate()))
         self.assertNotIn("secret", json.dumps(ok.diagnostics()).lower().replace("secrets", ""))

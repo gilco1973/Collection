@@ -42,7 +42,8 @@ describe("mock API contract", () => {
 
   it("records a sign-off only from the right person with every attestation, once per version", async () => {
     const attest = { testsGreen: true, exampleRun: true, walkthroughRead: true, rulesRead: true };
-    const name = (await clientAs("gk").shelf.list())[0].name;
+    const first = (await clientAs("gk").shelf.list())[0];
+    const name = first.name;
     // The wrong person is refused before anything else is looked at.
     await expect(clientAs("employee").shelf.sign(name, { role: "owner", attest }, "k1")).rejects.toBeInstanceOf(ForbiddenError);
     await expect(clientAs("gk").shelf.sign(name, { role: "ai_security", attest }, "k2")).rejects.toBeInstanceOf(ForbiddenError);
@@ -52,7 +53,7 @@ describe("mock API contract", () => {
     );
     await expect(clientAs("gk").shelf.sign(name, { role: "owner", attest }, "k4")).rejects.toBeInstanceOf(ValidationError);
     const rec = await clientAs("gk").shelf.sign(name, { role: "owner", attest, usedIn: "payments-ops-runbook", note: "ran it against the fake" }, "k5");
-    expect(rec).toMatchObject({ component: name, role: "owner", version: "1.0.0", usedIn: "payments-ops-runbook", email: "gil.klainert@crossriver.example" });
+    expect(rec).toMatchObject({ component: name, role: "owner", version: first.version, usedIn: "payments-ops-runbook", email: "gil.klainert@crossriver.example" });
     // Recorded, awaiting commit: visible to everyone, and not signable again at this version.
     const after = await clientAs("security").shelf.get(name);
     expect(after.recorded.owner?.id).toBe(rec.id);

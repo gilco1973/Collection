@@ -90,7 +90,23 @@ class BedrockAssistant:
             hits = json.loads(body)
         except ValueError:
             return []
-        return [h for h in hits if isinstance(h, dict) and h.get("text")][:6]
+        return self.normalise(hits)[:6]
+
+    @staticmethod
+    def normalise(hits) -> list[dict]:
+        """Two shapes: the documented `[{source, chunk_ref, classification, text}]`, or the knowledge base's own
+        `/search` answer, `{"items": [{path, title, section, excerpt|snippet, ...}]}` (a page is internal unless it says otherwise)."""
+        if isinstance(hits, dict):
+            hits = hits.get("items") or []
+        out = []
+        for h in hits if isinstance(hits, list) else []:
+            if not isinstance(h, dict):
+                continue
+            if h.get("text"):
+                out.append({"source": str(h.get("source", "knowledge base")), "chunk_ref": str(h.get("chunk_ref", "")), "classification": h.get("classification", "internal"), "text": str(h["text"])})
+            elif h.get("excerpt") or h.get("snippet"):
+                out.append({"source": f"{h.get('section', 'knowledge base')} · {h.get('title', h.get('path', ''))}", "chunk_ref": str(h.get("path", "")), "classification": h.get("classification", "internal"), "text": str(h.get("excerpt") or h.get("snippet"))})
+        return out
 
     def stream(self, conversation: dict, text: str, principal):
         t0 = time.time()

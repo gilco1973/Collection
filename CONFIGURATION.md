@@ -18,7 +18,7 @@ called with references the harness mints per call. Model access is IAM from the 
 
 | System | Variables | What is needed from the bank |
 | --- | --- | --- |
-| Identity provider (OIDC, RS256) | `*_IDP_ISSUER`, `*_IDP_AUDIENCE`, `*_IDP_JWKS_URL` (optional) | An app registration per deployable with `aud` set to its client id; the `groups` claim on tokens; the group ids for `HUB_IDENTITY_MAP` and `HUB_AI_SECURITY_GROUP` |
+| Identity provider (OIDC, RS256) | `*_IDP_ISSUER`, `*_IDP_AUDIENCE`, `*_IDP_JWKS_URL` (optional); for the browser `HUB_WEB_OIDC_AUTHORITY`, `HUB_WEB_OIDC_CLIENT_ID` | An app registration per deployable with `aud` set to its client id; the `groups` claim on tokens; the group ids for `HUB_IDENTITY_MAP` and `HUB_AI_SECURITY_GROUP` |
 | Directory groups to hub grants | `HUB_IDENTITY_MAP` (a JSON file, `services/hub-api/data/identity-map.example.json` is the shape) | Which groups grant which roles (`ops.lead`, `ops.investigator`, `platform.lead`, `ai.security`), entitlements (consumer ids), teams and ladders |
 | The bank's own listings | `HUB_CONSUMERS_FILE` (`consumers.example.json` is the shape) | The consumers the hub lists beyond the collection's components, and the registry of systems and tools a brief may name |
 | The record | `HUB_DB`, `AGENT_DB` | A persistent volume (EFS in ECS); the record must survive a restart |
@@ -41,9 +41,13 @@ production deployment reads from real systems and writes to none.
 
 ## The hub's build
 
-The hub is built once per environment with Vite: `hub/.env.production.example` names the variables. The built
-`dist/` is served by hub-api from `HUB_STATIC_DIR`, so a deployable is one container. Fonts are served from the
-same origin; no request leaves the bank's network for the page itself.
+The hub is built once, anywhere, and configured at runtime: hub-api serves `/config.js` from its `HUB_WEB_*`
+settings (the identity provider's authority and client id, the redirect URI, the knowledge base URL, the build
+sha), and the page reads it before anything else. So the `hub/dist` in the release bundle is the production hub;
+the bank never needs Node or a package store to point it at its identity provider. `HUB_STATIC_DIR` serves it
+from the same process, so a deployable is one container. Fonts are served from the same origin; no request
+leaves the bank's network for the page itself. `hub/.env.production.example` remains for a hub served by a
+static host without hub-api, where the values are baked in at build time instead.
 
 ## What to check before the first deployment
 

@@ -54,6 +54,14 @@ class Bedrock(unittest.TestCase):
         self.assertEqual(list(a.stream({"id": "c", "turns": []}, "hi", None))[-1]["reason"], "model.error")
 
 
+class KbShape(unittest.TestCase):
+    def test_the_knowledge_bases_own_search_answer_is_accepted(self):
+        hits = BedrockAssistant.normalise({"items": [{"path": "docs/runbooks/wires.md", "title": "Wires", "section": "runbooks", "excerpt": "Wire cut-off is 16:00.", "snippet": None},
+                                                    {"path": "x", "title": "empty", "section": "s"}]})
+        self.assertEqual(hits, [{"source": "runbooks · Wires", "chunk_ref": "docs/runbooks/wires.md", "classification": "internal", "text": "Wire cut-off is 16:00."}])
+        self.assertEqual(BedrockAssistant.normalise("garbage"), [])
+
+
 class Relay(unittest.TestCase):
     def test_the_relay_carries_a_credential_by_name_and_reads_view_events(self):
         import threading

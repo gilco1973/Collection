@@ -49,9 +49,19 @@ def make_handler(w, resource: str):
                 return self._json(200, r) if r else self._json(404, {"title": "Not found"})
             return super().do_GET()
 
+        def _body(self):
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > w.settings.max_body_bytes:
+                self._json(413, {"title": "Body too large", "detail": f"at most {w.settings.max_body_bytes} bytes"}); return None
+            try:
+                return json.loads(self.rfile.read(length) or b"{}")
+            except ValueError:
+                self._json(400, {"title": "Bad request", "detail": "the body is not JSON"}); return None
+
         def do_POST(self):
             if self.path == "/runs":
-                t0 = time.time(); body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+                t0 = time.time(); body = self._body()
+                if body is None: return
                 s = self._session()
                 if not s: return
                 try:
@@ -67,7 +77,8 @@ def make_handler(w, resource: str):
                 log.info("run session=%s tainted=%s parked=%s blocked=%s ms=%d", s.id, r["tainted"], bool(r["parked"]), r["blocked"], int((time.time() - t0) * 1000))
                 return self._json(200, out)
             if self.path.startswith("/runs/") and self.path.endswith("/confirm"):
-                sid = self.path.split("/")[2]; body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+                sid = self.path.split("/")[2]; body = self._body()
+                if body is None: return
                 with lock:
                     r = runs.get(sid)
                 if not r: return self._json(404, {"title": "Not found"})

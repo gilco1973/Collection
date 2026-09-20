@@ -307,9 +307,15 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
         def _dispatch(self):
             t0 = time.time()
             path = self.path
+            if urllib.parse.urlparse(path).path == "/config.js":
+                raw = ("// Runtime configuration from hub-api's settings; public values only.\nwindow.__HUB_CONFIG__ = " + json.dumps(api.s.web_config()) + ";\n").encode("utf-8")
+                self.send_response(200); self.send_header("Content-Type", "application/javascript"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-cache"); self.end_headers()
+                return self.wfile.write(raw)
             if not path.startswith(api_prefix + "/") and path != api_prefix:
                 return self._static(path)
             length = int(self.headers.get("Content-Length") or 0)
+            if length > api.s.max_body_bytes:
+                return self._send(413, {"Content-Type": "application/problem+json"}, json.dumps({"status": 413, "title": "Body too large", "detail": f"at most {api.s.max_body_bytes} bytes"}).encode())
             body = self.rfile.read(length) if length else b""
             res = api.handle(self.command, path[len(api_prefix):] or "/", self.headers, body)
             if isinstance(res, Stream):

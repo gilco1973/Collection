@@ -53,6 +53,8 @@ def main(argv=None) -> int:
         print(__doc__); return 2
     api = build(s)
     httpd = serve(api, s.listen_host, s.listen_port, s.static_dir)
+    import signal
+    signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=httpd.shutdown, daemon=True).start())  # a rolling deploy: finish in-flight requests, then exit 0
     logging.getLogger("hubapi").info("listening env=%s auth=%s assistant=%s port=%d static=%s diagnostics=%s", s.env, s.auth, api.assistant.name, s.listen_port, bool(s.static_dir), json.dumps(s.diagnostics()))
     try:
         httpd.serve_forever()

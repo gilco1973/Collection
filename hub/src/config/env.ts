@@ -40,8 +40,31 @@ const schema = z
 
 export type Env = z.infer<typeof schema>;
 
+/**
+ * Runtime configuration: hub-api serves `/config.js`, which sets `window.__HUB_CONFIG__`
+ * from its own settings, so one built dist runs in every environment (sandbox, staging,
+ * production) with the identity provider and API mode decided at deploy time, not at
+ * build time. Build-time values remain the defaults for `vite dev` and static hosting.
+ */
+declare global {
+  interface Window {
+    __HUB_CONFIG__?: Record<string, string>;
+  }
+}
+
+function runtimeOverrides(): Record<string, string> {
+  try {
+    const cfg = typeof window !== "undefined" ? window.__HUB_CONFIG__ : undefined;
+    return cfg && typeof cfg === "object"
+      ? Object.fromEntries(Object.entries(cfg).filter(([k, v]) => k.startsWith("VITE_") && typeof v === "string" && v !== ""))
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 function load(): Env {
-  const parsed = schema.safeParse(import.meta.env);
+  const parsed = schema.safeParse({ ...import.meta.env, ...runtimeOverrides() });
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid configuration:\n${lines}`);

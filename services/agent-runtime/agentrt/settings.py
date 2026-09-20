@@ -12,7 +12,19 @@ from dataclasses import dataclass, field, fields
 HERE = os.path.dirname(os.path.abspath(__file__))
 SERVICE = os.path.dirname(HERE)
 KNOWN_AGENTS = ("incident-first-read-agent",)
-TEMPLATE_TARGETS = {"incident-first-read-agent": ("tickets", "deploys")}   # the targets the template names; each needs a real system in production
+CONNECTORS = ("tickets", "deploys")     # the targets this runtime has a connector for (jira-connector, ado-connector)
+
+
+def template_targets(name: str) -> tuple:
+    """The targets the agent's template names, read from the vendored TEMPLATE.md: never a table to keep in step."""
+    import json as _json, re as _re
+    path = os.path.join(HERE, "vendor", "TEMPLATE.md")
+    try:
+        block = _re.search(r"```json\n(.*?)\n```", open(path, encoding="utf-8").read(), _re.S)
+        tools = _json.loads(block.group(1))["tools"] if block else []
+    except (OSError, ValueError, KeyError):
+        return ()
+    return tuple(dict.fromkeys(t["target"] for t in tools if isinstance(t, dict) and t.get("target")))
 
 
 class ConfigError(Exception):
@@ -69,6 +81,7 @@ class Settings:
     deploys_pipelines: dict = field(default_factory=dict)   # service=pipeline id
     audit_export: str = ""                         # s3://bucket/prefix/ or empty
     secrets: str = "env"
+    max_body_bytes: int = 1_000_000
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="AGENT_", repr=False)
@@ -84,7 +97,7 @@ class Settings:
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""), bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", "1500")),
                    targets=_list(e("TARGETS")), jira_url=e("JIRA_URL", ""), jira_token_name=e("JIRA_TOKEN_NAME", d.jira_token_name), jira_user=e("JIRA_USER", ""), jira_auth=e("JIRA_AUTH", "basic"),
                    deploys_url=e("DEPLOYS_URL", ""), deploys_project=e("DEPLOYS_PROJECT", ""), deploys_pat_name=e("DEPLOYS_PAT_NAME", d.deploys_pat_name), deploys_pipelines=_map(e("DEPLOYS_PIPELINES")),
-                   audit_export=e("AUDIT_EXPORT", ""), secrets=e("SECRETS", d.secrets), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   audit_export=e("AUDIT_EXPORT", ""), secrets=e("SECRETS", d.secrets), max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
 
     @property
     def live(self) -> bool:
@@ -98,8 +111,12 @@ class Settings:
         if self.signing not in ("local", "kms"): p.append(f"{P}SIGNING must be local or kms")
         if self.engine not in ("rules", "bedrock"): p.append(f"{P}ENGINE must be rules or bedrock")
         if not 1 <= self.listen_port <= 65535: p.append(f"{P}LISTEN_PORT out of range")
-        unknown = [t for t in self.targets if t not in TEMPLATE_TARGETS.get(self.name, ())]
+        named = template_targets(self.name)
+        unknown = [t for t in self.targets if t not in named]
         if unknown: p.append(f"{P}TARGETS names targets the template does not: {', '.join(unknown)}")
+        without = [t for t in named if t not in CONNECTORS]
+        if without: p.append(f"the template names targets this runtime has no connector for: {', '.join(without)}")
+        if not 10_000 <= self.max_body_bytes <= 50_000_000: p.append(f"{P}MAX_BODY_BYTES out of range")
         if self.identity == "oidc":
             if not self.idp_issuer or not self.idp_audience: p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")
             if self.idp_issuer and not self.idp_issuer.startswith("https://"): p.append(f"{P}IDP_ISSUER must be https")
@@ -115,7 +132,7 @@ class Settings:
             if self.identity == "fake": p.append("the fake identity provider is refused in staging and production")
             if self.signing == "local": p.append("local signing is refused in staging and production; use kms")
             if self.engine == "rules": p.append("the rules engine is refused in staging and production; use bedrock")
-            missing = [t for t in TEMPLATE_TARGETS.get(self.name, ()) if t not in self.targets]
+            missing = [t for t in named if t not in self.targets]
             if missing: p.append(f"{P}TARGETS must name a real system for every target the template names; fakes are refused for: {', '.join(missing)}")
             if self.db_path == ":memory:": p.append(f"{P}DB must be a file path in staging and production")
             if not self.public_url.startswith("https://"): p.append(f"{P}PUBLIC_URL must be https in staging and production")

@@ -1,5 +1,5 @@
 """The contract, route by route, against the in-process application, and once end to end over HTTP."""
-import json, os, tempfile, unittest
+import json, os, tempfile, unittest, urllib.error, urllib.request
 from hubapi.app import Problem
 from tests.support import Client, HttpServer, make_api
 
@@ -132,3 +132,9 @@ class OverHttp(unittest.TestCase):
         r = self.srv.request("GET", "/discover/tools/audit-chain", token=None); self.assertEqual(r.status, 200); self.assertIn("<title>hub</title>", r.read().decode())
         r = self.srv.request("GET", "/assets/a.js", token=None); self.assertIn("immutable", r.headers["Cache-Control"]); self.assertEqual(r.headers["X-Frame-Options"], "DENY")
         r = self.srv.request("GET", "/../etc/passwd", token=None); self.assertEqual(r.status, 200)  # the SPA fallback, never a file outside dist
+        r = self.srv.request("GET", "/config.js", token=None); js = r.read().decode()
+        self.assertEqual(r.headers["Content-Type"], "application/javascript"); self.assertIn('"VITE_API_MODE": "http"', js); self.assertIn('"VITE_AUTH_MODE": "mock"', js); self.assertNotIn("secret", js.lower())
+        big = urllib.request.Request(self.srv.base + "/api/me/preferences", data=b"x" * 2_000_000, headers={"Authorization": "Bearer mock.gk", "Content-Type": "application/json"}, method="PUT")
+        with self.assertRaises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(big)
+        self.assertEqual(e.exception.code, 413)

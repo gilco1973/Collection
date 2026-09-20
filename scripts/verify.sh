@@ -20,6 +20,7 @@ if [ "$what" = all ] || [ "$what" = python ]; then
   gate "agent-runtime: tests";                                  (cd services/agent-runtime && python3 -m unittest discover -s tests -t .)
   gate "hub-api: check-config refuses fakes in production";     (cd services/hub-api && ! HUB_ENV=production HUB_AUTH=mock python3 -m hubapi check-config >/dev/null)
   gate "agent-runtime: check-config refuses fakes in production"; (cd services/agent-runtime && ! AGENT_ENV=production python3 -m agentrt check-config >/dev/null)
+  if [ -d hub/dist ]; then gate "container trees: assemble, start, health, refuse fakes"; scripts/smoke-container-tree.sh >/dev/null; fi
 fi
 if [ "$what" = all ] || [ "$what" = typescript ]; then
   gate "components: typescript tests and examples";             python3 tools/shelf.py --test --only typescript && python3 tools/shelf.py --examples --only typescript

@@ -108,7 +108,10 @@ Node ≥ 22, pnpm 10. In mock mode, sign in as one of five personas: **Gil Klain
 (AI security engineer, the `ai.security` role that signs components off).
 `?mockPersona=gk` on any URL signs in without the picker (tests use this).
 
-Against a real server: set `VITE_API_MODE=http`, `VITE_API_BASE`, `VITE_AUTH_MODE=oidc`
+Behind hub-api (`services/hub-api`), nothing is set at build time: the page loads `/config.js`, which hub-api
+renders from its `HUB_WEB_*` settings, so one `dist/` runs in every environment.
+
+On a static host without hub-api: set `VITE_API_MODE=http`, `VITE_API_BASE`, `VITE_AUTH_MODE=oidc`
 and the `VITE_OIDC_*` values; the server must implement `api/openapi.yaml`.
 
 ## Tests

@@ -5,8 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HUB_ENV=production HUB_AUTH=oid
 RUN useradd --system --uid 10001 --create-home hub && mkdir -p /var/hub /app/config && chown hub:hub /var/hub
 WORKDIR /app
 COPY services/hub-api/hubapi /app/hubapi
-COPY services/hub-api/data/collection.json /app/data/collection.json
-COPY services/hub-api/data/examples.json /app/data/examples.json
+COPY services/hub-api/data /app/data
 COPY services/hub-api/deploy/entrypoint.sh /app/entrypoint.sh
 COPY hub/dist /app/hub-dist
 RUN chmod 0555 /app/entrypoint.sh && python3 -m compileall -q /app/hubapi

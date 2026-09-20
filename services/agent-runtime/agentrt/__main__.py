@@ -37,6 +37,8 @@ def main(argv=None) -> int:
     if cmd != "serve":
         print(__doc__); return 2
     httpd = serve(w, s.listen_host, s.listen_port, s.public_url)
+    import signal, threading
+    signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=httpd.shutdown, daemon=True).start())
     logging.getLogger("agentrt").info("listening agent=%s env=%s port=%d diagnostics=%s", w.template["name"], s.env, s.listen_port, json.dumps(s.diagnostics()))
     try:
         httpd.serve_forever()
