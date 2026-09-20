@@ -43,7 +43,17 @@ the `handler(args, credential)` shape, where `credential["on_behalf_of"]` is the
 For a model behind the think step, construct `ModelEngine(complete, role=template["role"])` from `engine.py` with
 `complete` from `bedrock-converse-adapter`, and pass it to `FirstReadAgent`.
 
-## 6. Prove it
+## 6. Serve it over MCP
+
+```
+python3 example_mcp.py
+```
+
+The same `build()`; `McpToolServer` in front of it. `tools/list` is the template's three tools with annotations
+from their tiers, and the W1 comment reaches the client as an elicitation. For a real client, `serve_http` from
+`mcpserver/transports.py` puts it on Streamable HTTP; see `mcp-tool-server`.
+
+## 7. Prove it
 
 Rerun the tests, then run the example against your fakes with a poisoned ticket of your own. Sign the component
 off on the hub when it has run once for real.

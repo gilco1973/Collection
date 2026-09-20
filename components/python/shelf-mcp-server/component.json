@@ -1,0 +1,52 @@
+{
+  "name": "shelf-mcp-server",
+  "version": "1.0.0",
+  "category": "tool",
+  "language": "python",
+  "summary": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+  "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
+  "used_in": [],
+  "source": {
+    "project": "new",
+    "path": "written for the collection; the stage rule mirrors tools/shelf.py",
+    "snapshot": "2026-09-20"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "agents",
+    "paved-road",
+    "skill"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "mcp-tool-server"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
+  "vendored": [
+    {
+      "path": "protocol.py",
+      "from": "components/python/mcp-tool-server/mcpserver/protocol.py"
+    }
+  ],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "7.4",
+      "4.11"
+    ],
+    "requirements": [
+      "PLT-CAT-5",
+      "PLT-HAR-33"
+    ],
+    "replacement_test": "The platform's registry exposes the same records over its own MCP endpoint (§4.11: one discoverable record per component with version and owner); a coding assistant configured against either gets the same list, the same stage and the same pages."
+  }
+}

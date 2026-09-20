@@ -1,9 +1,9 @@
 {
-  "name": "incident-first-read-agent",
+  "name": "mcp-gateway-client",
   "version": "1.0.0",
-  "category": "agent",
+  "category": "integration",
   "language": "python",
-  "summary": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
+  "summary": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
   "status": "ready",
   "signoff": {
     "owner": null,
@@ -12,7 +12,7 @@
   "used_in": [],
   "source": {
     "project": "meg-first-responder",
-    "path": "meg/responder (the first read) on meg/crai (the loop)",
+    "path": "meg/crai/gateway.py (the fake gateway's shape); the contract rules are new, to the platform specification §4.12",
     "snapshot": "2026-09-19"
   },
   "owner": "gil.klainert",
@@ -24,20 +24,10 @@
   "requires": [],
   "pairs_with": [
     "governed-action-loop",
-    "cited-llm-engine",
-    "teams-graph-connector",
-    "comm-templates",
-    "mcp-tool-server"
+    "mcp-tool-server",
+    "incident-first-read-agent"
   ],
-  "agent": {
-    "template": "TEMPLATE.md",
-    "tools": [
-      "cited-llm-engine",
-      "audit-chain"
-    ],
-    "harness": "governed-action-loop"
-  },
-  "test": "python3 -m unittest discover -s tests -t . && python3 example.py && python3 example_mcp.py",
+  "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
   "walkthrough": "WALKTHROUGH.md",
   "example": {
     "path": "example.py",
@@ -93,49 +83,24 @@
       "from": "components/python/governed-action-loop/actionloop/telemetry.py"
     },
     {
-      "path": "engine.py",
-      "from": "components/python/cited-llm-engine/engine.py"
-    },
-    {
-      "path": "guard.py",
-      "from": "components/python/cited-llm-engine/guard.py"
-    },
-    {
-      "path": "mcpserver/__init__.py",
-      "from": "components/python/mcp-tool-server/mcpserver/__init__.py"
-    },
-    {
-      "path": "mcpserver/protocol.py",
+      "path": "mcpgateway/protocol.py",
       "from": "components/python/mcp-tool-server/mcpserver/protocol.py"
-    },
-    {
-      "path": "mcpserver/server.py",
-      "from": "components/python/mcp-tool-server/mcpserver/server.py"
-    },
-    {
-      "path": "mcpserver/transports.py",
-      "from": "components/python/mcp-tool-server/mcpserver/transports.py"
     }
   ],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
     "sections": [
-      "5.1",
+      "4.12",
       "5.2",
-      "5.5",
-      "4.8",
-      "4.5"
+      "4.1"
     ],
     "requirements": [
-      "PLT-AC-8",
-      "PLT-AC-11",
+      "PLT-CAT-7",
+      "PLT-CAT-10",
+      "PLT-CAT-6",
       "PLT-AC-16",
-      "PLT-AC-21",
-      "PLT-HAR-11",
-      "PLT-MDL-1",
-      "PLT-PRM-1",
-      "PLT-DATA-3"
+      "PLT-ID-6"
     ],
-    "replacement_test": "The same TEMPLATE.md runs unchanged with the platform's harness (AgentCore Runtime with the three hooks, the catalog it declares signed into AgentCore Gateway, the stage prompts in the prompt registry); the conformance tests on the first read, the refused proposal on taint and the once-confirmed W1 comment pass on both."
+    "replacement_test": "The same contract record lives in the platform's contract registry and the same allowlist is the Gateway target's; a changed description, publisher or fingerprint quarantines the target there exactly as here, and the harness's conformance tests through the gateway pass on both."
   }
 }

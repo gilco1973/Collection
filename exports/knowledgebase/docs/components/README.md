@@ -30,6 +30,7 @@ For engineers building an agent. Each one has the loop an agent runs inside: fix
 | Component | Language | What it is |
 | --- | --- | --- |
 | [Governed action loop](governed-action-loop.md) | python | The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record |
+| [Mcp tool server](mcp-tool-server.md) | python | An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403 |
 
 ## Tools
 
@@ -42,6 +43,7 @@ For engineers; an agent calls one through its harness. Each one has code with on
 | [Ids-only logging](ids-only-logging.md) | python | A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line |
 | [RS256 jwt verify](rs256-jwt-verify.md) | python | RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion) |
 | [Secrets by name](secrets-by-name.md) | python | Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check |
+| [Shelf mcp server](shelf-mcp-server.md) | python | A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant |
 | [Stdlib http client](stdlib-http-client.md) | python | One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport |
 | [Typed API client](typed-api-client.md) | typescript | One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server |
 | [Untrusted input guard](untrusted-input-guard.md) | python | Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus |
@@ -54,6 +56,7 @@ For engineers connecting a system. Each one has a client for an external system 
 | --- | --- | --- |
 | [AWS sigv4](aws-sigv4.md) | python | AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock |
 | [Bedrock converse adapter](bedrock-converse-adapter.md) | python | Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned |
+| [Mcp gateway client](mcp-gateway-client.md) | python | The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake |
 | [OIDC pkce auth](oidc-pkce-auth.md) | typescript | Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set |
 | [Teams graph connector](teams-graph-connector.md) | python | Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake |
 

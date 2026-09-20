@@ -71,6 +71,39 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "collection": true
   },
   {
+    "id": "mcp-tool-server",
+    "slug": "mcp-tool-server",
+    "kind": "tool",
+    "name": "Mcp tool server",
+    "description": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "m",
+    "glyph": "shield",
+    "meta": [
+      {
+        "text": "R1 · harness",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from meg-first-responder · 2026-09-19",
+    "access": "open",
+    "tagline": "agents, security, governance",
+    "collection": true
+  },
+  {
     "id": "audit-chain",
     "slug": "audit-chain",
     "kind": "tool",
@@ -236,6 +269,39 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "collection": true
   },
   {
+    "id": "shelf-mcp-server",
+    "slug": "shelf-mcp-server",
+    "kind": "tool",
+    "name": "Shelf mcp server",
+    "description": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "",
+    "glyph": "layers",
+    "meta": [
+      {
+        "text": "R1 · tool",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from new · 2026-09-20",
+    "access": "open",
+    "tagline": "agents, paved-road, skill",
+    "collection": true
+  },
+  {
     "id": "stdlib-http-client",
     "slug": "stdlib-http-client",
     "kind": "tool",
@@ -398,6 +464,39 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "footNote": "from meg-first-responder · 2026-09-19",
     "access": "open",
     "tagline": "agents, security, cost",
+    "collection": true
+  },
+  {
+    "id": "mcp-gateway-client",
+    "slug": "mcp-gateway-client",
+    "kind": "tool",
+    "name": "Mcp gateway client",
+    "description": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "m",
+    "glyph": "shield",
+    "meta": [
+      {
+        "text": "R1 · integration",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from meg-first-responder · 2026-09-19",
+    "access": "open",
+    "tagline": "agents, security, governance",
     "collection": true
   },
   {
@@ -896,8 +995,8 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Pairs with",
-        "value": "4",
-        "note": "governed-action-loop, cited-llm-engine, teams-graph-connector, comm-templates"
+        "value": "5",
+        "note": "governed-action-loop, cited-llm-engine, teams-graph-connector, comm-templates, mcp-tool-server"
       }
     ],
     "does": [
@@ -1271,6 +1370,238 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       }
     ],
     "changelogHref": "components/python/governed-action-loop/README.md"
+  },
+  "mcp-tool-server": {
+    "id": "mcp-tool-server",
+    "slug": "mcp-tool-server",
+    "kind": "tool",
+    "name": "Mcp tool server",
+    "description": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "m",
+    "glyph": "shield",
+    "meta": [
+      {
+        "text": "R1 · harness",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from meg-first-responder · 2026-09-19",
+    "access": "open",
+    "tagline": "agents, security, governance",
+    "collection": true,
+    "crumbs": [
+      "Discover",
+      "Tools",
+      "Mcp tool server"
+    ],
+    "youActAt": "L1",
+    "ladderMax": "L1",
+    "headerChips": [
+      {
+        "text": "road R1",
+        "kind": "line"
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "harness · ready",
+        "kind": "ok"
+      },
+      {
+        "text": "spec §7.4, §4.12, §4.1, §5.1",
+        "kind": "accent"
+      },
+      {
+        "text": "agents",
+        "kind": "line"
+      },
+      {
+        "text": "security",
+        "kind": "line"
+      },
+      {
+        "text": "governance",
+        "kind": "line"
+      }
+    ],
+    "tiles": [
+      {
+        "label": "Language",
+        "value": "python",
+        "note": "standard library only"
+      },
+      {
+        "label": "Status",
+        "value": "ready",
+        "note": "snapshot 2026-09-19"
+      },
+      {
+        "label": "Pairs with",
+        "value": "3",
+        "note": "governed-action-loop, incident-first-read-agent, mcp-gateway-client"
+      }
+    ],
+    "does": [
+      "The platform's R1 road is \"an MCP server: tools exposed to an AI client that holds the model, with the harness behind the transport\". This is that shape, standard library only: JSON-RPC 2.0 over stdio or Streamable HTTP in front of the same `Harness` the agents use. The protocol is the wire and nothing more. Tiers, taint, budgets, kill switches and the chained record stay in the harness, where a client cannot reach around them: a W1 call parks and is put to the person as an elicitation, a tainted or out-of-scope call is a typed forbidden error the HTTP transport answers with 403 and `WWW-Authenticate: insufficient_scope` naming the scope, and sampling is disabled. Reach for it when a champion's tool set should be callable by Claude Code, the hub's assistant or a partner client the same way, with the same controls.",
+      "Every tools/call runs the harness's three hooks; there is no method that reaches a handler around them.",
+      "tools/list is rendered from the signed catalog; annotations are derived from it and never read from a client.",
+      "A W1 call runs only after the person accepts the elicitation for the exact tool and arguments; a client without the elicitation capability, a decline, a cancel or a timeout means nothing ran.",
+      "A deny for taint, ladder, scope or a kill switch is a typed forbidden error; over HTTP it is 403 with `WWW-Authenticate: Bearer error=\"insufficient_scope\", scope=<permission>`."
+    ],
+    "catalog": {
+      "name": "mcp-tool-server · component.json",
+      "signed": false,
+      "entries": [
+        {
+          "op": "mcpserver/protocol.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "JSON-RPC 2.0 framing, the standard error codes and three of this server's: forbidden, confirmation declined, stopped"
+        },
+        {
+          "op": "mcpserver/server.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`McpToolServer`: initialize (admits with the bearer), tools/list (the catalog as MCP tools; annotations from tier, rever"
+        },
+        {
+          "op": "mcpserver/transports.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`InProcessClient` (tests, examples), `serve_stdio` (newline JSON-RPC; the bearer read from a named environment variable)"
+        },
+        {
+          "op": "example.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`build()` wires a three-tool catalog behind the harness; `HttpClient` is a small client enough for the walk-through"
+        },
+        {
+          "op": "tests/test_server.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "The handshake, annotations from the catalog, reads through the hooks, W1 only after accept, declined means nothing ran, "
+        },
+        {
+          "op": "actionloop/",
+          "tier": "R",
+          "classes": "internal",
+          "note": "The harness, vendored verbatim from `governed-action-loop`"
+        }
+      ]
+    },
+    "trust": [
+      {
+        "label": "Tests",
+        "value": "green",
+        "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+      },
+      {
+        "label": "Rules it enforces",
+        "value": "6",
+        "note": "listed on the README"
+      },
+      {
+        "label": "Implements",
+        "value": "§7.4, §4.12, §4.1, §5.1",
+        "note": "PLT-CAT-5, PLT-CAT-6, PLT-HAR-33, PLT-ID-6, PLT-AC-11, PLT-AC-16, PLT-AC-21"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      }
+    ],
+    "evidence": [
+      {
+        "label": "README",
+        "href": "components/python/mcp-tool-server/README.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/mcp-tool-server/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/mcp-tool-server/example.py",
+        "icon": "pulse"
+      },
+      {
+        "label": "Tests",
+        "href": "components/python/mcp-tool-server/",
+        "icon": "shield"
+      },
+      {
+        "label": "Knowledge base page",
+        "href": "/kb/page/components/mcp-tool-server.md",
+        "icon": "db"
+      },
+      {
+        "label": "Replacement test: The same catalog and handlers run behind the platform's crai.transport.mcp on AgentCore Runtime with the Redis…",
+        "href": "components/python/mcp-tool-server/README.md#known-limits",
+        "icon": "pulse"
+      }
+    ],
+    "cost": [],
+    "getStarted": [
+      {
+        "n": "1",
+        "title": "Copy the directory. Build your harness as `example.build()` does (your catalog, rules, han",
+        "small": "",
+        "state": "on"
+      },
+      {
+        "n": "2",
+        "title": "`admit` is yours: it chooses the board, the ticket and the budget for a session and hands ",
+        "small": "",
+        "state": ""
+      }
+    ],
+    "owner": [
+      {
+        "label": "owner",
+        "value": "gil.klainert"
+      },
+      {
+        "label": "source",
+        "value": "meg-first-responder · meg/crai (the loop); the transport is new, to the platform specification §7.4"
+      },
+      {
+        "label": "support",
+        "value": "the AI champions channel"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "state": "current",
+        "date": "2026-09-19"
+      }
+    ],
+    "changelogHref": "components/python/mcp-tool-server/README.md"
   },
   "audit-chain": {
     "id": "audit-chain",
@@ -2246,6 +2577,219 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       }
     ],
     "changelogHref": "components/python/secrets-by-name/README.md"
+  },
+  "shelf-mcp-server": {
+    "id": "shelf-mcp-server",
+    "slug": "shelf-mcp-server",
+    "kind": "tool",
+    "name": "Shelf mcp server",
+    "description": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "",
+    "glyph": "layers",
+    "meta": [
+      {
+        "text": "R1 · tool",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from new · 2026-09-20",
+    "access": "open",
+    "tagline": "agents, paved-road, skill",
+    "collection": true,
+    "crumbs": [
+      "Discover",
+      "Tools",
+      "Shelf mcp server"
+    ],
+    "youActAt": "L1",
+    "ladderMax": "L1",
+    "headerChips": [
+      {
+        "text": "road R1",
+        "kind": "line"
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "tool · ready",
+        "kind": "ok"
+      },
+      {
+        "text": "spec §7.4, §4.11",
+        "kind": "accent"
+      },
+      {
+        "text": "agents",
+        "kind": "line"
+      },
+      {
+        "text": "paved-road",
+        "kind": "line"
+      },
+      {
+        "text": "skill",
+        "kind": "line"
+      }
+    ],
+    "tiles": [
+      {
+        "label": "Language",
+        "value": "python",
+        "note": "standard library only"
+      },
+      {
+        "label": "Status",
+        "value": "ready",
+        "note": "snapshot 2026-09-20"
+      },
+      {
+        "label": "Pairs with",
+        "value": "1",
+        "note": "mcp-tool-server"
+      }
+    ],
+    "does": [
+      "A coding assistant working in a champion's project should be able to ask \"what is on the shelf for this, and how do I use it\" without cloning the collection. This server answers from the manifests: which components exist, by category; a component's version, both sign-offs and stage; a word search; and every README, walkthrough, template and SKILL.md as a resource. It never runs, writes or signs anything: the manifest stays the record, the hub and the shelf tool do the writing.",
+      "Every tool is read-only and idempotent and says so in its annotations; there is no tool that runs, writes or signs, and the tests try three.",
+      "Resources are exactly the component files (`README.md`, `WALKTHROUGH.md`, `TEMPLATE.md`, `SKILL.md`, `component.json`); a URI cannot reach anything else.",
+      "The stage and sign-off state are read from the manifest with the shelf tool's rule; nothing is inferred."
+    ],
+    "catalog": {
+      "name": "shelf-mcp-server · component.json",
+      "signed": false,
+      "entries": [
+        {
+          "op": "server.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`Shelf` (reads every `component.json` under `components/`), `ShelfServer` (initialize, tools/list, tools/call, resources"
+        },
+        {
+          "op": "protocol.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "JSON-RPC framing, vendored from `mcp-tool-server`"
+        },
+        {
+          "op": "example.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "The walk-through over stdio: list agents, search, get, read a README, try a write tool and be refused"
+        },
+        {
+          "op": "tests/test_shelf.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "Complete listing by category, get and search, resources limited to component files (no path escape), no write tools, the"
+        }
+      ]
+    },
+    "trust": [
+      {
+        "label": "Tests",
+        "value": "green",
+        "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+      },
+      {
+        "label": "Rules it enforces",
+        "value": "3",
+        "note": "listed on the README"
+      },
+      {
+        "label": "Implements",
+        "value": "§7.4, §4.11",
+        "note": "PLT-CAT-5, PLT-HAR-33"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      }
+    ],
+    "evidence": [
+      {
+        "label": "README",
+        "href": "components/python/shelf-mcp-server/README.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/shelf-mcp-server/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/shelf-mcp-server/example.py",
+        "icon": "pulse"
+      },
+      {
+        "label": "Tests",
+        "href": "components/python/shelf-mcp-server/",
+        "icon": "shield"
+      },
+      {
+        "label": "Knowledge base page",
+        "href": "/kb/page/components/shelf-mcp-server.md",
+        "icon": "db"
+      },
+      {
+        "label": "Replacement test: The platform's registry exposes the same records over its own MCP endpoint (§4.11: one discoverable record per…",
+        "href": "components/python/shelf-mcp-server/README.md#known-limits",
+        "icon": "pulse"
+      }
+    ],
+    "cost": [],
+    "getStarted": [
+      {
+        "n": "1",
+        "title": "Copy the directory anywhere; point `--root` at a checkout of the collection (or at any tre",
+        "small": "",
+        "state": "on"
+      }
+    ],
+    "owner": [
+      {
+        "label": "owner",
+        "value": "gil.klainert"
+      },
+      {
+        "label": "source",
+        "value": "new · written for the collection; the stage rule mirrors tools/shelf.py"
+      },
+      {
+        "label": "support",
+        "value": "the AI champions channel"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "state": "current",
+        "date": "2026-09-20"
+      }
+    ],
+    "changelogHref": "components/python/shelf-mcp-server/README.md"
   },
   "stdlib-http-client": {
     "id": "stdlib-http-client",
@@ -3268,6 +3812,238 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       }
     ],
     "changelogHref": "components/python/bedrock-converse-adapter/README.md"
+  },
+  "mcp-gateway-client": {
+    "id": "mcp-gateway-client",
+    "slug": "mcp-gateway-client",
+    "kind": "tool",
+    "name": "Mcp gateway client",
+    "description": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+    "road": "R1",
+    "lifecycle": "preview",
+    "icon": "m",
+    "glyph": "shield",
+    "meta": [
+      {
+        "text": "R1 · integration",
+        "kind": ""
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
+      }
+    ],
+    "footNote": "from meg-first-responder · 2026-09-19",
+    "access": "open",
+    "tagline": "agents, security, governance",
+    "collection": true,
+    "crumbs": [
+      "Discover",
+      "Tools",
+      "Mcp gateway client"
+    ],
+    "youActAt": "L1",
+    "ladderMax": "L1",
+    "headerChips": [
+      {
+        "text": "road R1",
+        "kind": "line"
+      },
+      {
+        "text": "python",
+        "kind": "mono"
+      },
+      {
+        "text": "integration · ready",
+        "kind": "ok"
+      },
+      {
+        "text": "spec §4.12, §5.2, §4.1",
+        "kind": "accent"
+      },
+      {
+        "text": "agents",
+        "kind": "line"
+      },
+      {
+        "text": "security",
+        "kind": "line"
+      },
+      {
+        "text": "governance",
+        "kind": "line"
+      }
+    ],
+    "tiles": [
+      {
+        "label": "Language",
+        "value": "python",
+        "note": "standard library only"
+      },
+      {
+        "label": "Status",
+        "value": "ready",
+        "note": "snapshot 2026-09-19"
+      },
+      {
+        "label": "Pairs with",
+        "value": "3",
+        "note": "governed-action-loop, mcp-tool-server, incident-first-read-agent"
+      }
+    ],
+    "does": [
+      "When an agent's tools live on an MCP server someone else runs, the specification treats that server as a system of record: it enters the contract registry with a verified publisher and a key fingerprint, the consumer gets a signed allowlist of the tools it may call, and any change to a tool's description quarantines the server until a person re-verifies (PLT-CAT-7, PLT-CAT-10). This is that gateway, standard library only, behind the same `tools_list` and `tools_call` the harness already calls on its fake gateway. The harness decides; the gateway carries the call over MCP and nothing more.",
+      "Only tools on the signed allowlist are listed to the harness or callable; a tool the server offers but the contract does not is refused at the catalog hook, before any call.",
+      "A changed description, publisher or key fingerprint quarantines the server: every call is a typed stop until a person releases it, and the release is on the gateway's log with their name.",
+      "Tool descriptions are corpus payload locations: one that scores as an injection quarantines even when it was reviewed.",
+      "The harness's hooks run first; a parked W1 never crosses the wire, and a remote forbidden answer is a deny with a typed code."
+    ],
+    "catalog": {
+      "name": "mcp-gateway-client · component.json",
+      "signed": false,
+      "entries": [
+        {
+          "op": "mcpgateway/contract.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`Contract`: server, publisher, fingerprint, `allow` (harness name to remote tool and the sha256 of its description as re"
+        },
+        {
+          "op": "mcpgateway/client.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`McpGateway` (`verify`, `tools_list`, `tools_call`, `release`), `HttpTransport` (Streamable HTTP with the bearer looked "
+        },
+        {
+          "op": "mcpgateway/protocol.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "JSON-RPC framing, vendored from `mcp-tool-server`"
+        },
+        {
+          "op": "example.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "`build()` wires the harness with the gateway in the fake gateway's place"
+        },
+        {
+          "op": "tests/test_gateway.py",
+          "tier": "R",
+          "classes": "internal",
+          "note": "The contract rules, the harness through the gateway, remote forbidden and error results, quarantine and release, the cre"
+        },
+        {
+          "op": "actionloop/",
+          "tier": "R",
+          "classes": "internal",
+          "note": "The harness, vendored verbatim from `governed-action-loop`"
+        }
+      ]
+    },
+    "trust": [
+      {
+        "label": "Tests",
+        "value": "green",
+        "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+      },
+      {
+        "label": "Rules it enforces",
+        "value": "5",
+        "note": "listed on the README"
+      },
+      {
+        "label": "Implements",
+        "value": "§4.12, §5.2, §4.1",
+        "note": "PLT-CAT-7, PLT-CAT-10, PLT-CAT-6, PLT-AC-16, PLT-ID-6"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      }
+    ],
+    "evidence": [
+      {
+        "label": "README",
+        "href": "components/python/mcp-gateway-client/README.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/mcp-gateway-client/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/mcp-gateway-client/example.py",
+        "icon": "pulse"
+      },
+      {
+        "label": "Tests",
+        "href": "components/python/mcp-gateway-client/",
+        "icon": "shield"
+      },
+      {
+        "label": "Knowledge base page",
+        "href": "/kb/page/components/mcp-gateway-client.md",
+        "icon": "db"
+      },
+      {
+        "label": "Replacement test: The same contract record lives in the platform's contract registry and the same allowlist is the Gateway targe…",
+        "href": "components/python/mcp-gateway-client/README.md#known-limits",
+        "icon": "pulse"
+      }
+    ],
+    "cost": [],
+    "getStarted": [
+      {
+        "n": "1",
+        "title": "Copy the directory. Review the server's `tools/list` once, with the security engineer, and",
+        "small": "",
+        "state": "on"
+      },
+      {
+        "n": "2",
+        "title": "Store `contract.to_json()` with the consumer and load it with `Contract.from_json`; a new ",
+        "small": "",
+        "state": ""
+      }
+    ],
+    "owner": [
+      {
+        "label": "owner",
+        "value": "gil.klainert"
+      },
+      {
+        "label": "source",
+        "value": "meg-first-responder · meg/crai/gateway.py (the fake gateway's shape); the contract rules are new, to the platform specification §4.12"
+      },
+      {
+        "label": "support",
+        "value": "the AI champions channel"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "state": "current",
+        "date": "2026-09-19"
+      }
+    ],
+    "changelogHref": "components/python/mcp-gateway-client/README.md"
   },
   "oidc-pkce-auth": {
     "id": "oidc-pkce-auth",
@@ -5716,7 +6492,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
       "tests": true,
       "spec": true
     },
-    "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+    "test": "python3 -m unittest discover -s tests -t . && python3 example.py && python3 example_mcp.py",
     "exampleRun": "python3 example.py",
     "hubPath": "/discover/agents/incident-first-read-agent",
     "repoPath": "components/agents/incident-first-read-agent"
@@ -5754,6 +6530,40 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
     "exampleRun": "python3 example.py",
     "hubPath": "/discover/tools/governed-action-loop",
     "repoPath": "components/python/governed-action-loop"
+  },
+  {
+    "name": "mcp-tool-server",
+    "title": "Mcp tool server",
+    "version": "1.0.0",
+    "category": "harness",
+    "language": "python",
+    "owner": "gil.klainert",
+    "status": "ready",
+    "summary": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+    "signoff": {
+      "owner": null,
+      "ai_security": null
+    },
+    "signed": false,
+    "state": "owner pending; AI security pending",
+    "usedIn": [],
+    "stage": {
+      "index": 1,
+      "of": 6,
+      "label": "built",
+      "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+    },
+    "gates": {
+      "readme": true,
+      "walkthrough": true,
+      "example": true,
+      "tests": true,
+      "spec": true
+    },
+    "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+    "exampleRun": "python3 example.py",
+    "hubPath": "/discover/tools/mcp-tool-server",
+    "repoPath": "components/python/mcp-tool-server"
   },
   {
     "name": "audit-chain",
@@ -5926,6 +6736,40 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
     "repoPath": "components/python/secrets-by-name"
   },
   {
+    "name": "shelf-mcp-server",
+    "title": "Shelf mcp server",
+    "version": "1.0.0",
+    "category": "tool",
+    "language": "python",
+    "owner": "gil.klainert",
+    "status": "ready",
+    "summary": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+    "signoff": {
+      "owner": null,
+      "ai_security": null
+    },
+    "signed": false,
+    "state": "owner pending; AI security pending",
+    "usedIn": [],
+    "stage": {
+      "index": 1,
+      "of": 6,
+      "label": "built",
+      "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+    },
+    "gates": {
+      "readme": true,
+      "walkthrough": true,
+      "example": true,
+      "tests": true,
+      "spec": true
+    },
+    "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+    "exampleRun": "python3 example.py",
+    "hubPath": "/discover/tools/shelf-mcp-server",
+    "repoPath": "components/python/shelf-mcp-server"
+  },
+  {
     "name": "stdlib-http-client",
     "title": "Stdlib http client",
     "version": "1.0.0",
@@ -6094,6 +6938,40 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
     "exampleRun": "python3 example.py",
     "hubPath": "/discover/tools/bedrock-converse-adapter",
     "repoPath": "components/python/bedrock-converse-adapter"
+  },
+  {
+    "name": "mcp-gateway-client",
+    "title": "Mcp gateway client",
+    "version": "1.0.0",
+    "category": "integration",
+    "language": "python",
+    "owner": "gil.klainert",
+    "status": "ready",
+    "summary": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+    "signoff": {
+      "owner": null,
+      "ai_security": null
+    },
+    "signed": false,
+    "state": "owner pending; AI security pending",
+    "usedIn": [],
+    "stage": {
+      "index": 1,
+      "of": 6,
+      "label": "built",
+      "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+    },
+    "gates": {
+      "readme": true,
+      "walkthrough": true,
+      "example": true,
+      "tests": true,
+      "spec": true
+    },
+    "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+    "exampleRun": "python3 example.py",
+    "hubPath": "/discover/tools/mcp-gateway-client",
+    "repoPath": "components/python/mcp-gateway-client"
   },
   {
     "name": "oidc-pkce-auth",

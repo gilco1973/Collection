@@ -17,6 +17,7 @@ fakes, keep the loop.
 ```
 cd components/agents/incident-first-read-agent
 python3 example.py                                   # a clean incident, then a poisoned one; the chain verifies
+python3 example_mcp.py                               # the same template served over MCP; the W1 comment is an elicitation
 python3 -m unittest discover -s tests -t .           # one test per line of the template's "never"
 ```
 
@@ -31,9 +32,11 @@ the record.
 | `TEMPLATE.md` | The agent as data: name, role, ladder, road, channel, stages, budget, `tools` (target, op, tier, contract, permission, args, result shape) and `never` |
 | `agent.py` | `load_template()`, `catalog_from(template)` (the signed catalog built from `tools`), `FirstReadAgent.run()` (read, think, propose, park the write) and `post()` (confirm once, then write) |
 | `example.py` | `build()` wires the harness from the template with fake ticket and deploy targets; `main()` runs both scenarios |
+| `example_mcp.py` | The same harness served over MCP: tools/list is the template's tools with annotations, the W1 comment is an elicitation |
 | `tests/test_agent.py` | The happy path, and one test per `never` line: no write without a person, one confirmation for the exact call, refused on taint, nothing outside the template, only projected and masked text reaches the model, the chain verifies |
 | `actionloop/` | The harness, vendored verbatim from `governed-action-loop` |
 | `engine.py`, `guard.py` | The think step, vendored verbatim from `cited-llm-engine` |
+| `mcpserver/` | The MCP transport, vendored verbatim from `mcp-tool-server` |
 
 ## How to reuse it
 
@@ -63,6 +66,9 @@ harness and the think step are vendored from their own components so this direct
 
 One agent, one turn: no room, no follow-up questions, no scan-and-fix stage. The rules engine is the default
 engine; a model needs a `complete` callable and a prompt registry entry per stage.
+
+Over MCP (`example_mcp.py`) the agent is the R1 shape: the client holds the model and calls the template's tools;
+the harness is the same object, so the W1 comment is an elicitation and a tainted session is 403.
 
 **Replacement test:** the same `TEMPLATE.md` runs unchanged with the platform's harness (AgentCore Runtime with
 the three hooks, the catalog it declares signed into AgentCore Gateway, the stage prompts in the prompt registry);
