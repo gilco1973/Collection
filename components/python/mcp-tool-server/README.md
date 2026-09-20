@@ -44,7 +44,7 @@ Copy the directory. Build your harness as `example.build()` does (your catalog, 
 ```python
 server = McpToolServer(harness, admit, name="my-tools", version="1.0.0")   # admit(token) -> harness.admit(...)
 serve_stdio(server, token_env="MCP_BEARER_TOKEN")                           # or
-httpd = serve_http(server, host="0.0.0.0", port=8080, resource="https://<your host>/mcp", authorization_servers=["https://<your idp>"])
+httpd = serve_http(server, host="<bind address>", port=8080, resource="https://<your host>/mcp", authorization_servers=["https://<your idp>"])
 ```
 
 `admit` is yours: it chooses the board, the ticket and the budget for a session and hands the caller's bearer to
