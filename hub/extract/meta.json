@@ -1,0 +1,27 @@
+{
+  "HubHome": {
+    "root": "hub",
+    "height": 1660,
+    "bytes": 11064
+  },
+  "HubListing": {
+    "root": "hub",
+    "height": 1400,
+    "bytes": 11562
+  },
+  "HubIntake": {
+    "root": "hub",
+    "height": 1180,
+    "bytes": 11471
+  },
+  "HubWorkspace": {
+    "root": "hub",
+    "height": 1120,
+    "bytes": 9451
+  },
+  "HubAssistant": {
+    "root": "hub",
+    "height": 900,
+    "bytes": 7976
+  }
+}

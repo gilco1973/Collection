@@ -1,0 +1,215 @@
+/* Themes, density and accessibility for the ui-core design system.
+ *
+ * The artboards were designed light (PD-UX-4: light by default, dark
+ * available). The dark palette below keeps the same hue relationships and
+ * contrast roles; it is applied by an explicit choice (`data-theme="dark"`,
+ * stamped by ThemeProvider from the person's preferences) or by the OS when
+ * the person has chosen "system" and nothing is stamped.
+ *
+ * Nothing here touches the light render: every rule is behind a theme or
+ * preference selector, so the pixel guard against the artboards is unaffected.
+ */
+
+@layer components {
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]).dark-system {
+    color-scheme: dark;
+    --bg: #101418;
+    --surface: #171c22;
+    --surface-2: #1c2229;
+    --surface-3: #232b34;
+    --ink: #e7ecf2;
+    --ink-2: #c3ccd7;
+    --muted: #8e9bab;
+    --faint: #66727f;
+    --rule: #263039;
+    --rule-2: #334050;
+    --accent: #6f9ae6;
+    --accent-2: #8db0ee;
+    --accent-soft: #1d2b44;
+    --accent-ink: #b7cdf5;
+    --ok: #63c58c;
+    --ok-soft: #14301f;
+    --warn: #e4a44a;
+    --warn-soft: #3a2a12;
+    --crit: #f0776c;
+    --crit-soft: #3d1d1a;
+    --w2: #f0925f;
+    --w2-soft: #3d2416;
+    --money: #b39cf0;
+    --money-soft: #2a2140;
+    --model: #5cc2d6;
+    --model-soft: #16333a;
+    --r: #aab4c1;
+    --r-soft: #222a33;
+    --mask: #222a33;
+    --mask-ink: #aab4c1;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+    --shadow-3: 0 24px 64px -16px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ui-core paints a handful of components with literal white; in dark they follow the surface. */
+  :root[data-theme="dark"]
+    .hub
+    :is(
+      .btn,
+      .seg,
+      .radio,
+      .radio .rd,
+      .chk,
+      .inp,
+      .compose,
+      .stopbtn,
+      .bigsearch,
+      .sugg span,
+      .sugg button,
+      .chip.line,
+      .step .n,
+      .ibtn,
+      .kbd,
+      .tog i,
+      .btn.d
+    ),
+  :root:not([data-theme="light"]).dark-system
+    .hub
+    :is(
+      .btn,
+      .seg,
+      .radio,
+      .radio .rd,
+      .chk,
+      .inp,
+      .compose,
+      .stopbtn,
+      .bigsearch,
+      .sugg span,
+      .sugg button,
+      .chip.line,
+      .step .n,
+      .ibtn,
+      .kbd,
+      .tog i,
+      .btn.d
+    ) {
+    background: var(--surface);
+  }
+  :root[data-theme="dark"] .hub :is(.btn.p, .btn.ink, .chip.ink, .step.on .n, .step.done .n, .chk.on, .band),
+  :root:not([data-theme="light"]).dark-system .hub :is(.btn.p, .btn.ink, .chip.ink, .step.on .n, .step.done .n, .chk.on, .band) {
+    background: revert-layer;
+  }
+  :root[data-theme="dark"] .hub .btn.p,
+  :root:not([data-theme="light"]).dark-system .hub .btn.p {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0b1220;
+  }
+  :root[data-theme="dark"] .hub .btn.ink,
+  :root:not([data-theme="light"]).dark-system .hub .btn.ink {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #0b1220;
+  }
+  :root[data-theme="dark"] .hub .chip.ink,
+  :root:not([data-theme="light"]).dark-system .hub .chip.ink {
+    background: var(--ink);
+    color: #0b1220;
+  }
+  :root[data-theme="dark"] .hub .band,
+  :root:not([data-theme="light"]).dark-system .hub .band {
+    background: #0b1220;
+  }
+  :root[data-theme="dark"] .hub .band .btn,
+  :root:not([data-theme="light"]).dark-system .hub .band .btn {
+    background: var(--ink);
+    color: #0b1220;
+    border-color: var(--ink);
+  }
+  :root[data-theme="dark"] .hub .brand .mark,
+  :root:not([data-theme="light"]).dark-system .hub .brand .mark {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  :root[data-theme="dark"] .hub .av.ai,
+  :root:not([data-theme="light"]).dark-system .hub .av.ai {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  :root[data-theme="dark"] .hub .step.on .n,
+  :root:not([data-theme="light"]).dark-system .hub .step.on .n {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #0b1220;
+  }
+  :root[data-theme="dark"] .hub .banner.ok,
+  :root:not([data-theme="light"]).dark-system .hub .banner.ok {
+    color: #bfe8cf;
+    border-color: #1f4a30;
+  }
+  :root[data-theme="dark"] .hub .banner.warn,
+  :root:not([data-theme="light"]).dark-system .hub .banner.warn {
+    color: #f2d5a4;
+    border-color: #5a4220;
+  }
+  :root[data-theme="dark"] .hub .banner.crit,
+  :root:not([data-theme="light"]).dark-system .hub .banner.crit {
+    color: #f6c2bb;
+    border-color: #5c2a25;
+  }
+  :root[data-theme="dark"] .hub .banner.accent,
+  :root:not([data-theme="light"]).dark-system .hub .banner.accent {
+    border-color: #2f4670;
+  }
+  :root[data-theme="dark"] .hub .skip-link,
+  :root:not([data-theme="light"]).dark-system .hub .skip-link {
+    background: var(--accent);
+    color: #0b1220;
+  }
+
+  /* Dense: tighter rhythm for people who live in the Hub all day. */
+  :root[data-density="dense"] .hub .card .cb {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  :root[data-density="dense"] .hub .card .ch {
+    padding: 9px 12px;
+  }
+  :root[data-density="dense"] .hub .card .cf {
+    padding: 8px 12px;
+  }
+  :root[data-density="dense"] .hub .hwrap {
+    gap: 18px;
+    padding: 22px 0 30px;
+  }
+  :root[data-density="dense"] .hub .lc {
+    padding: 12px;
+    gap: 8px;
+  }
+  :root[data-density="dense"] .hub table.t td {
+    padding: 6px 10px;
+  }
+  :root[data-density="dense"] .hub .hero {
+    padding: 24px 28px;
+    gap: 12px;
+  }
+
+  /* Assistive-technology preference (PLT-UI-15): stronger focus, underlined links, marked claims louder. */
+  :root[data-a11y="true"] .hub :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline-width: 3px;
+    outline-offset: 3px;
+  }
+  :root[data-a11y="true"] .hub a:not(.btn) {
+    text-decoration: underline;
+  }
+  :root[data-a11y="true"] .hub .claim {
+    text-decoration-thickness: 2px;
+  }
+  :root[data-a11y="true"] .hub .claim.un::after {
+    content: " (unsupported)";
+    font-size: 11px;
+    color: var(--warn);
+  }
+  :root[data-a11y="true"] .hub .cursor {
+    animation: none;
+  }
+}

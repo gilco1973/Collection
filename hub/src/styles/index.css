@@ -1,0 +1,82 @@
+/* CrossRiver AI Hub — styling entry.
+ *
+ * Pixel fidelity rule: Tailwind's preflight is deliberately NOT imported. The
+ * artboards were rendered with `ui-core.css` as the only reset, so adding a
+ * second reset would change metrics (button fonts, img display, heading sizes)
+ * and break the pixel match. `ui-core.css` is imported verbatim instead.
+ *
+ * Layer order puts ui-core in `components`, so Tailwind utilities written in
+ * new code still win over a ui-core component rule, which is the cascade a
+ * Tailwind codebase expects.
+ */
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./ui-core.css" layer(components);
+@import "./ui-core.controls.css" layer(components);
+@import "./ui-core.themes.css";
+
+/* The ui-core design tokens, registered with Tailwind so that new work can use
+ * `bg-surface`, `text-muted`, `rounded-l`, `font-mono` and friends against the
+ * same palette the artboards use. Values mirror `:root` in ui-core.css. */
+@theme {
+  --color-bg: #f3f5f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-surface-3: #eef2f6;
+
+  --color-ink: #0f172a;
+  --color-ink-2: #344054;
+  --color-muted: #667085;
+  --color-faint: #98a2b3;
+
+  --color-rule: #e4e9f0;
+  --color-rule-2: #d0d7e2;
+
+  --color-accent: #2757a8;
+  --color-accent-2: #1f4a91;
+  --color-accent-soft: #e9effa;
+  --color-accent-ink: #1d4a8a;
+
+  --color-ok: #1f7a4d;
+  --color-ok-soft: #e5f4ec;
+  --color-warn: #b25e09;
+  --color-warn-soft: #fdf1e2;
+  --color-crit: #b42318;
+  --color-crit-soft: #fbeae9;
+
+  --color-w2: #c2410c;
+  --color-w2-soft: #fdeadf;
+  --color-money: #6941c6;
+  --color-money-soft: #efe9fa;
+  --color-model: #0e7490;
+  --color-model-soft: #e0f2f7;
+
+  --color-r: #475467;
+  --color-r-soft: #f2f4f7;
+  --color-mask: #eef0f4;
+  --color-mask-ink: #5b6472;
+
+  --radius-s: 6px;
+  --radius-DEFAULT: 8px;
+  --radius-l: 12px;
+
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-2: 0 8px 24px -8px rgba(16, 24, 40, 0.18), 0 2px 6px rgba(16, 24, 40, 0.06);
+  --shadow-3: 0 24px 64px -16px rgba(16, 24, 40, 0.35), 0 6px 18px rgba(16, 24, 40, 0.1);
+
+  --font-sans: "Instrument Sans", "Segoe UI", system-ui, Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Page ground outside the fixed-width artboard. The `.hub` element keeps its
+ * own 1440px width and background exactly as published. */
+@layer base {
+  html,
+  body,
+  #root {
+    background: var(--bg);
+  }
+}

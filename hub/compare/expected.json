@@ -1,0 +1,9 @@
+{
+  "_comment": "Regions where the live app is allowed to differ from the artboard, each with the reason. The guard still fails on any pixel outside these boxes.",
+  "HubHome": [
+    { "box": [1180, 705, 1320, 755], "reason": "Compliance narration card: the workspace artboard lists this reviewer-role request as pending, so the live card shows 'Requested' (disabled) instead of 'Request access'." }
+  ],
+  "HubListing": [
+    { "box": [480, 268, 640, 296], "reason": "The workspace artboard lists 'Ladder L2 on investigation triage' as pending, so the live listing shows 'Ladder L2 requested' (disabled) instead of 'Request ladder L2'." }
+  ]
+}

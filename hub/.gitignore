@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-artifact/
+preview*.log
+tsconfig.tsbuildinfo
+compare/*.ref.png
+compare/*.app.png
+compare/*.diff.png

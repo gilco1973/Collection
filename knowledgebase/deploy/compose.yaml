@@ -1,0 +1,63 @@
+services:
+  knowledge-base:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    # The same reference the Kubernetes manifests use (deploy/k8s/); bump both together.
+    image: knowledge-base:0.1.0
+    ports:
+      # Bind to localhost; the platform's ingress fronts the service.
+      - "127.0.0.1:8765:8765"
+    # The image runs as uid 10001 (with its own home for the bundled CLI) and owns the state volume.
+    # For live edits make the mounted docs writable by that uid on the host (`chown -R 10001 docs`);
+    # do not remap `user:` — the state volume and /home/librarian belong to 10001.
+    #
+    # Hardening: the root filesystem is read-only; the only scratch areas are the two tmpfs mounts
+    # below (the Agent SDK's bundled CLI writes its state under the home directory) plus the state
+    # volume and the docs bind mount, which keep their own modes. No capability, no setuid gain.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /home/librarian
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      # Liveness: the process answers. The slim image has no curl, so urllib does the request
+      # (a non-200 raises, which is exit 1). Readiness (`/api/health/ready`) is for the ingress.
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8765/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    # Ceilings mirror deploy/k8s/deployment.yaml; an audit turn is CPU- and memory-light, the
+    # bundled CLI is what needs the headroom.
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
+        reservations:
+          cpus: "0.25"
+          memory: 512m
+    pids_limit: 256
+    environment:
+      # Inject real values from your secret manager; never commit them.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      KB_API_KEY: ${KB_API_KEY:-}
+      # Live audits write pages: only meaningful with the docs bind mount below, and a
+      # process that commits the result to git. Leave false for a read-only deployment.
+      KB_ALLOW_LIVE: "false"
+      KB_ATLASSIAN_ALLOW_WRITE: "false"
+      # uvicorn trusts X-Forwarded-For only from these addresses (the per-client problem-report
+      # throttle keys on the resulting client address). The port is published on the host's loopback
+      # only, so every connection arrives from the docker bridge gateway and only the host-side
+      # ingress can reach it: trust it. Narrow this to the ingress address when the port is exposed wider.
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-*}
+    volumes:
+      - kb-state:/srv/knowledge-base/.librarian
+      # Mount the checked-out docs so live edits land in the working copy, not the image layer.
+      - ../docs:/srv/knowledge-base/docs
+volumes:
+  kb-state:

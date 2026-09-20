@@ -1,0 +1,27 @@
+version: 1
+entries:
+  - title: Claude developer platform documentation
+    url: https://platform.claude.com
+    why: Primary source for model and API behaviour behind the gateway.
+    owner: ai-platform-architecture
+    reviewed: 2026-09-15
+  - title: Claude Agent SDK documentation
+    url: https://code.claude.com/docs/en/agent-sdk
+    why: The runtime the librarian and the agent paved road are built on.
+    owner: ai-platform-engineering
+    reviewed: 2026-09-15
+  - title: NIST AI Risk Management Framework
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+    why: Shared vocabulary for responsible AI and risk.
+    owner: model-risk-management
+    reviewed: 2026-09-15
+  - title: OWASP Top 10 for LLM Applications
+    url: https://owasp.org/www-project-top-10-for-large-language-model-applications/
+    why: The threat list our security controls map to.
+    owner: ai-platform-architecture
+    reviewed: 2026-09-15
+  - title: SR 11-7 Guidance on Model Risk Management
+    url: https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
+    why: Supervisory expectation shaping the model lifecycle.
+    owner: model-risk-management
+    reviewed: 2026-09-15

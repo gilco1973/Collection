@@ -1,0 +1,96 @@
+// Browser smoke test for the console + API. Usage:
+//   KB_API_KEY=k KB_ROOT=$PWD poetry run python deploy/serve.py &
+//   BASE=http://127.0.0.1:8765 KEY=k PLAYWRIGHT=/path/to/node_modules/playwright/index.mjs node scripts/console-smoke.mjs
+const { chromium } = await import(process.env.PLAYWRIGHT ?? new URL("../web/node_modules/playwright/index.mjs", import.meta.url).href);
+const base = process.env.BASE;
+const browser = await chromium.launch({ args: ["--no-sandbox"] });
+const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
+const out = [];
+const errors = [];
+page.on("pageerror", (e) => errors.push(e.message));
+page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+process.on("exit", () => console.log(out.join("\n")));
+const check = (name, ok) => out.push(`${ok ? "PASS" : "FAIL"} ${name}`);
+await page.goto(base + "/", { waitUntil: "networkidle" });
+check("home renders title", (await page.textContent("h1")) === "Start here");
+check("home lists sections", await page.locator("text=Paved roads").count() > 0);
+await page.click('button[aria-label="Ask the librarian"]');
+check("chat widget opens", await page.locator('[role="dialog"][aria-label="Ask the librarian"]').count() > 0);
+check("chat widget shows the empty hint", await page.locator("text=Ask anything about this knowledge base").count() > 0);
+await page.click('button[aria-label="Close chat"]');
+check("chat widget closes", (await page.locator('[role="dialog"][aria-label="Ask the librarian"]').count()) === 0);
+await page.click("text=Start reading");
+await page.waitForURL("**/kb/onboarding");
+check("start reading opens the first section", (await page.locator("main h1").textContent()) === "Browse");
+await page.click("a[href='/kb/page/onboarding/README.md']");
+await page.waitForURL("**/kb/page/onboarding/README.md");
+check("page view renders markdown H1", (await page.locator("article h1").textContent()) === "Onboarding");
+check("page metadata shows owner", (await page.textContent("aside")).includes("ai-platform-enablement"));
+await page.selectOption('[data-testid="content-language-select"]', "es");
+check("selecting an untranslated content language shows the fallback notice", await page.locator("text=Not yet translated into this language; showing English.").waitFor().then(() => true, () => false));
+check("content language selection doesn't break the page", (await page.locator("article h1").textContent()) === "Onboarding");
+await page.selectOption('[data-testid="content-language-select"]', "en");
+await page.evaluate(() => {
+  const paragraph = document.querySelector("article div p") ?? document.querySelector("article p"); // a body paragraph
+  const range = document.createRange();
+  range.selectNodeContents(paragraph);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+});
+check("selecting article text shows the Explain / Elaborate / Quiz me toolbar", await page.locator('[role="toolbar"] >> text=Quiz me').waitFor({ timeout: 3000 }).then(() => true, () => false));
+await page.keyboard.press("Escape");
+check("escape hides the selection toolbar", (await page.locator('[role="toolbar"]').count()) === 0);
+await page.click("article >> text=Day one");
+await page.waitForURL("**/kb/page/onboarding/day-one.md");
+check("internal markdown link navigates", (await page.locator("article h1").textContent()) === "Day one");
+await page.goto(base + "/search?q=gateway", { waitUntil: "networkidle" });
+check("search finds gateway pages", await page.locator("role=status").textContent().then((t) => /\d+ results?/.test(t)));
+await page.goto(base + "/audits", { waitUntil: "networkidle" });
+check("audits list renders", (await page.locator("h1").textContent()) === "Audits");
+await page.goto(base + "/audits/new", { waitUntil: "networkidle" });
+check("viewer sees the operators-only notice instead of the audit form", (await page.locator("[role=alert]").textContent()).includes("Only operators can start audits"));
+check("viewer gets no audit form at all", (await page.locator("button:has-text('Start dry run'), input[type=radio]").count()) === 0);
+await page.selectOption('[data-testid="ui-language-select"]', "he");
+check("hebrew sets rtl", (await page.getAttribute("html", "dir")) === "rtl");
+check("hebrew nav translated", (await page.textContent("nav.fixed")).includes("עיון")); // Browse: the Audits link is operator-only
+await page.selectOption('[data-testid="ui-language-select"]', "en");
+await page.goto(base + "/settings", { waitUntil: "networkidle" });
+await page.fill("input[aria-label='Operator key']", process.env.KEY);
+await page.click("button:has-text('Save')");
+await page.waitForTimeout(500);
+check("operator role after key, attributed to the key", /^Operator\s*·\s*via the operator key$/.test((await page.textContent("[data-testid=settings-role]")).trim()));
+await page.goto(base + "/audits/new", { waitUntil: "networkidle" });
+await page.click("label:has-text('Deterministic checks only')");
+await page.click("button:has-text('Start dry run')");
+await page.waitForURL("**/audits/audit-*", { timeout: 15000 });
+await page.waitForSelector("h1", { timeout: 10000 });
+check("offline audit started and detail rendered", /^audit-/.test(await page.locator("h1").textContent()));
+check("dry run badge shown", await page.locator("text=DRY RUN").count() > 0);
+await page.click("role=tab[name='Tool trail']");
+check("trail tab shows empty state", await page.locator("text=No tool calls recorded.").count() > 0);
+check("tab is reflected in the URL", page.url().includes("tab=trail"));
+check("document title follows the page", (await page.title()).endsWith("KnowledgeBase Console") && (await page.title()).startsWith("audit-"));
+await page.setViewportSize({ width: 360, height: 740 });
+const overflow = await page.evaluate(() => {
+  const w = window.innerWidth;
+  return Array.from(document.querySelectorAll("body *")).filter((e) => e.getBoundingClientRect().right > w + 1).slice(0, 5).map((e) => `${e.tagName}.${String(e.className).slice(0, 40)}`).join(" | ");
+});
+check("no horizontal overflow at 360px" + (overflow ? ` (${overflow})` : ""), await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+await page.goto(base + "/kb/page/videos/README.md", { waitUntil: "networkidle" });
+const catalogLinks = page.locator("article a[href*='/api/files/']");
+check("catalog links resolve to the raw file endpoint", (await catalogLinks.count()) > 0);
+const catalogHref = await catalogLinks.first().getAttribute("href");
+const catalogResponse = await page.request.get(base + catalogHref);
+check("catalog file is served as text", catalogResponse.status() === 200 && (catalogResponse.headers()["content-type"] || "").startsWith("text/plain"));
+const a11y = await page.evaluate(() => Array.from(document.querySelectorAll("img:not([alt]), button:not([type])")).length);
+check("no unlabelled images or untyped buttons", a11y === 0);
+check("no console errors during the session: " + errors.join(" | "), errors.length === 0);
+const health = await page.request.get(base + "/api/health", { headers: { "X-Request-ID": "smoke-42" } });
+check("liveness answers with the version and echoes a valid request id", health.status() === 200 && (await health.json()).version !== undefined && health.headers()["x-request-id"] === "smoke-42");
+const ready = await page.request.get(base + "/api/health/ready", { headers: { "X-Request-ID": "not valid!" } });
+check("readiness answers 200 and replaces an invalid request id", ready.status() === 200 && /^[0-9a-f]{16}$/.test(ready.headers()["x-request-id"] || ""));
+const hybrid = await page.request.get(base + "/api/search?q=how%20do%20I%20get%20started");
+check("search answers with its effective mode (hybrid with an index, keyword without)", hybrid.status() === 200 && ["hybrid", "keyword"].includes((await hybrid.json()).mode));
+
+await browser.close();
+process.exit(out.some((l) => l.startsWith("FAIL")) ? 1 : 0);

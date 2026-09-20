@@ -1,0 +1,283 @@
+# The modules and components the security team reviews and signs off, one review sheet each.
+# `paths` are the files whose content makes up the module's version (globs, relative to the
+# project root; a directory means everything under it). `tests` are listed for the reviewer and
+# are not part of the version. Add a module here and a sheet under security/modules/ in the same
+# commit as the code it covers. `kb-librarian security status` lists every module's state.
+version: 1
+modules:
+  - id: config
+    title: Settings, contract and models
+    kind: backend
+    paths:
+      - kb_librarian/__init__.py
+      - kb_librarian/config.py
+      - kb_librarian/kbconfig.py
+      - kb_librarian/models.py
+      - kb.config.yaml
+      - pyproject.toml
+      - poetry.lock
+    tests: [tests/test_config_models.py, tests/test_settings_env.py]
+    sheet: security/modules/config.md
+  - id: catalog
+    title: Catalog (frontmatter, links, translation exclusion)
+    kind: backend
+    paths: [kb_librarian/catalog/]
+    tests: [tests/test_catalog.py, tests/test_frontmatter.py]
+    sheet: security/modules/catalog.md
+  - id: checks
+    title: Deterministic checks incl. the sensitive-content scanner
+    kind: backend
+    paths: [kb_librarian/checks/]
+    tests: [tests/test_checks.py]
+    sheet: security/modules/checks.md
+  - id: actions-reports
+    title: Action log, snapshots, rollback and report persistence
+    kind: backend
+    paths: [kb_librarian/actions.py, kb_librarian/reports.py]
+    tests: [tests/test_actions_tools.py]
+    sheet: security/modules/actions-reports.md
+  - id: tools
+    title: In-process MCP tool server (read, write, Atlassian tools)
+    kind: backend
+    paths: [kb_librarian/tools/]
+    tests: [tests/test_actions_tools.py, tests/test_agent_layer.py, tests/test_retrieval_chat.py]
+    sheet: security/modules/tools.md
+  - id: agent
+    title: Agent runtime (permission gate, hooks, options, audit runner)
+    kind: backend
+    paths: [kb_librarian/agent/]
+    tests: [tests/test_agent_layer.py, tests/test_runner.py, tests/fake_query.py]
+    sheet: security/modules/agent.md
+  - id: chat
+    title: Librarian chat turn
+    kind: backend
+    paths:
+      - kb_librarian/chat/__init__.py
+      - kb_librarian/chat/prompts.py
+      - kb_librarian/chat/quiz.py
+      - kb_librarian/chat/runner.py
+      - kb_librarian/chat/spend.py
+    tests: [tests/test_chat.py, tests/test_chat_modes.py, tests/test_spend.py, tests/test_retrieval_chat.py]
+    sheet: security/modules/chat.md
+  - id: atlassian
+    title: Atlassian clients and Confluence mirror
+    kind: backend
+    paths: [kb_librarian/atlassian/]
+    tests: [tests/test_atlassian.py]
+    sheet: security/modules/atlassian.md
+  - id: i18n
+    title: Content translation (localize view, nightly sync)
+    kind: backend
+    paths: [kb_librarian/i18n/, kb_librarian/cli_translate.py]
+    tests: [tests/test_i18n.py]
+    sheet: security/modules/i18n.md
+  - id: cli
+    title: Command line
+    kind: backend
+    paths:
+      - kb_librarian/cli.py
+      - kb_librarian/cli_commands.py
+      - kb_librarian/cli_doctor.py
+      - kb_librarian/cli_doctor_probes.py
+      - kb_librarian/cli_profiles.py
+    tests:
+      - tests/test_cli.py
+      - tests/test_doctor.py
+      - tests/test_doctor_network.py
+      - tests/doctor_helpers.py
+      - tests/test_profile_retention.py
+      - tests/test_cli_settings.py
+      - tests/test_retrieval_cli.py
+    sheet: security/modules/cli.md
+  - id: auth
+    title: Enterprise identity (OpenID Connect) and sessions
+    kind: backend
+    paths: [kb_librarian/auth/, kb_librarian/api/routes_auth.py]
+    tests:
+      - tests/test_auth.py
+      - tests/test_auth_routes.py
+      - tests/test_authz_groups.py
+      - tests/test_session_epoch.py
+      - tests/test_revocation_edges.py
+      - tests/fake_idp.py
+    sheet: security/modules/auth.md
+  - id: profile
+    title: Reader profiles (progress, persona, quiz results)
+    kind: backend
+    paths: [kb_librarian/profile/, kb_librarian/api/routes_profile.py]
+    tests: [tests/test_profile.py, tests/test_profile_retention.py, tests/test_revocation_edges.py]
+    sheet: security/modules/profile.md
+  - id: api-core
+    title: API application, authorisation, middleware, static console, admission
+    kind: backend
+    paths:
+      - kb_librarian/api/__init__.py
+      - kb_librarian/api/app.py
+      - kb_librarian/api/deps.py
+      - kb_librarian/api/middleware.py
+      - kb_librarian/api/observability.py
+      - kb_librarian/api/static.py
+      - kb_librarian/api/admission.py
+      - kb_librarian/api/service.py
+    tests:
+      - tests/test_api_pages.py
+      - tests/test_api_audits.py
+      - tests/test_observability.py
+      - tests/test_health.py
+      - tests/test_retrieval_api.py
+    sheet: security/modules/api-core.md
+  - id: api-pages
+    title: Reader endpoints (pages, search, files, problem reports)
+    kind: backend
+    paths: [kb_librarian/api/routes_pages.py]
+    tests: [tests/test_api_pages.py, tests/test_retrieval_api.py]
+    sheet: security/modules/api-pages.md
+  - id: api-audits
+    title: Operator endpoints (audits, cancel, rollback, export)
+    kind: backend
+    paths: [kb_librarian/api/routes_audits.py]
+    tests: [tests/test_api_audits.py]
+    sheet: security/modules/api-audits.md
+  - id: api-chat
+    title: Chat endpoint
+    kind: backend
+    paths: [kb_librarian/api/routes_chat.py]
+    tests: [tests/test_api_chat.py, tests/test_api_chat_modes.py, tests/test_api_chat_budget.py]
+    sheet: security/modules/api-chat.md
+  - id: security-review
+    title: Security review tooling (this package)
+    kind: tooling
+    paths: [kb_librarian/security/, security/registry.yaml]
+    tests: [tests/test_security_review.py, tests/test_security_cli.py, tests/security_fixtures.py]
+    sheet: security/modules/security-review.md
+  - id: retrieval
+    title: Grounded retrieval (chunks, embedders, vector index, hybrid search)
+    kind: backend
+    paths: [kb_librarian/retrieval/]
+    tests:
+      - tests/test_retrieval.py
+      - tests/test_retrieval_cli.py
+      - tests/test_retrieval_chat.py
+      - tests/test_retrieval_api.py
+    sheet: security/modules/retrieval.md
+  - id: deploy
+    title: Container, single-process server and CI workflows
+    kind: deploy
+    paths: [deploy/, .github/, scripts/]
+    tests: [scripts/console-smoke.mjs, tests/test_validate_k8s.py, tests/test_live_smoke.py]
+    sheet: security/modules/deploy.md
+  - id: web-api-client
+    title: Console API client, hooks and types
+    kind: frontend
+    paths: [web/src/api/]
+    tests: [web/src/test/units.test.ts, web/src/test/harness.tsx]
+    sheet: security/modules/web-api-client.md
+  - id: web-shell
+    title: Console shell (routing, layout, language switching)
+    kind: frontend
+    paths:
+      - web/src/App.tsx
+      - web/src/main.tsx
+      - web/src/components/Layout.tsx
+      - web/src/components/Identity.tsx
+      - web/src/components/LanguageSwitcher.tsx
+      - web/src/components/ContentLanguageSwitcher.tsx
+      - web/src/components/Nudges.tsx
+      - web/src/contentLanguage.ts
+      - web/src/nudges.ts
+      - web/src/nudgeStore.ts
+      - web/src/usePageTitle.ts
+      - web/src/format.ts
+      - web/src/vite-env.d.ts
+      - web/src/i18n/index.ts
+      - web/index.html
+      - web/vite.config.ts
+      - web/tsconfig.json
+      - web/tailwind.config.js
+      - web/postcss.config.js
+      - web/package.json
+      - web/package-lock.json
+      - web/scripts/
+    tests: [web/src/test/routes.test.tsx, web/src/test/components.test.tsx, web/src/test/nudges.test.ts, web/src/test/nudgesui.test.tsx]
+    sheet: security/modules/web-shell.md
+  - id: web-markdown
+    title: Markdown renderer and link classification
+    kind: frontend
+    paths: [web/src/components/Markdown.tsx, web/src/components/markdownInline.tsx, web/src/components/markdownLinks.ts]
+    tests: [web/src/test/units.test.ts, web/src/test/pageview.test.tsx]
+    sheet: security/modules/web-markdown.md
+  - id: web-reader
+    title: Reader pages (home, browse, page view, search) and the persona picker
+    kind: frontend
+    paths:
+      - web/src/pages/Home.tsx
+      - web/src/pages/Browse.tsx
+      - web/src/pages/PageView.tsx
+      - web/src/pages/Search.tsx
+      - web/src/components/PersonaPicker.tsx
+    tests: [web/src/test/pages.test.tsx, web/src/test/pageview.test.tsx, web/src/test/persona.test.tsx, web/src/test/selection.test.tsx]
+    sheet: security/modules/web-reader.md
+  - id: web-operator
+    title: Operator pages (audits, run, detail, rollback, settings)
+    kind: frontend
+    paths:
+      - web/src/pages/Audits.tsx
+      - web/src/pages/AuditDetail.tsx
+      - web/src/pages/RunAudit.tsx
+      - web/src/pages/Rollback.tsx
+      - web/src/pages/Settings.tsx
+      - web/src/components/AuditHeader.tsx
+      - web/src/components/AuditParts.tsx
+      - web/src/components/AuditTrail.tsx
+      - web/src/components/ConfirmWithReason.tsx
+      - web/src/components/Badges.tsx
+      - web/src/components/States.tsx
+      - web/src/components/Tabs.tsx
+      - web/src/components/InsightsPanel.tsx
+    tests: [web/src/test/operator.test.tsx, web/src/test/authz.test.tsx, web/src/test/insights.test.tsx]
+    sheet: security/modules/web-operator.md
+  - id: web-chat-voice
+    title: Chat widget, selection toolbar, quizzes, typewriter and voice input
+    kind: frontend
+    paths:
+      - web/src/components/ChatWidget.tsx
+      - web/src/components/ChatParts.tsx
+      - web/src/components/QuizCard.tsx
+      - web/src/components/SelectionToolbar.tsx
+      - web/src/chatBus.ts
+      - web/src/components/TypewriterText.tsx
+      - web/src/components/VoiceInputButton.tsx
+      - web/src/useVoiceInput.ts
+      - web/src/speech.d.ts
+    tests:
+      - web/src/test/chatwidget.test.tsx
+      - web/src/test/selection.test.tsx
+      - web/src/test/quizcard.test.tsx
+      - web/src/test/typewriter.test.tsx
+      - web/src/test/voice.test.tsx
+    sheet: security/modules/web-chat-voice.md
+  - id: evals
+    title: Librarian evaluation (golden set, scorer, eval command)
+    kind: backend
+    paths: [kb_librarian/evals/, kb_librarian/cli_evals.py, evals/]
+    tests:
+      - tests/test_evals_items.py
+      - tests/test_evals_score.py
+      - tests/test_evals_runner.py
+      - tests/test_evals_cli.py
+      - tests/evals_helpers.py
+    sheet: security/modules/evals.md
+  - id: insights
+    title: Insights (chat telemetry, collector, CLI and operator endpoint)
+    kind: backend
+    paths:
+      - kb_librarian/insights/
+      - kb_librarian/cli_insights.py
+      - kb_librarian/api/routes_insights.py
+      - kb_librarian/chat/telemetry.py
+    tests:
+      - tests/test_telemetry.py
+      - tests/test_insights.py
+      - tests/test_insights_api.py
+      - tests/test_cli_insights.py
+    sheet: security/modules/insights.md

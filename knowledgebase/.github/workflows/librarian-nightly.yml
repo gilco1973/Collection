@@ -1,0 +1,42 @@
+name: librarian-nightly
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dry-run-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pipx install poetry
+      - run: poetry install
+      # Offline hash embedder: no page text leaves the runner. The deployment's own index is built on
+      # its volume by deploy/k8s/cronjob-index.yaml, not here.
+      - name: Embedding index for this run
+        run: poetry run kb-librarian index --embeddings
+      - name: Agent audit (dry run; KB_ALLOW_LIVE is never set here; read-only Atlassian account)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          KB_MAX_TURNS: "40"
+          # The SDK enforces the cap between turns; one turn can overshoot it.
+          KB_MAX_BUDGET_USD: "2.0"
+        run: poetry run kb-librarian audit
+      - name: Insights (aggregates only; a fresh checkout has no reader data, so this proves the command, not the numbers)
+        run: poetry run kb-librarian insights --json > /dev/null && ls -l .librarian/insights/latest.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: librarian-report
+          # Markdown reports only (the JSON carries tool inputs; page snapshots are never in either) and the
+          # insights file (counts and rates, never identities).
+          path: |
+            .librarian/reports/*.md
+            .librarian/insights/latest.json
+          retention-days: 30

@@ -1,0 +1,96 @@
+# Video catalog. Every entry needs: id, title, series, supports_reading_block, owner,
+# recorded, duration_minutes, url (internal video platform only), status.
+# status: placeholder | scheduled | available | retired. Entries ship as placeholders:
+# record the session, upload it to your video platform, replace url and set available.
+version: 1
+entries:
+  - id: welcome-governance-20
+    title: Governance in 20 minutes
+    series: Welcome to AI at the bank
+    supports_reading_block: 1
+    owner: model-risk-management
+    recorded: 2026-06-10
+    duration_minutes: 22
+    url: https://video.internal.example/ai-kb/welcome-governance-20
+    status: placeholder
+  - id: welcome-gateway-live
+    title: The gateway, live
+    series: Welcome to AI at the bank
+    supports_reading_block: 1
+    owner: ai-platform-architecture
+    recorded: 2026-06-12
+    duration_minutes: 35
+    url: https://video.internal.example/ai-kb/welcome-gateway-live
+    status: placeholder
+  - id: welcome-data-classification
+    title: Data classification with real examples
+    series: Welcome to AI at the bank
+    supports_reading_block: 1
+    owner: ai-platform-architecture
+    recorded: 2026-06-17
+    duration_minutes: 28
+    url: https://video.internal.example/ai-kb/welcome-data-classification
+    status: placeholder
+  - id: roads-assistant-walkthrough
+    title: Assistant service walkthrough
+    series: Building on the paved roads
+    supports_reading_block: 2
+    owner: ai-platform-architecture
+    recorded: 2026-07-01
+    duration_minutes: 45
+    url: https://video.internal.example/ai-kb/roads-assistant-walkthrough
+    status: placeholder
+  - id: roads-rag-walkthrough
+    title: RAG service walkthrough
+    series: Building on the paved roads
+    supports_reading_block: 2
+    owner: ai-platform-architecture
+    recorded: 2026-07-08
+    duration_minutes: 50
+    url: https://video.internal.example/ai-kb/roads-rag-walkthrough
+    status: placeholder
+  - id: roads-agent-librarian
+    title: Agent with tools, including the librarian
+    series: Building on the paved roads
+    supports_reading_block: 2
+    owner: ai-platform-engineering
+    recorded: 2026-09-01
+    duration_minutes: 40
+    url: https://video.internal.example/ai-kb/roads-agent-librarian
+    status: placeholder
+  - id: evals-first-set
+    title: Your first evaluation set
+    series: Evaluations
+    supports_reading_block: 1
+    owner: ai-platform-enablement
+    recorded: 2026-06-24
+    duration_minutes: 30
+    url: https://video.internal.example/ai-kb/evals-first-set
+    status: placeholder
+  - id: evals-rubrics
+    title: Model-graded rubrics that hold up
+    series: Evaluations
+    supports_reading_block: 2
+    owner: ai-platform-enablement
+    recorded: 2026-07-15
+    duration_minutes: 38
+    url: https://video.internal.example/ai-kb/evals-rubrics
+    status: placeholder
+  - id: mrm-validators
+    title: What validators look for
+    series: Model risk for engineers
+    supports_reading_block: 2
+    owner: model-risk-management
+    recorded: 2026-07-22
+    duration_minutes: 33
+    url: https://video.internal.example/ai-kb/mrm-validators
+    status: placeholder
+  - id: mrm-tiering
+    title: Tiering a use case
+    series: Model risk for engineers
+    supports_reading_block: 2
+    owner: model-risk-management
+    recorded: 2026-09-20
+    duration_minutes: 30
+    url: https://video.internal.example/ai-kb/mrm-tiering
+    status: placeholder

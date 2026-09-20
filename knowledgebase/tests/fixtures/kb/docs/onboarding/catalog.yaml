@@ -1,0 +1,5 @@
+version: 1
+entries:
+  - title: Welcome
+    owner: enablement
+    url: https://video.internal.example/welcome

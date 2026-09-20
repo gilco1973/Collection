@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: CrossRiver AI Hub API
+  version: 0.1.0
+  description: |
+    The front end's half of the Hub contract (specification §8, PLT-UI-*). Every
+    request carries a bearer token from the bank's identity provider, an
+    `X-Request-Id`, a W3C `traceparent` and `X-Client-Build`. Mutations that a
+    client may safely repeat carry `Idempotency-Key`; writes to a versioned
+    record carry `If-Match` with the etag last seen. Errors are RFC 9457
+    `application/problem+json`; `422` carries `errors` keyed by dotted field
+    path, and a platform refusal carries a `code` (a deny code the client shows
+    in plain language, PLT-UI-18).
+
+    `src/api/endpoints.ts` is the typed client for this document and
+    `src/api/mock/server.ts` implements it in the browser for development and
+    tests; the three are kept in step by hand until the contract registry
+    generates the client (spec §4.11).
+servers:
+  - url: /api
+security:
+  - bearer: []
+tags:
+  - name: me
+  - name: catalog
+  - name: registry
+  - name: briefs
+  - name: requests
+  - name: workspace
+  - name: conversations
+
+paths:
+  /me:
+    get:
+      tags: [me]
+      summary: The signed-in principal as the platform resolves it
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+  /me/preferences:
+    put:
+      tags: [me]
+      summary: Replace the person's preferences
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Preferences" } } } }
+      responses:
+        "200": { description: The principal with the new preferences, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
+        "422": { $ref: "#/components/responses/Problem" }
+  /me/requests:
+    get:
+      tags: [requests]
+      summary: Access, role and ladder requests made by this person
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/AccessRequest" } } } } }
+    post:
+      tags: [requests]
+      summary: Ask for access, a role, or a higher ladder on a consumer
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [access, role, ladder] }
+                consumerId: { type: string }
+                ladder: { type: string, enum: [L0, L1, L2, L3] }
+                reason: { type: string }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/AccessRequest" } } } }
+        "403": { description: "Refused by policy; `code` names why (e.g. `ladder.above`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+  /me/workspace:
+    get:
+      tags: [workspace]
+      summary: The person's workspace
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Workspace" } } } }
+  /me/playground/rotate:
+    post:
+      tags: [workspace]
+      summary: Rotate the person's playground key
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, required: [keyMasked], properties: { keyMasked: { type: string } } } } } }
+  /catalog:
+    get:
+      tags: [catalog]
+      summary: The catalog as this person may see it
+      description: Access on every listing is resolved by the policy bundle for the caller; the client never infers it (PLT-UI-17).
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Catalog" } } } }
+  /catalog/search:
+    get:
+      tags: [catalog]
+      parameters: [{ name: q, in: query, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ConsumerSummary" } } } } }
+  /consumers/{slug}:
+    get:
+      tags: [catalog]
+      parameters: [{ name: slug, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/ConsumerDetail" } } } }
+        "404": { $ref: "#/components/responses/Problem" }
+  /registry/systems:
+    get:
+      tags: [registry]
+      summary: Systems of record a brief may name
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/RegistrySystem" } } } } }
+  /registry/tools:
+    get:
+      tags: [registry]
+      summary: Tools in the catalog a brief may name
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/RegistryTool" } } } } }
+  /briefs:
+    get:
+      tags: [briefs]
+      summary: Briefs this person may see (their own; a platform lead sees all)
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Brief" } } } } }
+    post:
+      tags: [briefs]
+      summary: Start a draft
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
+  /briefs/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [briefs]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
+        "404": { $ref: "#/components/responses/Problem" }
+    patch:
+      tags: [briefs]
+      summary: Autosave (partial content, current step, completed steps)
+      parameters: [{ $ref: "#/components/parameters/IfMatch" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { $ref: "#/components/schemas/BriefContentPartial" }
+                currentStep: { $ref: "#/components/schemas/BriefStep" }
+                completed: { type: array, items: { $ref: "#/components/schemas/BriefStep" } }
+      responses:
+        "200": { description: The brief with its new etag, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
+        "409": { description: Stale If-Match or a brief that is no longer editable, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+  /briefs/{id}/estimate:
+    post:
+      tags: [briefs]
+      summary: Cost estimate for the brief as written (PLT-DX-4)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/BriefContent" } } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/BriefEstimate" } } } }
+  /briefs/{id}/road:
+    post:
+      tags: [briefs]
+      summary: Recommended road for the brief as written
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/BriefContent" } } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/RoadRecommendation" } } } }
+  /briefs/{id}/file:
+    post:
+      tags: [briefs]
+      summary: File the brief
+      description: The server validates the full content with the intake schema (422 with field errors) and applies the lead rule for write profiles (403, `brief.lead_required`).
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IfMatch" }, { $ref: "#/components/parameters/IdempotencyKey" }]
+      responses:
+        "200": { description: Filed, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
+        "403": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+  /conversations:
+    get:
+      tags: [conversations]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ConversationSummary" } } } } }
+    post:
+      tags: [conversations]
+      summary: Start a conversation with an assistant the person may open
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [assistantId], properties: { assistantId: { type: string } } } } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Conversation" } } } }
+        "403": { $ref: "#/components/responses/Problem" }
+  /conversations/{id}:
+    get:
+      tags: [conversations]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Conversation" } } } }
+        "404": { $ref: "#/components/responses/Problem" }
+  /conversations/{id}/turns:
+    post:
+      tags: [conversations]
+      summary: Send a turn; the answer streams back as view events
+      description: |
+        `Accept: text/event-stream`. Each event is `event: view` with a JSON `TurnEvent`
+        (`{ seq, view }`) whose `view` is one of the closed descriptor set of specification §8.2.
+        Aborting the request stops the turn; the harness records `human.interrupt` (PLT-HAR-29).
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string } } } } } }
+      responses:
+        "200": { description: Event stream, content: { text/event-stream: { schema: { type: string } } } }
+  /conversations/{id}/feedback:
+    post:
+      tags: [conversations]
+      summary: One answer to the one feedback question of a turn (PLT-TEL-10)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [seq, answered], properties: { seq: { type: integer }, answered: { type: boolean } } } } } }
+      responses:
+        "204": { description: Recorded }
+  /conversations/{id}/handoff:
+    post:
+      tags: [conversations]
+      summary: Hand the conversation to a person (PLT-CH-18)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, required: [route], properties: { route: { type: string, enum: [human, callback, secure_message] }, expected_wait_s: { type: integer } } } } } }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: Client-generated; the server replays the first response for a repeat. }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string }, description: The etag last seen; a mismatch is 409. }
+  responses:
+    Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string, description: Platform deny code, e.g. ladder.above, brief.lead_required, entitlement.missing }
+        errors: { type: object, additionalProperties: { type: array, items: { type: string } }, description: Field errors keyed by dotted path (422) }
+    Ladder: { type: string, enum: [L0, L1, L2, L3] }
+    Preferences:
+      type: object
+      required: [theme, accessibility, noAssistant, density, locale, notifications]
+      properties:
+        theme: { type: string, enum: [system, light, dark] }
+        accessibility: { type: boolean, description: PLT-UI-15 }
+        noAssistant: { type: boolean, description: PLT-CH-18 }
+        density: { type: string, enum: [comfortable, dense] }
+        locale: { type: string }
+        notifications: { type: object, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }
+    Principal:
+      type: object
+      required: [id, name, email, initials, tenant, roles, ladder, channel, teams, costCentre, entitlements, preferences]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        initials: { type: string }
+        tenant: { type: string }
+        roles: { type: array, items: { type: string } }
+        ladder: { $ref: "#/components/schemas/Ladder" }
+        channel: { type: string, enum: [operator, customer, partner, machine] }
+        teams: { type: array, items: { type: object, required: [id, name, lead], properties: { id: { type: string }, name: { type: string }, lead: { type: boolean } } } }
+        costCentre: { type: string }
+        entitlements: { type: array, items: { type: string }, description: Consumer ids the person may open }
+        preferences: { $ref: "#/components/schemas/Preferences" }
+    Chip:
+      type: object
+      required: [text]
+      properties: { text: { type: string }, kind: { type: string, enum: ["", line, accent, ok, warn, crit, money, model, mono, ink] } }
+    ConsumerSummary:
+      type: object
+      required: [id, slug, kind, name, description, road, lifecycle, icon, glyph, meta, footNote, access]
+      properties:
+        id: { type: string }
+        slug: { type: string }
+        kind: { type: string, enum: [assistant, agent, knowledge, tool, road] }
+        name: { type: string }
+        description: { type: string }
+        road: { type: string, enum: [R1, R2, R3, R4, R5, R6] }
+        lifecycle: { type: string, enum: [GA, preview, deprecates, retired] }
+        icon: { type: string, enum: [a, w, m, p, ""] }
+        glyph: { type: string, enum: [sparkle, pulse, book, pen, chat, bolt, shield, layers] }
+        meta: { type: array, items: { $ref: "#/components/schemas/Chip" } }
+        footNote: { type: string }
+        access: { type: string, enum: [open, request, view, contract], description: Resolved for the caller by the policy bundle }
+        requestKind: { type: string, enum: [access, role] }
+        tagline: { type: string }
+    Tile: { type: object, required: [label, value, note], properties: { label: { type: string }, value: { type: string }, small: { type: string }, note: { type: string } } }
+    ConsumerDetail:
+      allOf:
+        - $ref: "#/components/schemas/ConsumerSummary"
+        - type: object
+          required: [crumbs, youActAt, ladderMax, headerChips, tiles, does, catalog, trust, evidence, cost, getStarted, owner, versions, changelogHref]
+          properties:
+            crumbs: { type: array, items: { type: string } }
+            youActAt: { $ref: "#/components/schemas/Ladder" }
+            ladderMax: { $ref: "#/components/schemas/Ladder" }
+            headerChips: { type: array, items: { $ref: "#/components/schemas/Chip" } }
+            tiles: { type: array, items: { $ref: "#/components/schemas/Tile" } }
+            does: { type: array, items: { type: string } }
+            catalog: { type: object, properties: { name: { type: string }, signed: { type: boolean }, entries: { type: array, items: { type: object, properties: { op: { type: string }, tier: { type: string }, classes: { type: string }, note: { type: string } } } } } }
+            trust: { type: array, items: { $ref: "#/components/schemas/Tile" } }
+            evidence: { type: array, items: { type: object, properties: { label: { type: string }, href: { type: string }, icon: { type: string, enum: [doc, db, shield, pulse] } } } }
+            cost: { type: array, items: { type: object, properties: { label: { type: string }, value: { type: string }, note: { type: string } } } }
+            getStarted: { type: array, items: { type: object, properties: { n: { type: string }, title: { type: string }, small: { type: string }, state: { type: string, enum: [done, on, ""] } } } }
+            owner: { type: array, items: { type: object, properties: { label: { type: string }, value: { type: string } } } }
+            versions: { type: array, items: { type: object, properties: { version: { type: string }, state: { type: string, enum: [current, supported, retired] }, date: { type: string } } } }
+            changelogHref: { type: string }
+    Catalog:
+      type: object
+      required: [availableCount, available, listings, counts, changes, suggestions]
+      properties:
+        availableCount: { type: integer }
+        available: { type: array, items: { $ref: "#/components/schemas/ConsumerSummary" } }
+        listings: { type: array, items: { $ref: "#/components/schemas/ConsumerSummary" } }
+        counts: { type: object, additionalProperties: { type: integer } }
+        changes: { type: array, items: { type: object, properties: { date: { type: string }, kind: { $ref: "#/components/schemas/Chip" }, text: { type: string } } } }
+        suggestions: { type: array, items: { type: string } }
+    RegistrySystem: { type: object, required: [id, name, owner, contract], properties: { id: { type: string }, name: { type: string }, owner: { type: string }, contract: { type: string, enum: [recorded, missing] } } }
+    RegistryTool: { type: object, required: [name, systemId, tier, classes, description], properties: { name: { type: string }, systemId: { type: string }, tier: { type: string, enum: [R, W1, W2, M] }, classes: { type: array, items: { type: string, enum: [internal, confidential, restricted] } }, description: { type: string } } }
+    BriefStep: { type: string, enum: [useCase, people, dataAndTools, model, outcome, review] }
+    BriefContent:
+      type: object
+      description: Validated with the same rules as src/api/schemas.ts (zod); the server is the authority on file.
+      required: [useCase, people, dataAndTools, model, outcome, review]
+      properties:
+        useCase: { type: object, required: [name, problem, channel, teamId], properties: { name: { type: string, minLength: 3, maxLength: 80 }, problem: { type: string, minLength: 20 }, channel: { type: string, enum: [operator, customer, partner, batch] }, teamId: { type: string } } }
+        people: { type: object, required: [businessOwner, productOwner, domainExpert, labellingHoursPerWeek], properties: { businessOwner: { type: string }, productOwner: { type: string }, domainExpert: { type: string }, labellingHoursPerWeek: { type: number, minimum: 1, maximum: 40 } } }
+        dataAndTools:
+          type: object
+          required: [systems, tools, dataClasses, tierCeiling]
+          properties:
+            systems: { type: array, minItems: 1, items: { type: object, properties: { id: { type: string }, name: { type: string } } } }
+            tools: { type: array, minItems: 1, maxItems: 15, items: { type: object, properties: { name: { type: string }, tier: { type: string, enum: [R, W1, W2, M] }, classes: { type: array, items: { type: string } } } } }
+            dataClasses: { type: array, minItems: 1, items: { type: string, enum: [internal, confidential, restricted] }, description: restricted is refused for a first consumer }
+            tierCeiling: { type: string, enum: [R, W1, W2], description: must cover every tool's tier }
+        model: { type: object, required: [need, classificationCeiling, substitute], properties: { need: { type: string, enum: [none, utility, workhorse, frontier] }, classificationCeiling: { type: string, enum: [internal, confidential, restricted] }, substitute: { type: boolean } } }
+        outcome: { type: object, required: [metric, unit, baseline, target, measuredOn], properties: { metric: { type: string }, unit: { type: string }, baseline: { type: number }, target: { type: number }, measuredOn: { type: string, format: date } } }
+        review: { type: object, required: [acknowledged], properties: { acknowledged: { type: boolean, const: true } } }
+    BriefContentPartial:
+      type: object
+      description: Any subset of BriefContent's sections, each complete.
+    Brief:
+      type: object
+      required: [id, status, etag, createdBy, createdAt, updatedAt, currentStep, completed, content]
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [draft, filed, in_review, needs_info, registered, merged, out_of_scope, declined] }
+        etag: { type: string }
+        createdBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        currentStep: { $ref: "#/components/schemas/BriefStep" }
+        completed: { type: array, items: { $ref: "#/components/schemas/BriefStep" } }
+        content: { $ref: "#/components/schemas/BriefContent" }
+        road: { type: string }
+        outcomeReason: { type: string }
+    BriefEstimate: { type: object, required: [modelSpendMonthly, modelSpendBasis, reviewHours, reviewNote, platformShare, basis], properties: { modelSpendMonthly: { type: number }, modelSpendBasis: { type: string }, reviewHours: { type: number }, reviewNote: { type: string }, platformShare: { type: string }, basis: { type: string } } }
+    RoadRecommendation: { type: object, required: [road, title, subtitle, selfService, note, next], properties: { road: { type: string }, title: { type: string }, subtitle: { type: string }, selfService: { type: boolean }, note: { type: string }, next: { type: array, items: { type: object, properties: { week: { type: string }, title: { type: string }, small: { type: string } } } } } }
+    AccessRequest: { type: object, required: [id, kind, title, note, status, createdAt], properties: { id: { type: string }, kind: { type: string, enum: [access, ladder, role] }, consumerId: { type: string }, title: { type: string }, note: { type: string }, status: { type: string, enum: [pending, granted, denied] }, createdAt: { type: string, format: date-time } } }
+    Workspace:
+      type: object
+      required: [header, assistants, teamConsumers, requests, usage, playground]
+      properties:
+        header: { type: object, properties: { name: { type: string }, role: { type: string }, team: { type: string }, costCentre: { type: string } } }
+        assistants: { type: array, items: { type: object, properties: { consumerId: { type: string }, name: { type: string }, sub: { type: string }, lifecycle: { type: string }, ai: { type: boolean } } } }
+        teamConsumers: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, status: { $ref: "#/components/schemas/Chip" }, step: { type: integer, minimum: 1, maximum: 7 }, stepNote: { type: string }, pipe: { type: array, items: { type: string, enum: [done, on, ""] } }, note: { type: string }, briefId: { type: string } } } }
+        requests: { type: array, items: { $ref: "#/components/schemas/AccessRequest" } }
+        usage: { type: object, properties: { sandboxMonth: { type: string }, sandboxNote: { type: string }, productionNote: { type: string }, playgroundToday: { type: string }, playgroundBudget: { type: string }, playgroundPct: { type: number } } }
+        playground: { type: object, properties: { gateway: { type: string }, keyMasked: { type: string }, fixtures: { type: string }, example: { type: string } } }
+    ConversationSummary: { type: object, required: [id, title, when, assistantId], properties: { id: { type: string }, title: { type: string }, when: { type: string }, via: { type: string }, assistantId: { type: string } } }
+    View:
+      description: The closed, versioned descriptor set of specification §8.2. Model text is always a `text` leaf with provenance, never markup.
+      oneOf:
+        - { type: object, required: [kind, text, provenance], properties: { kind: { const: text }, text: { type: string }, provenance: { type: string, enum: [model, system, upstream] }, claims: { type: array, items: { type: object, properties: { span: { type: array, items: { type: integer }, minItems: 2, maxItems: 2 }, support: { type: string, enum: [cited, tool, unsupported] }, ref: { type: string } } } } } }
+        - { type: object, required: [kind, tool, state, tier, args_summary], properties: { kind: { const: tool_call }, tool: { type: string }, state: { type: string, enum: [proposed, running, allowed, denied, pending] }, tier: { type: string, enum: [R, W1, W2, M] }, args_summary: { type: array, items: { type: object, properties: { label: { type: string }, value: { type: string } } } }, deny_code: { type: string }, ms: { type: integer } } }
+        - { type: object, required: [kind, source, chunk_ref, classification], properties: { kind: { const: citation }, source: { type: string }, chunk_ref: { type: string }, classification: { type: string, enum: [internal, confidential, restricted] } } }
+        - { type: object, required: [kind, schema], properties: { kind: { const: form }, schema: { type: object }, ttl_s: { type: integer }, request_hash: { type: string } } }
+        - { type: object, required: [kind, reason, message], properties: { kind: { const: stop }, reason: { type: string }, message: { type: string } } }
+        - { type: object, required: [kind, tokens, tool_calls, time_s], properties: { kind: { const: budget }, tokens: { type: array, items: { type: integer } }, tool_calls: { type: array, items: { type: integer } }, time_s: { type: array, items: { type: integer } } } }
+        - { type: object, required: [kind, seq, question], properties: { kind: { const: feedback }, seq: { type: integer }, question: { type: string } } }
+        - { type: object, required: [kind, route], properties: { kind: { const: handoff }, route: { type: string, enum: [human, callback, secure_message] }, expected_wait_s: { type: integer }, reason: { type: string } } }
+        - { type: object, required: [kind, turn], properties: { kind: { const: interrupt }, turn: { type: integer } } }
+    TurnEvent: { type: object, required: [seq, view], properties: { seq: { type: integer }, view: { $ref: "#/components/schemas/View" } } }
+    Turn: { type: object, required: [id, role, at, views], properties: { id: { type: string }, role: { type: string, enum: [user, assistant] }, at: { type: string }, views: { type: array, items: { $ref: "#/components/schemas/View" } }, sourcesLabel: { type: string }, sources: { type: array, items: { $ref: "#/components/schemas/Chip" } } } }
+    Conversation: { type: object, required: [id, title, assistantId, assistant, turns], properties: { id: { type: string }, title: { type: string }, assistantId: { type: string }, assistant: { type: object, properties: { name: { type: string }, sub: { type: string }, chips: { type: array, items: { $ref: "#/components/schemas/Chip" } } } }, turns: { type: array, items: { $ref: "#/components/schemas/Turn" } } } }

@@ -1,0 +1,37 @@
+{
+  "HubHome": {
+    "differing_px": 0,
+    "total_px": 2390400,
+    "pct": 0.0,
+    "bbox": null,
+    "allowed_px": 1196
+  },
+  "HubListing": {
+    "differing_px": 0,
+    "total_px": 2016000,
+    "pct": 0.0,
+    "bbox": null,
+    "allowed_px": 1038
+  },
+  "HubIntake": {
+    "differing_px": 0,
+    "total_px": 1699200,
+    "pct": 0.0,
+    "bbox": null,
+    "allowed_px": 0
+  },
+  "HubWorkspace": {
+    "differing_px": 0,
+    "total_px": 1612800,
+    "pct": 0.0,
+    "bbox": null,
+    "allowed_px": 0
+  },
+  "HubAssistant": {
+    "differing_px": 0,
+    "total_px": 1296000,
+    "pct": 0.0,
+    "bbox": null,
+    "allowed_px": 0
+  }
+}

@@ -1,0 +1,166 @@
+"""In-memory catalog of every page in the knowledge base."""
+
+from dataclasses import dataclass, field
+from datetime import date
+from functools import cached_property
+from pathlib import Path
+from typing import Any
+
+from kb_librarian.catalog.frontmatter import PARSE_ERROR_KEY, render_frontmatter, split_frontmatter
+from kb_librarian.catalog.links import Link, extract_links
+from kb_librarian.kbconfig import KbConfig
+
+__all__ = ["Catalog", "Document", "Link", "extract_links", "load_catalog", "load_document", "render_index"]
+
+
+@dataclass
+class Document:
+    rel_path: str
+    path: Path
+    meta: dict[str, Any]
+    body: str
+    section_id: str | None
+    body_offset: int = 0
+    raw: str = ""  # file text at load time; writes compare against this to refuse lost updates
+    links: list[Link] = field(default_factory=list)
+
+    @cached_property
+    def sensitive(self) -> bool:
+        """Whether the page must be withheld from readers: any critical or error sensitive hit in its text."""
+        from kb_librarian.checks.sensitive import withholds  # local: the checks package imports this module
+
+        return withholds(self.raw.splitlines(), self.rel_path)
+
+    @property
+    def title(self) -> str:
+        title = self.meta.get("title")
+        if isinstance(title, str) and title.strip():
+            return title.strip()
+        for line in self.body.splitlines():
+            if line.startswith("# "):
+                return line[2:].strip()
+        return self.rel_path
+
+    @property
+    def has_frontmatter(self) -> bool:
+        return bool(self.meta) and PARSE_ERROR_KEY not in self.meta
+
+    @property
+    def frontmatter_error(self) -> str | None:
+        return self.meta.get(PARSE_ERROR_KEY)
+
+    @property
+    def is_readme(self) -> bool:
+        return self.rel_path.rsplit("/", 1)[-1] == "README.md"
+
+
+@dataclass
+class Catalog:
+    root: Path
+    docs_root: Path
+    documents: list[Document]
+    _by_path: dict[str, Document] = field(default_factory=dict, repr=False)
+
+    def __post_init__(self) -> None:
+        self._by_path = {d.rel_path: d for d in self.documents}
+
+    def get(self, rel_path: str) -> Document | None:
+        return self._by_path.get(rel_path)
+
+    def in_section(self, section_id: str) -> list[Document]:
+        return [d for d in self.documents if d.section_id == section_id]
+
+    def search(self, query: str, limit: int = 20) -> list[Document]:
+        needle = query.lower()
+        return [d for d in self.documents if needle in d.body.lower() or needle in d.title.lower()][:limit]
+
+
+def load_document(docs_root: Path, path: Path, config: KbConfig) -> Document:
+    rel_path = path.relative_to(docs_root).as_posix()
+    raw = path.read_text(encoding="utf-8")
+    meta, body, offset = split_frontmatter(raw)
+    section = config.section_for(rel_path)
+    return Document(
+        rel_path=rel_path,
+        path=path,
+        meta=meta,
+        body=body,
+        section_id=section.id if section else None,
+        body_offset=offset,
+        raw=raw,
+        links=extract_links(body, offset),
+    )
+
+
+def _is_real_page(docs_root: Path, path: Path) -> bool:
+    if not path.is_file() or path.is_symlink():
+        return False
+    resolved = path.resolve()
+    return docs_root.resolve() in resolved.parents
+
+
+def _is_translation(docs_root: Path, path: Path) -> bool:
+    """Machine-translated copies live under docs/i18n/<lang>/...; the English catalog never sees them."""
+    rel = path.relative_to(docs_root).as_posix()
+    return rel == "i18n" or rel.startswith("i18n/")
+
+
+def load_catalog(root: Path, config: KbConfig) -> Catalog:
+    docs_root = root / config.docs_root
+    documents = [
+        load_document(docs_root, path, config)
+        for path in sorted(docs_root.rglob("*.md"))
+        if _is_real_page(docs_root, path) and not _is_translation(docs_root, path)
+    ]
+    return Catalog(root=root, docs_root=docs_root, documents=documents)
+
+
+def _section_order(catalog: Catalog, section_path: str, docs: list[Document]) -> list[Document]:
+    """README first, then pages in the order the README links them, then the rest by path."""
+    readme = catalog.get(f"{section_path}/README.md")
+    ordered: list[Document] = [readme] if readme else []
+    if readme:
+        for link in readme.links:
+            if link.is_external:
+                continue
+            target = (readme.path.parent / link.target.split("#", 1)[0]).resolve()
+            try:
+                rel = target.relative_to(catalog.docs_root.resolve()).as_posix()
+            except ValueError:
+                continue
+            doc = catalog.get(rel)
+            if doc is not None and doc not in ordered and doc in docs:
+                ordered.append(doc)
+    ordered.extend(d for d in sorted(docs, key=lambda d: d.rel_path) if d not in ordered)
+    return ordered
+
+
+def render_index_body(catalog: Catalog, config: KbConfig) -> str:
+    lines = ["# Knowledge base index", "", "Generated by kb-librarian. Edit pages, not this file.", ""]
+    for section in config.sections:
+        lines += [f"## {section.title}", ""]
+        docs = _section_order(catalog, section.path, catalog.in_section(section.id))
+        if not docs:
+            lines.append("_No pages yet._")
+        for doc in docs:
+            lines.append(f"- [{doc.title}]({doc.rel_path}) — {doc.meta.get('status', 'unknown')}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_index(catalog: Catalog, config: KbConfig, today: date | None = None) -> str:
+    """Render the front-door index. ``reviewed`` only moves when the body changes."""
+    body = render_index_body(catalog, config)
+    existing = catalog.get("index.md")
+    reviewed = (today or date.today()).isoformat()
+    if existing is not None and existing.body == body and existing.meta.get("reviewed"):
+        reviewed = str(existing.meta["reviewed"])
+    meta = {
+        "title": "Knowledge base index",
+        "owner": config.index.owner,
+        "status": "active",
+        "reviewed": reviewed,
+        "tags": list(config.index.tags),
+        "audience": list(config.index.audience),
+    }
+    return render_frontmatter(meta, body)

@@ -1,0 +1,41 @@
+# Non-secret environment for the API pod and the retention CronJob (both use `envFrom`).
+# Secrets never go here: see secret.example.yaml. Every KB_* variable is described one line
+# each in deploy/RUNBOOK.md ("Configuration reference") and in .env.example.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: knowledge-base-config
+  namespace: knowledge-base
+  labels:
+    app.kubernetes.io/name: knowledge-base
+data:
+  # Server-side gates. Both stay "false" in a hosted deployment: the image's docs tree is
+  # read-only, so a live audit could neither write a page nor commit it; Atlassian writes
+  # additionally require a live run. Flip them only on a deployment with a writable, committed
+  # docs volume (RUNBOOK, "The two gates").
+  KB_ALLOW_LIVE: "false"
+  KB_ATLASSIAN_ALLOW_WRITE: "false"
+  # One JSON line per request (method, path, status, duration_ms, request_id, client) for the
+  # platform's log pipeline; DEBUG/INFO/WARNING/ERROR.
+  KB_LOG_FORMAT: "json"
+  KB_LOG_LEVEL: "INFO"
+  # Reader records (`.librarian/users/`) untouched for this many days are purged by the
+  # retention CronJob. Empty = no automatic purge: the CronJob then exits 2 on every run until
+  # the organisation's retention period is set here (e.g. "365").
+  KB_PROFILE_RETENTION_DAYS: ""
+  # Listen on every pod interface (the Service and the NetworkPolicy decide who reaches it).
+  KB_API_HOST: "0.0.0.0"
+  KB_API_PORT: "8765"
+  KB_ROOT: "/srv/knowledge-base"
+  # Embedding provider for hybrid search and the librarian's semantic_search (cronjob-index.yaml builds
+  # the index). Empty = the offline hash embedder (token overlap only, no text leaves the pod). An
+  # https endpoint speaking the {"model","input"} shape plus KB_EMBED_MODEL enables real embeddings;
+  # KB_EMBED_API_KEY lives in the Secret.
+  KB_EMBED_URL: ""
+  KB_EMBED_MODEL: ""
+  # uvicorn trusts X-Forwarded-For only from these addresses; the anonymous problem-report
+  # throttle keys on the resulting client address. PARAMETER: set it to the ingress
+  # controller's pod CIDR or addresses (`kubectl -n ingress get pods -o wide`), comma-separated,
+  # CIDR notation accepted. The loopback value below trusts no proxy at all (fail-safe): until
+  # it is narrowed to the ingress, every reader shares one problem-report bucket.
+  FORWARDED_ALLOW_IPS: "127.0.0.1"

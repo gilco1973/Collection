@@ -1,0 +1,52 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "kb-librarian"
+version = "0.1.0"
+description = "Unified organisational AI knowledge base and the librarian agent that maintains it"
+authors = ["AI Platform Team <ai-platform@example.com>"]
+readme = "README.md"
+packages = [{ include = "kb_librarian" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+claude-agent-sdk = "^0.2.152"
+pydantic = "^2.11"
+pydantic-settings = "^2.10"
+pyyaml = "^6.0"
+httpx = "^0.28.1"
+mcp = "^2.0"
+fastapi = "^0.116"
+uvicorn = {version = "^0.35", extras = ["standard"]}
+pyjwt = {version = "^2.10", extras = ["crypto"]}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4"
+pytest-asyncio = "^1.1"
+pytest-cov = "^6.2"
+ruff = "^0.12"
+
+[tool.poetry.scripts]
+kb-librarian = "kb_librarian.cli:main"
+kb-librarian-api = "kb_librarian.api.app:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--cov=kb_librarian --cov-fail-under=87 --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["tests/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI's dependency injection uses Depends(...) in parameter defaults by design.
+"kb_librarian/api/*" = ["B008"]

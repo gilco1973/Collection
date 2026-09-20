@@ -1,0 +1,9 @@
+dist
+dist-artifact
+node_modules
+extract
+artboards
+compare
+tools/fonts
+src/screens/Hub*.tsx
+pnpm-lock.yaml
