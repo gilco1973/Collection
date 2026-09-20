@@ -19,6 +19,9 @@ roads" for anyone joining a team that builds, reviews or operates AI in the bank
 4. [Reading list](reading-list.md) — ordered, with why each item matters here.
 5. [Checklist](checklist.md) — the sign-off list you and your manager complete.
 
+Already on a team and asked to be its AI champion? Start with [the programme](ai-champions.md) and the
+[initiative brief](ai-champions-initiative-brief.md).
+
 ## Adapting this knowledge base to your organisation
 
 The pages are written for a bank but name no real systems. Words such as "the service

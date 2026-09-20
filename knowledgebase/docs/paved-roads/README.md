@@ -25,7 +25,9 @@ architecture review and you own everything the road would have given you.
 | Model lifecycle | Getting a model or use case from idea to production and retirement | [model-lifecycle.md](model-lifecycle.md) |
 
 The first internal use case built on these roads is this knowledge base itself:
-[Use case 001](use-case-001-knowledge-base.md) walks it through every stage.
+[Use case 001](use-case-001-knowledge-base.md) walks it through every stage. The second is the on-call
+[first responder](use-case-002-first-responder.md), the origin of most of the
+[reusable components](../components/README.md).
 
 ## Shared properties of every road
 
