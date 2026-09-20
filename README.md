@@ -15,6 +15,7 @@ meeting every two weeks, each carrying one initiative built from what is here an
 | `config/`, `CONFIGURATION.md` | Every system the collection touches, named once; settings that fail closed | `python3 -m hubapi check-config` |
 | `scripts/` | `verify.sh` (every gate, any runner) and `bundle.sh` (an offline release with the hub prebuilt) | `scripts/verify.sh python` |
 | `deploy/`, `services/*/deploy/` | Compose for the sandbox; Dockerfiles, fail-closed entrypoints, ECS task definitions and task roles with placeholders | `docker compose -f deploy/compose.yaml up` |
+| `docs/pdf/` | The user manual (non-technical), the technical guide and the leadership brief as PDFs, built by `docs/pdf/build.py` | `python3 docs/pdf/build.py` |
 | `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |
 | `tools/publish_kb.py` | Applies `exports/knowledgebase/` and `content/knowledgebase/` to a checkout of the knowledge base, idempotently | `python3 tools/publish_kb.py <checkout>` |
 
