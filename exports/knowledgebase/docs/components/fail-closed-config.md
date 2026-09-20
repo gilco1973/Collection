@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # fail-closed-config
 
-> A component of the collection: `components/python/fail-closed-config/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.6, §4.16 (PLT-SEC-5, PLT-GATE-1, PLT-ONB-5); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/fail-closed-config/` in the repository (category pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.6, §4.16 (PLT-SEC-5, PLT-GATE-1, PLT-ONB-5); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 Configuration that refuses to start a live process with a missing gate. Everything comes from the environment, an

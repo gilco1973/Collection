@@ -1,0 +1,124 @@
+{
+  "name": "incident-first-read-agent",
+  "version": "1.0.0",
+  "category": "agent",
+  "language": "python",
+  "summary": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
+  "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
+  "used_in": [],
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder (the first read) on meg/crai (the loop)",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "agents",
+    "security",
+    "governance"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "governed-action-loop",
+    "cited-llm-engine",
+    "teams-graph-connector",
+    "comm-templates"
+  ],
+  "agent": {
+    "template": "TEMPLATE.md",
+    "tools": [
+      "cited-llm-engine",
+      "audit-chain"
+    ],
+    "harness": "governed-action-loop"
+  },
+  "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
+  "vendored": [
+    {
+      "path": "actionloop/__init__.py",
+      "from": "components/python/governed-action-loop/actionloop/__init__.py"
+    },
+    {
+      "path": "actionloop/audit.py",
+      "from": "components/python/governed-action-loop/actionloop/audit.py"
+    },
+    {
+      "path": "actionloop/catalog.py",
+      "from": "components/python/governed-action-loop/actionloop/catalog.py"
+    },
+    {
+      "path": "actionloop/dataguard.py",
+      "from": "components/python/governed-action-loop/actionloop/dataguard.py"
+    },
+    {
+      "path": "actionloop/gateway.py",
+      "from": "components/python/governed-action-loop/actionloop/gateway.py"
+    },
+    {
+      "path": "actionloop/harness.py",
+      "from": "components/python/governed-action-loop/actionloop/harness.py"
+    },
+    {
+      "path": "actionloop/identity.py",
+      "from": "components/python/governed-action-loop/actionloop/identity.py"
+    },
+    {
+      "path": "actionloop/kill.py",
+      "from": "components/python/governed-action-loop/actionloop/kill.py"
+    },
+    {
+      "path": "actionloop/modelgw.py",
+      "from": "components/python/governed-action-loop/actionloop/modelgw.py"
+    },
+    {
+      "path": "actionloop/policy.py",
+      "from": "components/python/governed-action-loop/actionloop/policy.py"
+    },
+    {
+      "path": "actionloop/signing.py",
+      "from": "components/python/governed-action-loop/actionloop/signing.py"
+    },
+    {
+      "path": "actionloop/telemetry.py",
+      "from": "components/python/governed-action-loop/actionloop/telemetry.py"
+    },
+    {
+      "path": "engine.py",
+      "from": "components/python/cited-llm-engine/engine.py"
+    },
+    {
+      "path": "guard.py",
+      "from": "components/python/cited-llm-engine/guard.py"
+    }
+  ],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "5.1",
+      "5.2",
+      "5.5",
+      "4.8",
+      "4.5"
+    ],
+    "requirements": [
+      "PLT-AC-8",
+      "PLT-AC-11",
+      "PLT-AC-16",
+      "PLT-AC-21",
+      "PLT-HAR-11",
+      "PLT-MDL-1",
+      "PLT-PRM-1",
+      "PLT-DATA-3"
+    ],
+    "replacement_test": "The same TEMPLATE.md runs unchanged with the platform's harness (AgentCore Runtime with the three hooks, the catalog it declares signed into AgentCore Gateway, the stage prompts in the prompt registry); the conformance tests on the first read, the refused proposal on taint and the once-confirmed W1 comment pass on both."
+  }
+}

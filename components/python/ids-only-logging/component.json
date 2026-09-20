@@ -1,7 +1,7 @@
 {
   "name": "ids-only-logging",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "tool",
   "language": "python",
   "summary": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
   "status": "ready",

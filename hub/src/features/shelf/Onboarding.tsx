@@ -143,7 +143,7 @@ function Progress({ e }: { e: ShelfEntry }) {
       <div style={{ width: 220, flex: "none" }}>
         <Link to={e.hubPath}>{e.title}</Link>
         <div className="muted" style={{ fontSize: 12 }}>
-          <span className="mono">{e.version}</span> · {e.kind} · owner {e.owner}
+          <span className="mono">{e.version}</span> · {e.category} · owner {e.owner}
           {e.usedIn.length > 0 ? ` · used in ${e.usedIn.join(", ")}` : ""}
         </div>
       </div>

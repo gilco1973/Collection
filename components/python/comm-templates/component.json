@@ -1,7 +1,7 @@
 {
   "name": "comm-templates",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "tool",
   "language": "python",
   "summary": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
   "status": "ready",

@@ -1,7 +1,7 @@
 {
   "name": "cited-llm-engine",
   "version": "1.0.0",
-  "kind": "pattern",
+  "category": "pattern",
   "language": "python",
   "summary": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
   "status": "ready",

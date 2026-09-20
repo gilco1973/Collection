@@ -1,7 +1,7 @@
 {
   "name": "rs256-jwt-verify",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "tool",
   "language": "python",
   "summary": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
   "status": "ready",

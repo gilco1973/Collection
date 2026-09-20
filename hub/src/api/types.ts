@@ -105,6 +105,7 @@ export interface Catalog {
 /* ---------- The shelf: components of the collection, their sign-offs and onboarding stage ---------- */
 
 export type ShelfRole = "owner" | "ai_security";
+export type ShelfCategory = "agent" | "harness" | "tool" | "integration" | "pattern" | "skill";
 /** A sign-off as the manifest records it: who, when, at which version. Null while pending. */
 export type ShelfSignoff = { by: string; date: string; version: string } | null;
 
@@ -113,7 +114,8 @@ export interface ShelfRecord {
   name: string;
   title: string;
   version: string;
-  kind: "tool" | "integration" | "skill" | "pattern";
+  /** The category of AI component: an agent (template, tools, harness), the harness itself, a tool, an integration, a pattern, or a skill anyone can follow. */
+  category: ShelfCategory;
   language: string;
   owner: string;
   status: "ready" | "draft" | "deprecated";

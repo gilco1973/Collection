@@ -1,7 +1,7 @@
 {
   "name": "handover",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "markdown",
   "summary": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
   "status": "ready",

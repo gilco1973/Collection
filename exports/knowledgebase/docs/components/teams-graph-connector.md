@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # teams-graph-connector
 
-> A component of the collection: `components/python/teams-graph-connector/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.3, §4.11, §7.6 (PLT-HDL-1, PLT-CTR-1); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/teams-graph-connector/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.3, §4.11, §7.6 (PLT-HDL-1, PLT-CTR-1); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 Microsoft Teams as a bot's surface, through Graph and the Bot Framework connector: transitive group membership for

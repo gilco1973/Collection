@@ -1,7 +1,7 @@
 {
   "name": "audit-chain",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "tool",
   "language": "python",
   "summary": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
   "status": "ready",

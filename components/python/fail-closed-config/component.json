@@ -1,7 +1,7 @@
 {
   "name": "fail-closed-config",
   "version": "1.0.0",
-  "kind": "pattern",
+  "category": "pattern",
   "language": "python",
   "summary": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
   "status": "ready",

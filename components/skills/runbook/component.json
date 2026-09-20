@@ -1,7 +1,7 @@
 {
   "name": "runbook",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "markdown",
   "summary": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
   "status": "ready",

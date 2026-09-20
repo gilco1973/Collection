@@ -188,7 +188,7 @@ function Row({ e, open, onToggle }: { e: ShelfEntry; open: boolean; onToggle: ()
         <td>
           <Link to={e.hubPath}>{e.title}</Link>
           <div className="muted" style={{ fontSize: 12 }}>
-            {e.kind} · {e.language} · owner {e.owner}
+            {e.category} · {e.language} · owner {e.owner}
           </div>
         </td>
         <td>

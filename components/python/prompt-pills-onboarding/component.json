@@ -1,7 +1,7 @@
 {
   "name": "prompt-pills-onboarding",
   "version": "1.0.0",
-  "kind": "pattern",
+  "category": "pattern",
   "language": "python",
   "summary": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
   "status": "ready",

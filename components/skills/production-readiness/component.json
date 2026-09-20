@@ -1,7 +1,7 @@
 {
   "name": "production-readiness",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "markdown",
   "summary": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
   "status": "ready",

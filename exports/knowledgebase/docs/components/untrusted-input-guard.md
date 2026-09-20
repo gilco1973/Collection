@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # untrusted-input-guard
 
-> A component of the collection: `components/python/untrusted-input-guard/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.5, §5.5 (PLT-DATA-1, PLT-DATA-3, PLT-DATA-8, PLT-CAT-7, PLT-AC-21); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/untrusted-input-guard/` in the repository (category tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.5, §5.5 (PLT-DATA-1, PLT-DATA-3, PLT-DATA-8, PLT-CAT-7, PLT-AC-21); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 Text a model will read is evidence, never an instruction. Alert titles, log lines, ticket bodies, runbook steps, chat

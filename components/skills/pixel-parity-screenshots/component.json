@@ -1,7 +1,7 @@
 {
   "name": "pixel-parity-screenshots",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "mixed",
   "summary": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
   "status": "ready",

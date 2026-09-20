@@ -1,7 +1,7 @@
 {
   "name": "bedrock-converse-adapter",
   "version": "1.0.0",
-  "kind": "integration",
+  "category": "integration",
   "language": "python",
   "summary": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
   "status": "ready",

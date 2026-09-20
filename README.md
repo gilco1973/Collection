@@ -9,7 +9,7 @@ meeting every two weeks, each carrying one initiative built from what is here an
 | --- | --- | --- |
 | `hub/` | The employee AI hub: Discover (the catalog, including every component here), My workspace, Build (the intake brief), Learn. React, pixel-identical to its design artboards, runs against an in-browser API | `cd hub && pnpm install && pnpm dev` |
 | `content/knowledgebase/` | The pages the Collection authors for the knowledge base: the practices behind the components, the first responder as use case 002, the AI champions programme and the initiative brief | `python3 tools/publish_kb.py <checkout>` |
-| `components/` | 23 self-contained components lifted from products in production: Python tools and integrations (standard library only), TypeScript pieces, and skills with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |
+| `components/` | 24 self-contained AI components in six categories: an agent (template, tools, harness), the harness, tools, integrations, patterns, and skills anyone can follow. Lifted from products in production: Python (standard library only), TypeScript, and markdown with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |
 | `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |
 | `tools/publish_kb.py` | Applies `exports/knowledgebase/` and `content/knowledgebase/` to a checkout of the knowledge base, idempotently | `python3 tools/publish_kb.py <checkout>` |
 
@@ -35,7 +35,7 @@ names where each part came from and where the standalone products live.
   the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.
 - **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in
   as a persona, and show Discover's Tools tab and the Learn page.
-- **Adding a component:** `python3 tools/new_component.py python my-tool --kind tool --summary "..."`, then
+- **Adding a component:** `python3 tools/new_component.py python my-tool --category tool --summary "..."`, then
   `python3 tools/shelf.py --write`.
 
 ## Gates

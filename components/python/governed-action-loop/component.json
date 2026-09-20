@@ -1,7 +1,7 @@
 {
   "name": "governed-action-loop",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "harness",
   "language": "python",
   "summary": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
   "status": "ready",

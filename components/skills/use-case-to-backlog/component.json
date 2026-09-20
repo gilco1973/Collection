@@ -1,7 +1,7 @@
 {
   "name": "use-case-to-backlog",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "mixed",
   "summary": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
   "status": "ready",

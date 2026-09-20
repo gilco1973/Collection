@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Scaffold a component from components/_template.
 
-    python3 tools/new_component.py python my-tool --kind tool --summary "One line"
-    python3 tools/new_component.py skills my-skill --kind skill --summary "One line"
+    python3 tools/new_component.py python my-tool --category tool --summary "One line"
+    python3 tools/new_component.py skills my-skill --category skill --summary "One line"
+    python3 tools/new_component.py agents my-agent --category agent --summary "One line"
 
 Creates components/<group>/<name>/ with component.json, README.md and, for a skill, SKILL.md; for python, a tests/
 folder with one passing test so the shelf's --test run is green from the first commit.
@@ -18,7 +19,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("group", choices=("python", "typescript", "skills"))
     ap.add_argument("name")
-    ap.add_argument("--kind", choices=("tool", "integration", "skill", "pattern"), required=True)
+    ap.add_argument("--category", choices=("agent", "harness", "tool", "integration", "pattern", "skill"), required=True)
     ap.add_argument("--summary", required=True)
     ap.add_argument("--owner", default=os.environ.get("USER", "unknown"))
     a = ap.parse_args()
@@ -28,7 +29,7 @@ def main() -> int:
     os.makedirs(dest)
     language = {"python": "python", "typescript": "typescript", "skills": "markdown"}[a.group]
     test = {"python": "python3 -m unittest discover -s tests -t . -v", "typescript": "npm ci --no-audit --no-fund && npx vitest run", "skills": ""}[a.group]
-    manifest = {"name": a.name, "version": "0.1.0", "kind": a.kind, "language": language, "summary": a.summary, "status": "draft", "signoff": {"owner": None, "ai_security": None}, "used_in": [],
+    manifest = {"name": a.name, "version": "0.1.0", "category": a.category, "language": language, "summary": a.summary, "status": "draft", "signoff": {"owner": None, "ai_security": None}, "used_in": [],
                 "source": {"project": "new", "path": "", "snapshot": ""}, "owner": a.owner, "tags": ["paved-road"],
                 "requires": [], "pairs_with": [], "test": test, "walkthrough": "WALKTHROUGH.md",
                 "example": {"path": "example.py" if a.group == "python" else ("example.ts" if a.group == "typescript" else "EXAMPLE.md"), "run": {"python": "python3 example.py", "typescript": "npx tsx example.ts", "skills": ""}[a.group]}, "vendored": [],
@@ -37,7 +38,12 @@ def main() -> int:
     json.dump(manifest, open(os.path.join(dest, "component.json"), "w"), indent=2); open(os.path.join(dest, "component.json"), "a").write("\n")
     readme = open(os.path.join(TEMPLATE, "README.md"), encoding="utf-8").read().replace("{{name}}", a.name).replace("{{summary}}", a.summary)
     open(os.path.join(dest, "README.md"), "w", encoding="utf-8").write(readme)
-    if a.kind == "skill":
+    if a.category == "agent":
+        manifest["agent"] = {"template": "TEMPLATE.md", "tools": ["untrusted-input-guard"], "harness": "governed-action-loop"}
+        tpl = {"name": a.name, "role": "an assistant that reads evidence and cites it", "ladder": "L1", "road": "R2", "channel": "operator", "stages": ["first-read", "ask"],
+               "tools": [{"target": "tickets", "op": "get", "tier": "R", "classes": "internal", "note": "what the agent sees"}], "never": ["acts without a person confirming", "proposes on a tainted context"]}
+        open(os.path.join(dest, "TEMPLATE.md"), "w").write("# " + a.name + ": the template\n\nWhat this agent is, in a paragraph.\n\n```json\n" + json.dumps(tpl, indent=2) + "\n```\n")
+    if a.category == "skill":
         open(os.path.join(dest, "SKILL.md"), "w", encoding="utf-8").write(open(os.path.join(TEMPLATE, "SKILL.md"), encoding="utf-8").read().replace("{{name}}", a.name).replace("{{summary}}", a.summary))
     open(os.path.join(dest, "WALKTHROUGH.md"), "w").write(f"# Walkthrough: {a.name}\n\n## 1. Run the live example\n\n```\ncd components/{a.group}/{a.name} && <the example command>\n```\n\nWhat you see.\n\n## 2. Copy it into your project\n\n## 3. Wire it\n\n## 4. Prove it\n")
     ex = {"python": '"""Live example: what this shows, in one line."""\nprint("replace me with something real")\n', "typescript": '// Live example. Run: npx tsx example.ts\nconsole.log("replace me with something real");\n', "skills": "# Example\n\nA filled example from a real use.\n"}[a.group]

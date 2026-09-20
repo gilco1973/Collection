@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # cited-llm-engine
 
-> A component of the collection: `components/python/cited-llm-engine/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8, §4.9, §4.5 (PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/cited-llm-engine/` in the repository (category pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8, §4.9, §4.5 (PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 The think step behind one adapter. A model reasons over a fenced context and returns strict, cited JSON; it never

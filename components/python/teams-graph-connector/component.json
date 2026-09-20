@@ -1,7 +1,7 @@
 {
   "name": "teams-graph-connector",
   "version": "1.0.0",
-  "kind": "integration",
+  "category": "integration",
   "language": "python",
   "summary": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
   "status": "ready",

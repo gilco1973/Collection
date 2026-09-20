@@ -6,7 +6,7 @@ const base: ShelfEntry = {
   name: "audit-chain",
   title: "Audit chain",
   version: "1.0.0",
-  kind: "tool",
+  category: "tool",
   language: "python",
   owner: "gil.klainert",
   status: "ready",

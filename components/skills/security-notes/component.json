@@ -1,7 +1,7 @@
 {
   "name": "security-notes",
   "version": "1.0.0",
-  "kind": "skill",
+  "category": "skill",
   "language": "markdown",
   "summary": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
   "status": "ready",

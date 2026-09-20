@@ -1,7 +1,7 @@
 {
   "name": "secrets-by-name",
   "version": "1.0.0",
-  "kind": "tool",
+  "category": "tool",
   "language": "python",
   "summary": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
   "status": "ready",
