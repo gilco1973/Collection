@@ -102,6 +102,14 @@ class Store:
             if self._prunes % 100 == 0:
                 self.prune()
 
+    def prune_docs(self, kind: str, older_than_s: float, now: float | None = None) -> int:
+        """Deletes documents of a kind not updated within the window, and the feedback rows of a conversation with them."""
+        cutoff = (now or time.time()) - older_than_s
+        with self.lock:
+            if kind == "conversation":
+                self.conn.execute("DELETE FROM feedback WHERE conversation IN (SELECT id FROM docs WHERE kind = ? AND updated < ?)", (kind, cutoff))
+            return self.conn.execute("DELETE FROM docs WHERE kind = ? AND updated < ?", (kind, cutoff)).rowcount
+
     def prune(self, now: float | None = None) -> int:
         """Forgets replays older than the TTL; a client that retries a day later gets a fresh answer, not a stale one."""
         with self.lock:

@@ -28,6 +28,7 @@ printed. `AGENT_*`: `verify-record` exits 1 on a broken chain; do not start over
 | Change which systems the agent writes to | `AGENT_TARGETS`; a target not named is a fake and refused outside the sandbox |
 | Stop the agent now | The kill switch is in the record: `python3 -m agentrt` has no remote stop by design; scale the service to zero, then set the kill switch through the harness before scaling back (`actionloop.kill`) |
 | Rotate a credential | Rotate it in the secrets provider under the same name; nothing restarts, the next call reads the new value (a five-minute cache) |
+| Apply the retention now | `python3 -m hubapi prune` inside the task; `serve` does the same once a day. Conversations past `HUB_CONVERSATION_RETENTION_DAYS` go, with their feedback rows; nothing else is touched |
 | Back up the record | `python3 -m hubapi backup /var/hub/backup.db` and `python3 -m agentrt backup /var/agent/backup.db` inside the task (SQLite's online backup: consistent while serving), then copy the file off the volume; restore by stopping the task and putting the file back as the record. A record from a newer build refuses to open under an older one; restore before rolling back |
 | Export the chain | `python3 -m agentrt export-audit` inside the task, or set `AGENT_AUDIT_EXPORT_INTERVAL_S` and the task exports itself (a failed export is logged and retried at the next interval; the chain stays local meanwhile); `latest.json` in the bucket points at the newest object |
 

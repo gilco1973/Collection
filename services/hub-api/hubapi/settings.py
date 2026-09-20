@@ -58,6 +58,7 @@ class Settings:
     max_body_bytes: int = 1_000_000
     rate_per_minute: int = 300                             # requests per person per minute (a token bucket); 0 disables
     idempotency_ttl_s: int = 86_400                        # how long a replayed answer is kept
+    conversation_retention_days: int = 90                  # conversations older than this are deleted daily; 0 keeps them
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="HUB_", repr=False)
@@ -77,7 +78,8 @@ class Settings:
                    ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
                    web_oidc_redirect_uri=e("WEB_OIDC_REDIRECT_URI", ""), web_oidc_post_logout_uri=e("WEB_OIDC_POST_LOGOUT_URI", ""), web_oidc_scope=e("WEB_OIDC_SCOPE", d.web_oidc_scope),
                    max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), rate_per_minute=int(e("RATE_PER_MINUTE", str(d.rate_per_minute))),
-                   idempotency_ttl_s=int(e("IDEMPOTENCY_TTL_S", str(d.idempotency_ttl_s))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   idempotency_ttl_s=int(e("IDEMPOTENCY_TTL_S", str(d.idempotency_ttl_s))), conversation_retention_days=int(e("CONVERSATION_RETENTION_DAYS", str(d.conversation_retention_days))),
+                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
 
     @property
     def live(self) -> bool:
@@ -105,6 +107,8 @@ class Settings:
         if not 0 <= self.rate_per_minute <= 100_000: p.append(f"{P}RATE_PER_MINUTE out of range")
         if self.live and self.rate_per_minute == 0: p.append(f"{P}RATE_PER_MINUTE must be above 0 in staging and production")
         if not 60 <= self.idempotency_ttl_s <= 30 * 86_400: p.append(f"{P}IDEMPOTENCY_TTL_S out of range (60 s to 30 days)")
+        if not 0 <= self.conversation_retention_days <= 3650: p.append(f"{P}CONVERSATION_RETENTION_DAYS out of range (0 keeps, up to ten years)")
+        if self.live and self.conversation_retention_days == 0: p.append(f"{P}CONVERSATION_RETENTION_DAYS must be set in staging and production: a person's conversations are not kept for good")
         if self.assistant == "http" and not self.assistant_url: p.append(f"{P}ASSISTANT_URL is required with the http assistant")
         if self.assistant == "bedrock":
             if not self.bedrock_region: p.append(f"{P}BEDROCK_REGION (or AWS_REGION) is required with the bedrock assistant")

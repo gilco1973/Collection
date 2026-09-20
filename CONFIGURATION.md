@@ -31,6 +31,7 @@ called with references the harness mints per call. Model access is IAM from the 
 | The platform runtime | `HUB_ASSISTANT=http`, `HUB_ASSISTANT_URL`, `HUB_ASSISTANT_TOKEN_NAME` | The runtime that owns the employee assistant and streams `event: view` turns on the same contract |
 | Audit export | `AGENT_AUDIT_EXPORT`, `AGENT_AUDIT_EXPORT_INTERVAL_S` | A bucket the task role may `s3:PutObject` to; the chain's export lands there with its head. With an interval the task exports itself; without one, a scheduled task runs `export-audit` |
 | Limits | `HUB_RATE_PER_MINUTE`, `AGENT_RUNS_PER_MINUTE`, `HUB_IDEMPOTENCY_TTL_S` | Nothing: the defaults (300 requests and 60 runs per person per minute, replays kept a day) suit a first deployment; both limits must be above 0 outside the sandbox |
+| Retention | `HUB_CONVERSATION_RETENTION_DAYS` | The retention the bank's records policy sets for a person's conversations with the assistant (90 days by default; the task deletes older ones daily, with their feedback). Briefs, requests and sign-offs are kept: they are the record. The chain's retention is the bucket's |
 | Readiness and backups | `/api/ready`, `/ready`; `python3 -m hubapi backup <path>`, `python3 -m agentrt backup <path>` | The load balancer's health check pointed at the readiness route; a scheduled task that runs the backup command and copies the file off the volume |
 
 ## Two environments, one build

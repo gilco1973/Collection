@@ -101,6 +101,25 @@ class Record(unittest.TestCase):
         self.assertEqual(st.prune(), 0)                            # now: kept
         self.assertEqual(st.replay("k2", "u")[0], 201)
 
+    def test_conversations_past_the_retention_are_deleted_with_their_feedback(self):
+        from hubapi.__main__ import retention, retention_loop
+        st = Store(":memory:")
+        st.put("conversation", "old", {"id": "old"}, "u"); st.feedback("old", 1, True, "u")
+        st.conn.execute("UPDATE docs SET updated = updated - 100 * 86400 WHERE id = 'old'")
+        st.put("conversation", "new", {"id": "new"}, "u"); st.put("brief", "b1", {"id": "b1"}, "u")
+        self.assertEqual(retention(st, Settings(conversation_retention_days=0)), 0)          # 0 keeps everything
+        self.assertEqual(retention(st, Settings(conversation_retention_days=90)), 1)
+        self.assertEqual([x["id"] for x in st.list("conversation")], ["new"]); self.assertEqual(st.count("brief"), 1)
+        self.assertEqual(st.conn.execute("SELECT COUNT(*) FROM feedback").fetchone()[0], 0)
+        import threading
+        stop, ticks = threading.Event(), []
+        def sleep(n):
+            ticks.append(n)
+            if len(ticks) == 2: stop.set()
+        retention_loop(st, Settings(conversation_retention_days=90), stop=stop, sleep=sleep)
+        self.assertEqual(ticks, [86400, 86400])
+        self.assertIn("HUB_CONVERSATION_RETENTION_DAYS must be set", " ".join(Settings(env="production", conversation_retention_days=0).validate()))
+
     def test_backup_is_a_consistent_copy(self):
         with tempfile.TemporaryDirectory() as d:
             st = Store(os.path.join(d, "hub.db")); st.put("brief", "b1", {"id": "b1", "n": 1}, "u")

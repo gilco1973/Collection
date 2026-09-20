@@ -2,6 +2,7 @@
     python3 -m hubapi serve             # the hub API (and the hub itself when HUB_STATIC_DIR points at its dist/)
     python3 -m hubapi mock-token <persona>   # a mock bearer for development (refused in production)
     python3 -m hubapi backup <path>     # a consistent copy of the record (SQLite online backup) for the bank's backup job
+    python3 -m hubapi prune             # apply the retention now (serve does it daily): conversations past HUB_CONVERSATION_RETENTION_DAYS
 """
 from __future__ import annotations
 import json, logging, os, sys, threading, urllib.request
@@ -53,6 +54,9 @@ def main(argv=None) -> int:
             print("usage: backup <path>; the record must be a file (HUB_DB)"); return 2
         pages = Store(s.db_path, s.idempotency_ttl_s).backup(argv[1])
         print(f"backup written: {argv[1]} ({pages} pages)"); return 0
+    if cmd == "prune":
+        n = retention(Store(s.db_path, s.idempotency_ttl_s), s)
+        print(f"pruned: {n} conversations past {s.conversation_retention_days} days"); return 0
     if cmd == "mock-token":
         if s.env == "production" or s.auth != "mock":
             print("mock tokens exist only with HUB_AUTH=mock outside production"); return 2
@@ -61,6 +65,7 @@ def main(argv=None) -> int:
         print(__doc__); return 2
     api = build(s)
     httpd = serve(api, s.listen_host, s.listen_port, s.static_dir)
+    threading.Thread(target=retention_loop, args=(api.store, s), daemon=True).start()
     import signal
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=httpd.shutdown, daemon=True).start())  # a rolling deploy: finish in-flight requests, then exit 0
     logging.getLogger("hubapi").info("listening env=%s auth=%s assistant=%s port=%d static=%s diagnostics=%s", s.env, s.auth, api.assistant.name, s.listen_port, bool(s.static_dir), json.dumps(s.diagnostics()))
@@ -69,6 +74,28 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:
         pass
     return 0
+
+
+def retention(store: Store, s: Settings, now: float | None = None) -> int:
+    """Deletes conversations (and their feedback) older than the retention; 0 keeps everything. Replays are pruned too."""
+    store.prune(now)
+    if not s.conversation_retention_days:
+        return 0
+    return store.prune_docs("conversation", s.conversation_retention_days * 86_400, now)
+
+
+def retention_loop(store: Store, s: Settings, stop=None, sleep=None):
+    """Once a day, from inside the task; a failure is logged and tried again tomorrow."""
+    import time
+    wait = sleep or time.sleep
+    while not (stop and stop.is_set()):
+        wait(86_400)
+        if stop and stop.is_set(): break
+        try:
+            n = retention(store, s)
+            logging.getLogger("hubapi").info("retention applied conversations_deleted=%d days=%d", n, s.conversation_retention_days)
+        except Exception as e:
+            logging.getLogger("hubapi").warning("retention failed error=%s", type(e).__name__)
 
 
 if __name__ == "__main__":
