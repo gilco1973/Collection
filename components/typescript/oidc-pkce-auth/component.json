@@ -1,0 +1,28 @@
+{
+  "name": "oidc-pkce-auth",
+  "kind": "integration",
+  "language": "typescript",
+  "summary": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
+  "status": "ready",
+  "source": {
+    "project": "crossriver-ai-hub",
+    "path": "src/auth/",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "security",
+    "onboarding"
+  ],
+  "requires": [
+    "react",
+    "react-router-dom",
+    "@tanstack/react-query",
+    "oidc-client-ts"
+  ],
+  "pairs_with": [
+    "typed-api-client"
+  ],
+  "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
+  "vendored": []
+}

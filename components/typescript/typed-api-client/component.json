@@ -1,0 +1,24 @@
+{
+  "name": "typed-api-client",
+  "kind": "tool",
+  "language": "typescript",
+  "summary": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
+  "status": "ready",
+  "source": {
+    "project": "crossriver-ai-hub",
+    "path": "src/api/client.ts, errors.ts, mock/server.ts",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "observability",
+    "security",
+    "agents"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "oidc-pkce-auth"
+  ],
+  "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
+  "vendored": []
+}
