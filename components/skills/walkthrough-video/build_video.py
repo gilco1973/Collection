@@ -19,8 +19,25 @@ def ffmpeg() -> str:
         return "ffmpeg"
 
 
+MAX_CUE_CHARS = 90   # about two caption lines at the burned-in size
+
+
 def sentences(t: str) -> list:
-    return [p.strip() for p in re.split(r"(?<=[.!?…])\s+", t.strip()) if p.strip()]
+    """One sentence per cue; a long sentence is split at the clause boundary nearest its middle so a cue never runs past two lines."""
+    out = []
+    for s in (p.strip() for p in re.split(r"(?<=[.!?…])\s+", t.strip()) if p.strip()):
+        out.extend(_clauses(s))
+    return out
+
+
+def _clauses(s: str) -> list:
+    if len(s) <= MAX_CUE_CHARS:
+        return [s]
+    cuts = [m.end() for m in re.finditer(r"[,;:]\s+| (?=and |but |so |then |or )", s)]
+    if not cuts:
+        return [s]
+    cut = min(cuts, key=lambda i: abs(i - len(s) / 2))
+    return _clauses(s[:cut].rstrip()) + _clauses(s[cut:].lstrip())
 
 
 def ts(s: float) -> str:
@@ -56,7 +73,7 @@ def main():
     open(OUT.rsplit(".", 1)[0] + ".en.vtt", "w", encoding="utf-8").write("\n".join(vtt)); open("build/captions.srt", "w", encoding="utf-8").write("\n".join(srt))
     joined = "build/joined.mp4"
     subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", "build/concat.txt", "-c", "copy", joined], check=True)
-    style = f"FontName=DejaVu Sans,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00202020,BackColour=&H80000000,BorderStyle=4,Outline=0,Shadow=0,MarginV=28,Alignment=2"
+    style = "FontName=DejaVu Sans,FontSize=9,PrimaryColour=&H00FFFFFF,OutlineColour=&H00202020,BackColour=&H90000000,BorderStyle=4,Outline=0,Shadow=0,MarginV=24,MarginL=40,MarginR=40,Alignment=2"  # libass sizes against a 288-line canvas: 9 is about 34 px at 1080p, two lines at most
     subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-i", joined, "-vf", f"subtitles=build/captions.srt:fontsdir=/usr/share/fonts/truetype/dejavu:force_style='{style}'", "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-c:a", "copy", OUT], check=True)
     shutil.copy(joined, OUT.rsplit(".", 1)[0] + ".nocaptions.mp4")
     print("video", OUT, f"{t:.1f}s", os.path.getsize(OUT) // 1024, "KB")
