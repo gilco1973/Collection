@@ -6,7 +6,7 @@ the components, from real screenshots of the running products. Built with the `w
 
 | File | What it is |
 | --- | --- |
-| `slides.py` | The eighteen slides with their narration (the authoritative script) |
+| `slides.py` | The nineteen slides with their narration (the authoritative script) |
 | `capture_shots.cjs` | Drives the hub (`pnpm preview`) and the knowledge-base console (the product's `deploy/serve.py`, run from its own checkout) with Playwright and screenshots each step; renders the terminal outputs |
 | `build.sh` | The whole pipeline: terminal outputs, shots, deck, frames, narration, video |
 | `out/collection-walkthrough.mp4` | The result (not committed): about eight minutes, captions burned in, plus `.en.vtt` and a no-captions copy |
@@ -30,7 +30,7 @@ slides you changed.
 
 1. The shape: four parts, one repository, drawn on the architecture diagram.
 2. The shelf: six categories and who each is for; the shelf tool's listing.
-3. The hub: Discover's Agents tab, the agent's listing with its template, tools and harness, and the sign-off card.
+3. The hub: Discover's Agents tab, the agent's listing with its template, tools and harness, and the sign-off card; the guide, open on that listing for a leader.
 4. Under the hood: one call through the loop (the harness diagram), then the agent's first read in a terminal, and the same agent over MCP.
 5. Governance: how a component earns its sign-offs, the queue and form, the onboarding tracker.
 6. The assistant: how an answer is produced and where it stops.

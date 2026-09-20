@@ -42,6 +42,11 @@ function terminalHtml(title, cmd, text) {
   await page.evaluate(() => document.querySelector('[role="tablist"]')?.scrollIntoView({ block: "start" }));
   await shot("01-discover-agents.png");
   await page.goto(HUB + "/discover/agents/incident-first-read-agent", { waitUntil: "networkidle" }); await ready(); await shot("02-listing-agent.png");
+  // The guide, open on the same listing, for someone here to understand and decide.
+  await page.getByRole("button", { name: "Open the guide" }).click(); await page.waitForTimeout(300);
+  await page.getByRole("button", { name: /understand and decide/ }).click(); await page.waitForTimeout(400);
+  await shot("16-guide-leader.png");
+  await page.keyboard.press("Escape"); await page.waitForTimeout(200);
   await page.goto(HUB + "/build/shelf/sign-offs", { waitUntil: "networkidle" }); await ready();
   const sign = page.getByRole("button", { name: "Sign" }).first(); if (await sign.count()) { await sign.click(); await page.waitForTimeout(300); }
   await shot("03-signoffs.png");
