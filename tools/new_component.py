@@ -28,7 +28,7 @@ def main() -> int:
     os.makedirs(dest)
     language = {"python": "python", "typescript": "typescript", "skills": "markdown"}[a.group]
     test = {"python": "python3 -m unittest discover -s tests -t . -v", "typescript": "npm ci --no-audit --no-fund && npx vitest run", "skills": ""}[a.group]
-    manifest = {"name": a.name, "version": "0.1.0", "kind": a.kind, "language": language, "summary": a.summary, "status": "draft", "signoff": {"owner": None, "ai_security": None},
+    manifest = {"name": a.name, "version": "0.1.0", "kind": a.kind, "language": language, "summary": a.summary, "status": "draft", "signoff": {"owner": None, "ai_security": None}, "used_in": [],
                 "source": {"project": "new", "path": "", "snapshot": ""}, "owner": a.owner, "tags": ["paved-road"],
                 "requires": [], "pairs_with": [], "test": test, "walkthrough": "WALKTHROUGH.md",
                 "example": {"path": "example.py" if a.group == "python" else ("example.ts" if a.group == "typescript" else "EXAMPLE.md"), "run": {"python": "python3 example.py", "typescript": "npx tsx example.ts", "skills": ""}[a.group]}, "vendored": [],

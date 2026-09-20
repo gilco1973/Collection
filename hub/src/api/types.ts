@@ -102,6 +102,75 @@ export interface Catalog {
   suggestions: string[];
 }
 
+/* ---------- The shelf: components of the collection, their sign-offs and onboarding stage ---------- */
+
+export type ShelfRole = "owner" | "ai_security";
+/** A sign-off as the manifest records it: who, when, at which version. Null while pending. */
+export type ShelfSignoff = { by: string; date: string; version: string } | null;
+
+/** One component as `tools/shelf.py --write` exports it from its manifest: facts, never guesses. */
+export interface ShelfRecord {
+  name: string;
+  title: string;
+  version: string;
+  kind: "tool" | "integration" | "skill" | "pattern";
+  language: string;
+  owner: string;
+  status: "ready" | "draft" | "deprecated";
+  summary: string;
+  signoff: Record<ShelfRole, ShelfSignoff>;
+  /** Both sign-offs name the current version. */
+  signed: boolean;
+  /** "signed", or which sign-offs are pending or stale. */
+  state: string;
+  /** Projects the component has been used in for real; the owner signs only after one is recorded. */
+  usedIn: string[];
+  /** Where it is in the onboarding process (CONTRIBUTING.md): 0 scaffolded … 5 on the shelf; `of` past the end means deprecated. */
+  stage: { index: number; of: number; label: string; next: string };
+  gates: { readme: boolean; walkthrough: boolean; example: boolean; tests: boolean; spec: boolean };
+  test: string;
+  exampleRun: string;
+  hubPath: string;
+  repoPath: string;
+}
+
+/** What a signer attests to on the form; every box must be ticked, the server refuses otherwise. */
+export interface ShelfAttestation {
+  testsGreen: boolean;
+  exampleRun: boolean;
+  walkthroughRead: boolean;
+  rulesRead: boolean;
+}
+
+/** A sign-off recorded through the hub, before it is applied to the manifest and committed. */
+export interface ShelfSignoffRecord {
+  id: string;
+  component: string;
+  role: ShelfRole;
+  by: string;
+  email: string;
+  date: string;
+  version: string;
+  usedIn?: string;
+  note?: string;
+  attest: ShelfAttestation;
+  recordedAt: string;
+}
+
+/** A shelf record with what this session has recorded on top of the manifest. */
+export interface ShelfEntry extends ShelfRecord {
+  recorded: Partial<Record<ShelfRole, ShelfSignoffRecord>>;
+  /** Roles the signed-in person may sign for on this component (owner by name, AI security by role). */
+  youMaySign: ShelfRole[];
+}
+
+/** The file the queue exports; `python3 tools/shelf.py --apply-signoffs <file>` writes it into the manifests. */
+export interface ShelfExport {
+  generatedAt: string;
+  apply: string;
+  signoffs: ShelfSignoffRecord[];
+}
+
 /* ---------- Registry (systems of record and tools a brief may name) ---------- */
 
 export interface RegistrySystem {

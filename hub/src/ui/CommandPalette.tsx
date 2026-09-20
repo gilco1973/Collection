@@ -93,6 +93,8 @@ function Palette({ onClose }: { onClose: () => void }) {
       { id: "g:discover", title: "Discover", small: "the catalog", run: () => go(ROUTES.discover) },
       { id: "g:workspace", title: "My workspace", small: "assistants, requests, usage", run: () => go(ROUTES.workspace) },
       { id: "g:brief", title: "Start or continue a brief", small: "Build · intake", run: () => go(ROUTES.intake) },
+      { id: "g:signoffs", title: "Component sign-offs", small: "Build · the shelf's queue", run: () => go(ROUTES.shelfSignoffs) },
+      { id: "g:onboarding", title: "Onboarding", small: "Build · components to the shelf, people into roles", run: () => go(ROUTES.shelfOnboarding) },
       { id: "g:learn", title: "Learn", small: "roads, bootcamp, office hours", run: () => go(ROUTES.learn) },
       { id: "g:settings", title: "Settings", small: "theme, accessibility, notifications", run: () => go(ROUTES.settings) },
       {

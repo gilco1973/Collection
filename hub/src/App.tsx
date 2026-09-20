@@ -12,6 +12,8 @@ import Discover from "./features/discover/Discover";
 import Listing from "./features/discover/Listing";
 import IntakeBrief from "./features/intake/IntakeBrief";
 import Settings from "./features/settings/Settings";
+import Onboarding from "./features/shelf/Onboarding";
+import SignOffs from "./features/shelf/SignOffs";
 import Workspace from "./features/workspace/Workspace";
 import { PaletteProvider } from "./ui/CommandPalette";
 import Learn from "./screens/Learn";
@@ -75,6 +77,8 @@ export default function App() {
                         <Route path={ROUTES.workspace} element={guarded(<Workspace />)} />
                         <Route path={ROUTES.intake} element={guarded(<IntakeBrief />)} />
                         <Route path={`${ROUTES.intake}/:briefId`} element={guarded(<IntakeBrief />)} />
+                        <Route path={ROUTES.shelfSignoffs} element={guarded(<SignOffs />)} />
+                        <Route path={ROUTES.shelfOnboarding} element={guarded(<Onboarding />)} />
                         <Route path={ROUTES.learn} element={guarded(<Learn />)} />
                         <Route path={ROUTES.settings} element={guarded(<Settings />)} />
                         <Route path="*" element={<NotFound />} />

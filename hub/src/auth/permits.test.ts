@@ -17,6 +17,16 @@ describe("front-end permits", () => {
     expect(permits(gk, "consumer.open")).toBe(false);
   });
 
+  it("lets the owner sign by name and AI security by role, nobody else", () => {
+    expect(permits(gk, "shelf.sign", { signoffRole: "owner", owner: "gil.klainert" })).toBe(true);
+    expect(permits(gk, "shelf.sign", { signoffRole: "owner", owner: "someone.else" })).toBe(false);
+    expect(permits(gk, "shelf.sign", { signoffRole: "ai_security", owner: "gil.klainert" })).toBe(false);
+    expect(permits(PRINCIPALS.security, "shelf.sign", { signoffRole: "ai_security" })).toBe(true);
+    expect(permits(PRINCIPALS.security, "shelf.sign", { signoffRole: "owner", owner: "gil.klainert" })).toBe(false);
+    expect(permits(employee, "shelf.sign", { signoffRole: "ai_security" })).toBe(false);
+    expect(permits(gk, "shelf.sign")).toBe(false);
+  });
+
   it("lets anyone ask for access to what they lack, and only that", () => {
     expect(permits(employee, "consumer.request_access", { consumerId: "investigation-triage" })).toBe(true);
     expect(permits(employee, "consumer.request_access", { consumerId: "employee-assistant" })).toBe(false);

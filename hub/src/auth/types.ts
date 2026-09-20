@@ -13,7 +13,7 @@ export type Ladder = "L0" | "L1" | "L2" | "L3";
 export type Channel = "operator" | "customer" | "partner" | "machine";
 
 /** Roles the Hub understands. The server may send others; they are kept but not interpreted. */
-export type Role = "employee" | "ops.investigator" | "ops.lead" | "platform.lead" | "approver" | "audit" | "admin" | (string & {});
+export type Role = "employee" | "ops.investigator" | "ops.lead" | "platform.lead" | "ai.security" | "approver" | "audit" | "admin" | (string & {});
 
 export interface Principal {
   id: string;

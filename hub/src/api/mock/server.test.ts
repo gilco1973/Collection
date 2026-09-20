@@ -29,6 +29,42 @@ describe("mock API contract", () => {
     await expect(clientAs("employee").consumers.get("nope")).rejects.toBeInstanceOf(NotFoundError);
   });
 
+  it("lists the shelf with what each person may sign: the owner by name, AI security by role", async () => {
+    const gk = await clientAs("gk").shelf.list();
+    expect(gk.length).toBeGreaterThan(0);
+    expect(gk.every((e) => e.youMaySign.includes("owner"))).toBe(true); // every component names gil.klainert as owner today
+    const sec = await clientAs("security").shelf.list();
+    expect(sec.every((e) => e.youMaySign.length === 1 && e.youMaySign[0] === "ai_security")).toBe(true);
+    const emp = await clientAs("employee").shelf.list();
+    expect(emp.every((e) => e.youMaySign.length === 0)).toBe(true);
+    await expect(clientAs("gk").shelf.get("nope")).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("records a sign-off only from the right person with every attestation, once per version", async () => {
+    const attest = { testsGreen: true, exampleRun: true, walkthroughRead: true, rulesRead: true };
+    const name = (await clientAs("gk").shelf.list())[0].name;
+    // The wrong person is refused before anything else is looked at.
+    await expect(clientAs("employee").shelf.sign(name, { role: "owner", attest }, "k1")).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(clientAs("gk").shelf.sign(name, { role: "ai_security", attest }, "k2")).rejects.toBeInstanceOf(ForbiddenError);
+    // An attestation missing, or no project named on the owner's first sign-off, is a validation error.
+    await expect(clientAs("gk").shelf.sign(name, { role: "owner", attest: { ...attest, rulesRead: false }, usedIn: "p" }, "k3")).rejects.toBeInstanceOf(
+      ValidationError,
+    );
+    await expect(clientAs("gk").shelf.sign(name, { role: "owner", attest }, "k4")).rejects.toBeInstanceOf(ValidationError);
+    const rec = await clientAs("gk").shelf.sign(name, { role: "owner", attest, usedIn: "payments-ops-runbook", note: "ran it against the fake" }, "k5");
+    expect(rec).toMatchObject({ component: name, role: "owner", version: "1.0.0", usedIn: "payments-ops-runbook", email: "gil.klainert@crossriver.example" });
+    // Recorded, awaiting commit: visible to everyone, and not signable again at this version.
+    const after = await clientAs("security").shelf.get(name);
+    expect(after.recorded.owner?.id).toBe(rec.id);
+    expect(after.signoff.owner).toBeNull();
+    await expect(clientAs("gk").shelf.sign(name, { role: "owner", attest, usedIn: "x" }, "k6")).rejects.toBeInstanceOf(ConflictError);
+    const sec = await clientAs("security").shelf.sign(name, { role: "ai_security", attest }, "k7");
+    expect(sec.by).toBe("Maya Chen <maya.chen@crossriver.example>");
+    const exp = await clientAs("gk").shelf.export();
+    expect(exp.signoffs.map((s) => s.role)).toEqual(["owner", "ai_security"]);
+    expect(exp.apply).toContain("--apply-signoffs");
+  });
+
   it("bumps the etag on save and refuses a stale If-Match with 409", async () => {
     const api = clientAs("gk");
     const b = await api.briefs.get("brf_7c1e");

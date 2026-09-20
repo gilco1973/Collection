@@ -9,6 +9,8 @@ export const ROUTES = {
   assistant: "/assistant",
   workspace: "/workspace",
   intake: "/build/intake",
+  shelfSignoffs: "/build/shelf/sign-offs",
+  shelfOnboarding: "/build/shelf/onboarding",
   learn: "/learn",
   settings: "/settings",
 } as const;
@@ -32,6 +34,8 @@ export const SCREEN_TITLES: Record<string, string> = {
   [ROUTES.assistant]: "Employee assistant",
   [ROUTES.workspace]: "My workspace",
   [ROUTES.intake]: "Intake brief",
+  [ROUTES.shelfSignoffs]: "Sign-offs",
+  [ROUTES.shelfOnboarding]: "Onboarding",
   [ROUTES.learn]: "Learn",
   [ROUTES.settings]: "Settings",
 };

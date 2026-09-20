@@ -12,6 +12,8 @@ import { usePalette } from "../../ui/CommandPalette";
 import { useTitle } from "../../ui/useTitle";
 import { NotFound } from "../../screens/Status";
 import { useCreateRequest } from "../requests/useCreateRequest";
+import { SignoffPanel } from "../shelf/SignoffForm";
+import { useShelfEntry } from "../shelf/useShelf";
 
 const TIER_CHIP: Record<string, string> = { R: "", W1: "warn", W2: "w2", M: "money", R5: "line" };
 const EVIDENCE_ICON = { doc: Doc, db: Db, shield: Shield, pulse: Pulse };
@@ -25,6 +27,8 @@ export default function Listing() {
   const q = useQuery({ queryKey: ["consumer", slug], queryFn: ({ signal }) => api.consumers.get(slug, signal), enabled: !!slug });
   const requests = useQuery({ queryKey: ["requests"], queryFn: ({ signal }) => api.requests.list(signal) });
   const create = useCreateRequest();
+  // Components of the collection carry a version and two sign-offs; the panel shows them and lets the right person sign.
+  const shelf = useShelfEntry(q.data?.collection ? q.data.id : undefined);
   useTitle(q.data?.name);
 
   if (q.isPending) return <PageState kind="loading" text="Opening the listing…" />;
@@ -278,6 +282,7 @@ export default function Listing() {
             )}
           </div>
           <div className="col" style={{ gap: "16px" }}>
+            {d.collection && shelf.data && <SignoffPanel entry={shelf.data} />}
             {d.getStarted.length > 0 && (
               <div className="card " style={{}}>
                 <div className="ch">

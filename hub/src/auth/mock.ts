@@ -14,6 +14,7 @@ export const MOCK_PERSONAS: MockPersona[] = [
   { id: "investigator", label: "Ana Petrov", description: "ops.investigator · team-payments-ops · ladder L1" },
   { id: "employee", label: "Sam Okafor", description: "employee · no team lead role · ladder L0" },
   { id: "platform", label: "Dana Ruiz", description: "platform.lead · reviews briefs and roads" },
+  { id: "security", label: "Maya Chen", description: "ai.security · signs components off for AI security" },
 ];
 
 const KEY = "crai.hub.mockPersona";

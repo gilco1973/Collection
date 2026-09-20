@@ -14,6 +14,11 @@ import type {
   RegistrySystem,
   RegistryTool,
   RoadRecommendation,
+  ShelfAttestation,
+  ShelfEntry,
+  ShelfExport,
+  ShelfRole,
+  ShelfSignoffRecord,
   TurnEvent,
   Workspace,
 } from "./types";
@@ -45,6 +50,16 @@ export function endpoints(api: ApiClient) {
     workspace: {
       get: (signal?: AbortSignal) => api.get<Workspace>("/me/workspace", { signal }),
       rotatePlaygroundKey: (idempotencyKey: string) => api.post<{ keyMasked: string }>("/me/playground/rotate", undefined, { idempotencyKey }),
+    },
+    shelf: {
+      /** Every component of the collection with its version, sign-offs and onboarding stage. */
+      list: (signal?: AbortSignal) => api.get<ShelfEntry[]>("/shelf", { signal }),
+      get: (name: string, signal?: AbortSignal) => api.get<ShelfEntry>(`/shelf/${encodeURIComponent(name)}`, { signal }),
+      /** Record a sign-off; the server checks the role and that every attestation is ticked. */
+      sign: (name: string, body: { role: ShelfRole; attest: ShelfAttestation; usedIn?: string; note?: string }, idempotencyKey: string) =>
+        api.post<ShelfSignoffRecord>(`/shelf/${encodeURIComponent(name)}/signoffs`, body, { idempotencyKey }),
+      /** Sign-offs recorded here and not yet in a manifest, as the file the shelf tool applies. */
+      export: (signal?: AbortSignal) => api.get<ShelfExport>("/shelf/signoffs/export", { signal }),
     },
     registry: {
       systems: (signal?: AbortSignal) => api.get<RegistrySystem[]>("/registry/systems", { signal }),

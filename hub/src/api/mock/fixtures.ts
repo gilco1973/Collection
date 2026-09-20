@@ -111,9 +111,34 @@ export const PRINCIPALS: Record<string, Principal> = {
       notifications: { requests: true, briefs: true, digest: true },
     },
   },
+  security: {
+    id: "u_mc",
+    name: "Maya Chen",
+    email: "maya.chen@crossriver.example",
+    initials: "MC",
+    tenant: "t_crossriver",
+    roles: ["ai.security"],
+    ladder: "L1",
+    channel: "operator",
+    teams: [{ id: "security", name: "Security", lead: false }],
+    costCentre: "1002",
+    entitlements: ["employee-assistant", "policy-and-procedures"],
+    preferences: {
+      theme: "system",
+      accessibility: false,
+      noAssistant: false,
+      density: "dense",
+      locale: "en-US",
+      notifications: { requests: true, briefs: false, digest: true },
+    },
+  },
 };
 
-import { COLLECTION_DETAILS, COLLECTION_LISTINGS } from "./collection";
+import { COLLECTION_DETAILS, COLLECTION_LISTINGS, COLLECTION_SHELF } from "./collection";
+import type { ShelfRecord } from "../types";
+
+/** The shelf as the sign-off queue and the onboarding tracker read it; generated from the manifests. */
+export const SHELF: ShelfRecord[] = COLLECTION_SHELF;
 
 export const LISTINGS: ConsumerSummary[] = [
   {
@@ -159,7 +184,8 @@ export const LISTINGS: ConsumerSummary[] = [
     slug: "first-responder",
     kind: "agent",
     name: "First responder",
-    description: "Page to postmortem in the on-call team's chat: assembles the war room, reads with citations, acts under confirmation, mitigates under dual control.",
+    description:
+      "Page to postmortem in the on-call team's chat: assembles the war room, reads with citations, acts under confirmation, mitigates under dual control.",
     road: "R2",
     lifecycle: "preview",
     icon: "w",
@@ -316,7 +342,9 @@ export function catalogFor(p: Principal): Catalog {
   return {
     availableCount: 4,
     available,
-    listings: ALL_LISTINGS.map((l) => (l.collection ? l : { ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access })),
+    listings: ALL_LISTINGS.map((l) =>
+      l.collection ? l : { ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access },
+    ),
     counts: { all: 9, assistants: 2, agents: 3, knowledge: 1, tools: 1, roads: 2 },
     changes: [
       { date: "12 Sep", kind: { text: "new version", kind: "accent" }, text: "Investigation triage 1.4 — claim-support marks on every answer" },

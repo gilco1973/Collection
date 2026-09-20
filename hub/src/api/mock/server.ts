@@ -1,7 +1,8 @@
 import type { Transport } from "../client";
 import type { Problem } from "../errors";
 import { briefContentSchema, issuesToFieldErrors } from "../schemas";
-import type { AccessRequest, Brief, ConsumerDetail, Conversation, TurnEvent, Workspace } from "../types";
+import { ownerHandle, permits } from "../../auth/permits";
+import type { AccessRequest, Brief, ConsumerDetail, Conversation, ShelfEntry, ShelfRole, ShelfSignoffRecord, TurnEvent, Workspace } from "../types";
 import {
   ASSISTANT_META,
   CONVERSATION_1,
@@ -12,6 +13,7 @@ import {
   INITIAL_REQUESTS,
   ALL_LISTINGS,
   PRINCIPALS,
+  SHELF,
   ROAD_R2_READ,
   catalogFor,
   workspaceFor,
@@ -70,6 +72,8 @@ const state = {
   conversations: new Map<string, Conversation>([[CONVERSATION_1.id, structuredClone(CONVERSATION_1)]]),
   prefs: new Map<string, (typeof PRINCIPALS)[string]["preferences"]>(),
   idempotency: new Map<string, Response>(),
+  /** Sign-offs recorded through the hub this session; the export hands them to the shelf tool. */
+  signoffs: [] as ShelfSignoffRecord[],
   seq: 100,
 };
 
@@ -160,6 +164,92 @@ route("GET", "/me/workspace", ({ principal }) => {
 });
 
 route("POST", "/me/playground/rotate", () => json({ keyMasked: `crai_pg_…${Math.random().toString(16).slice(2, 6)}` }));
+
+/* ---------- the shelf: sign-offs and onboarding ---------- */
+
+const ROLES: ShelfRole[] = ["owner", "ai_security"];
+
+/** The manifest's facts plus what this session recorded, and which roles this person may sign for. */
+function shelfEntry(name: string, principal: (typeof PRINCIPALS)[string]): ShelfEntry | undefined {
+  const r = SHELF.find((s) => s.name === name);
+  if (!r) return undefined;
+  const recorded: ShelfEntry["recorded"] = {};
+  for (const s of state.signoffs) if (s.component === name && s.version === r.version) recorded[s.role] = s;
+  const youMaySign = ROLES.filter((role) => permits(principal, "shelf.sign", { signoffRole: role, owner: r.owner }));
+  return { ...r, recorded, youMaySign };
+}
+
+route("GET", "/shelf", ({ principal }) => json(SHELF.map((r) => shelfEntry(r.name, principal))));
+
+route("GET", "/shelf/signoffs/export", () =>
+  json({ generatedAt: nowIso(), apply: "python3 tools/shelf.py --apply-signoffs shelf-signoffs.json", signoffs: state.signoffs }),
+);
+
+route("GET", "/shelf/:name", ({ params, principal }) => {
+  const e = shelfEntry(params.name, principal);
+  return e ? json(e) : problem(404, { title: "Not found", detail: "No component with that name is on the shelf." });
+});
+
+route("POST", "/shelf/:name/signoffs", ({ params, principal, body }) => {
+  const r = SHELF.find((s) => s.name === params.name);
+  if (!r) return problem(404, { title: "Not found", detail: "No component with that name is on the shelf." });
+  const b = (body ?? {}) as { role?: ShelfRole; attest?: Record<string, unknown>; usedIn?: string; note?: string };
+  if (!b.role || !ROLES.includes(b.role)) return problem(422, { title: "Not valid", detail: "role must be owner or ai_security.", code: "validation" });
+  if (!permits(principal, "shelf.sign", { signoffRole: b.role, owner: r.owner })) {
+    return problem(403, {
+      title: b.role === "owner" ? "Not the owner" : "Not an AI security engineer",
+      detail:
+        b.role === "owner"
+          ? `The manifest names ${r.owner} as the owner; you are ${ownerHandle(principal)}.`
+          : "The ai.security role is granted by the security team lead on your platform principal.",
+      code: "shelf.role",
+    });
+  }
+  if (r.status !== "ready")
+    return problem(409, { title: "Not ready", detail: `The component is ${r.status}; a sign-off needs a ready component.`, code: "shelf.status" });
+  const keys = ["testsGreen", "exampleRun", "walkthroughRead", "rulesRead"] as const;
+  const missing = keys.filter((k) => b.attest?.[k] !== true);
+  if (missing.length) {
+    return problem(422, {
+      title: "Every attestation is required",
+      detail: `Not ticked: ${missing.join(", ")}.`,
+      code: "validation",
+      errors: Object.fromEntries(missing.map((k) => [`attest.${k}`, ["required"]])),
+    });
+  }
+  const usedIn = (b.usedIn ?? "").trim();
+  if (b.role === "owner" && r.usedIn.length === 0 && !usedIn) {
+    return problem(422, {
+      title: "Where was it used?",
+      detail: "The owner signs after one real use; name the project.",
+      code: "validation",
+      errors: { usedIn: ["required"] },
+    });
+  }
+  const already =
+    r.signoff[b.role]?.version === r.version || state.signoffs.some((s) => s.component === r.name && s.role === b.role && s.version === r.version);
+  if (already)
+    return problem(409, {
+      title: "Already signed",
+      detail: `The ${b.role === "owner" ? "owner" : "AI security"} sign-off at ${r.version} is already recorded.`,
+      code: "shelf.signed",
+    });
+  const rec: ShelfSignoffRecord = {
+    id: `so_${state.signoffs.length + 1}`,
+    component: r.name,
+    role: b.role,
+    by: `${principal.name} <${principal.email}>`,
+    email: principal.email,
+    date: nowIso().slice(0, 10),
+    version: r.version,
+    usedIn: usedIn || undefined,
+    note: (b.note ?? "").trim() || undefined,
+    attest: { testsGreen: true, exampleRun: true, walkthroughRead: true, rulesRead: true },
+    recordedAt: nowIso(),
+  };
+  state.signoffs.push(rec);
+  return json(rec, { status: 201 });
+});
 
 route("GET", "/registry/systems", () => json(REGISTRY_SYSTEMS));
 route("GET", "/registry/tools", () => json(REGISTRY_TOOLS));
@@ -391,4 +481,5 @@ export function resetMockState() {
   state.conversations = new Map([[CONVERSATION_1.id, structuredClone(CONVERSATION_1)]]);
   state.prefs.clear();
   state.idempotency.clear();
+  state.signoffs = [];
 }

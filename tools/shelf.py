@@ -8,6 +8,8 @@ components index is the shelf, so champions learn one meaning.
     python3 tools/shelf.py --write          # regenerate SHELF.md, the hub's collection.ts and the knowledge-base pages
     python3 tools/shelf.py --test           # run every component's test command (add --only python|typescript|skills)
     python3 tools/shelf.py --list           # one line per component
+    python3 tools/shelf.py --sign NAME --role owner|ai-security --by "Name <email>" [--used-in PROJECT]
+    python3 tools/shelf.py --apply-signoffs FILE   # sign-offs exported from the hub's sign-off queue, into the manifests
 
 Standard library only. A component is a directory under components/ that holds a `component.json` (the contract is
 in CONTRIBUTING.md). Nothing here reads a component's code; the manifest and the README are the interface.
@@ -116,6 +118,9 @@ def validate(m: dict) -> list[str]:
     for dep in m.get("pairs_with", []):
         if not any(os.path.basename(d) == dep for d in all_dirs()):
             p.append(f"pairs_with names an unknown component `{dep}`")
+    ui = m.get("used_in", [])
+    if not isinstance(ui, list) or not all(isinstance(x, str) and x.strip() for x in ui):
+        p.append("used_in must be a list of project names (where the component has been used for real)")
     return p
 
 
@@ -145,15 +150,15 @@ def render(ms: list[dict]) -> str:
     total = len(ms)
     ready = sum(1 for m in ms if m["status"] == "ready")
     signed = sum(1 for m in ms if signed_state(m) == "signed")
-    lines += [f"{total} components, {ready} ready, {signed} signed by both the owner and the AI security engineer at their current version. Kinds: " + ", ".join(f"{KIND_LABEL[k].lower()} {sum(1 for m in ms if m['kind'] == k)}" for k in KINDS if any(m["kind"] == k for m in ms)), ""]
+    lines += [f"{total} components, {ready} ready, {signed} signed by both the owner and the AI security engineer at their current version. The stage column is the onboarding process in CONTRIBUTING.md; the hub's sign-off queue and onboarding tracker show the same facts. Kinds: " + ", ".join(f"{KIND_LABEL[k].lower()} {sum(1 for m in ms if m['kind'] == k)}" for k in KINDS if any(m["kind"] == k for m in ms)), ""]
     for kind in KINDS:
         group = [m for m in ms if m["kind"] == kind]
         if not group: continue
-        lines += [f"## {KIND_LABEL[kind]}", "", "| Component | Version | Sign-off | Language | Status | Summary | From | Implements (spec §) | Walkthrough · example |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        lines += [f"## {KIND_LABEL[kind]}", "", "| Component | Version | Stage | Sign-off | Language | Status | Summary | From | Implements (spec §) | Walkthrough · example |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
         for m in group:
             src = m["source"].get("project", "")
             if m["source"].get("path"): src += f" (`{m['source']['path']}`)"
-            lines.append(f"| [{m['name']}]({m['_rel']}/) | {m['version']} | {signed_state(m)} | {m['language']} | {m['status']} | {m['summary']} | {src} | {spec_short(m)} | [walkthrough]({m['_rel']}/{m['walkthrough']}) · [example]({m['_rel']}/{m['example']['path']}) |")
+            lines.append(f"| [{m['name']}]({m['_rel']}/) | {m['version']} | {stage_of(m)['label']} | {signed_state(m)} | {m['language']} | {m['status']} | {m['summary']} | {src} | {spec_short(m)} | [walkthrough]({m['_rel']}/{m['walkthrough']}) · [example]({m['_rel']}/{m['example']['path']}) |")
         lines.append("")
     lines += ["## By tag", ""]
     tags: dict[str, list[str]] = {}
@@ -208,6 +213,43 @@ def signed_state(m: dict) -> str:
         if not e: out.append(f"{label} pending")
         elif e.get("version") != m["version"]: out.append(f"{label} stale ({e['version']})")
     return "signed" if not out else "; ".join(out)
+
+
+STAGES = ("scaffolded", "built", "used once for real", "owner signed", "AI security signed", "on the shelf")
+
+
+def stage_of(m: dict) -> dict:
+    """Where a component is on its way to the shelf: the stage index, its label, and what has to happen next.
+
+    The stages are the onboarding process in CONTRIBUTING.md; each one is read from the manifest, never guessed:
+    draft -> ready (tests green) -> used_in names a project -> owner signed at this version -> AI security signed
+    at this version -> on the shelf (the hub lists it as GA). A deprecated component is past the shelf.
+    """
+    so = m["signoff"]; v = m["version"]
+    signed = lambda role: bool(so.get(role)) and so[role].get("version") == v
+    if m["status"] == "deprecated":
+        return {"index": len(STAGES), "of": len(STAGES), "label": "deprecated", "next": "consumers move to its replacement; the directory stays until they have"}
+    if m["status"] == "draft":
+        return {"index": 0, "of": len(STAGES), "label": STAGES[0], "next": "fill the README, the walkthrough, the live example and the tests; set status to ready when the tests are green"}
+    if not m.get("used_in"):
+        return {"index": 1, "of": len(STAGES), "label": STAGES[1], "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"}
+    if not signed("owner"):
+        stale = so.get("owner") and so["owner"].get("version") != v
+        return {"index": 2, "of": len(STAGES), "label": STAGES[2], "next": f"the owner ({m['owner']}) signs at {v}" + (f"; the {so['owner']['version']} sign-off is stale" if stale else "")}
+    if not signed("ai_security"):
+        stale = so.get("ai_security") and so["ai_security"].get("version") != v
+        return {"index": 3, "of": len(STAGES), "label": STAGES[3], "next": f"an AI security engineer signs at {v}" + (f"; the {so['ai_security']['version']} sign-off is stale" if stale else "")}
+    return {"index": 5, "of": len(STAGES), "label": STAGES[5], "next": "keep it: bump the version on any change a consumer would notice, and both sign again"}
+
+
+def shelf_record(m: dict) -> dict:
+    """The component as the hub's sign-off queue and onboarding tracker see it: facts from the manifest only."""
+    return {"name": m["name"], "title": title_of(m), "version": m["version"], "kind": m["kind"], "language": m["language"], "owner": m["owner"], "status": m["status"],
+            "summary": m["summary"], "signoff": {r: m["signoff"].get(r) for r in SIGNOFF_ROLES}, "signed": signed_state(m) == "signed", "state": signed_state(m),
+            "usedIn": list(m.get("used_in", [])), "stage": stage_of(m),
+            "gates": {"readme": os.path.exists(os.path.join(m["_dir"], "README.md")), "walkthrough": os.path.exists(os.path.join(m["_dir"], m["walkthrough"])),
+                      "example": os.path.exists(os.path.join(m["_dir"], m["example"]["path"])), "tests": bool(m["test"]), "spec": bool(m["spec"]["requirements"])},
+            "test": m["test"], "exampleRun": m["example"].get("run") or "", "hubPath": f"/discover/{'knowledge' if m['kind'] == 'skill' else 'tools'}/{m['name']}", "repoPath": m["_rel"]}
 
 
 def spec_short(m: dict) -> str:
@@ -272,9 +314,11 @@ def render_hub(ms: list[dict]) -> str:
     body = ("// Generated by `python3 tools/shelf.py --write` from components/*/component.json and each README. Do not edit.\n"
             "// Every component of the collection as a listing on Discover (under its kind's tab and in search) with a\n"
             "// listing page built from its README. `collection: true` keeps them out of the artboard's default \"All\" tab.\n"
-            'import type { ConsumerDetail, ConsumerSummary } from "../types";\n\n'
+            'import type { ConsumerDetail, ConsumerSummary, ShelfRecord } from "../types";\n\n'
             f"export const COLLECTION_LISTINGS: ConsumerSummary[] = {json.dumps(listings, indent=2, ensure_ascii=False)};\n\n"
-            f"export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {json.dumps(details, indent=2, ensure_ascii=False)};\n")
+            f"export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {json.dumps(details, indent=2, ensure_ascii=False)};\n\n"
+            "// The same components as the sign-off queue and the onboarding tracker see them: version, sign-offs, stage.\n"
+            f"export const COLLECTION_SHELF: ShelfRecord[] = {json.dumps([shelf_record(m) for m in ms], indent=2, ensure_ascii=False)};\n")
     return body
 
 
@@ -378,19 +422,68 @@ def run_examples(ms: list[dict], only: str | None) -> int:
     return failures
 
 
-def sign(ms: list[dict], name: str, role: str, by: str) -> int:
+def record_signoff(m: dict, role: str, by: str, date: str | None = None, used_in: str | None = None) -> str | None:
+    """Write one sign-off into the manifest after the tests pass; returns a problem, or None when recorded.
+
+    The manifest is the record and the commit is the signature: nothing here is a credential. `used_in` names the
+    project the owner used the component in; an owner cannot sign before one is recorded.
+    """
     import datetime
     role = role.replace("-", "_")
-    m = next((x for x in ms if x["name"] == name), None)
-    if not m or role not in SIGNOFF_ROLES:
-        print("unknown component or role"); return 2
-    if m["test"] and subprocess.run(m["test"], shell=True, cwd=m["_dir"], capture_output=True).returncode != 0:
-        print("tests fail; a sign-off needs a green suite"); return 1
+    if role not in SIGNOFF_ROLES: return f"unknown role `{role}`"
+    if not by or not by.strip(): return "a sign-off needs a name"
     path = os.path.join(m["_dir"], "component.json"); raw = json.load(open(path, encoding="utf-8"))
-    raw["signoff"][role] = {"by": by, "date": datetime.date.today().isoformat(), "version": raw["version"]}
-    json.dump(raw, open(path, "w", encoding="utf-8"), indent=2); open(path, "a").write("\n")
-    print(f"{name}: {role} signed at {raw['version']} by {by}; commit component.json to make it a record, then run --write")
+    if used_in and used_in.strip() and used_in.strip() not in raw.get("used_in", []):
+        raw.setdefault("used_in", []).append(used_in.strip())
+    if role == "owner" and not raw.get("used_in"):
+        return "the owner signs after the component has been used once for real: record the project (--used-in)"
+    if raw["status"] != "ready": return f"status is {raw['status']}; a sign-off needs a ready component"
+    if m["test"] and subprocess.run(m["test"], shell=True, cwd=m["_dir"], capture_output=True).returncode != 0:
+        return "tests fail; a sign-off needs a green suite"
+    raw["signoff"][role] = {"by": by.strip(), "date": date or datetime.date.today().isoformat(), "version": raw["version"]}
+    json.dump(raw, open(path, "w", encoding="utf-8"), indent=2, ensure_ascii=False); open(path, "a").write("\n")
+    return None
+
+
+def sign(ms: list[dict], name: str, role: str, by: str, used_in: str | None = None) -> int:
+    m = next((x for x in ms if x["name"] == name), None)
+    if not m:
+        print(f"unknown component `{name}`"); return 2
+    problem = record_signoff(m, role, by, used_in=used_in)
+    if problem:
+        print(f"{name}: {problem}"); return 1
+    print(f"{name}: {role.replace('-', '_')} signed at {m['version']} by {by}; commit component.json to make it a record, then run --write")
     return 0
+
+
+def apply_signoffs(ms: list[dict], path: str) -> int:
+    """Apply a file the hub's sign-off queue exported: {"signoffs": [{component, role, by, date, version, usedIn?}]}.
+
+    A sign-off names the version it was given at; one for another version is stale and skipped, since the person
+    read a different component. Each applied entry is written into its manifest exactly as --sign would.
+    """
+    try:
+        doc = json.load(open(path, encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        print(f"cannot read {path}: {e}"); return 2
+    entries = doc.get("signoffs") if isinstance(doc, dict) else None
+    if not isinstance(entries, list):
+        print("the file must be {\"signoffs\": [...]} as the hub exports it"); return 2
+    by_name = {m["name"]: m for m in ms}; failures = 0; applied = 0
+    for e in entries:
+        m = by_name.get(e.get("component", "")); tag = f"{e.get('component')} · {e.get('role')}"
+        if not m:
+            print(f"!! {tag}: unknown component"); failures += 1; continue
+        if e.get("version") != m["version"]:
+            print(f"!! {tag}: signed at {e.get('version')}, the component is at {m['version']}; ask again"); failures += 1; continue
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(e.get("date", ""))):
+            print(f"!! {tag}: date must be YYYY-MM-DD"); failures += 1; continue
+        problem = record_signoff(m, str(e.get("role", "")), str(e.get("by", "")), e["date"], e.get("usedIn"))
+        if problem:
+            print(f"!! {tag}: {problem}"); failures += 1; continue
+        applied += 1; print(f"ok {tag}: signed at {m['version']} by {e['by']} on {e['date']}")
+    print(f"{applied} sign-off(s) written; commit the manifests (the commit is the signature) and run --write" + (f"; {failures} skipped" if failures else ""))
+    return 1 if failures else 0
 
 
 def run_tests(ms: list[dict], only: str | None) -> int:
@@ -411,10 +504,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true"); ap.add_argument("--write", action="store_true")
     ap.add_argument("--test", action="store_true"); ap.add_argument("--list", action="store_true"); ap.add_argument("--examples", action="store_true")
-    ap.add_argument("--sign", metavar="NAME"); ap.add_argument("--role", choices=("owner", "ai-security", "ai_security")); ap.add_argument("--by")
+    ap.add_argument("--sign", metavar="NAME"); ap.add_argument("--role", choices=("owner", "ai-security", "ai_security")); ap.add_argument("--by"); ap.add_argument("--used-in", metavar="PROJECT")
+    ap.add_argument("--apply-signoffs", metavar="FILE")
     ap.add_argument("--only", choices=("python", "typescript", "markdown", "mixed", "skills"))
     a = ap.parse_args(argv)
-    if not (a.check or a.write or a.test or a.list or a.examples or a.sign):
+    if not (a.check or a.write or a.test or a.list or a.examples or a.sign or a.apply_signoffs):
         ap.print_help(); return 2
     ms = []
     problems = []
@@ -431,13 +525,15 @@ def main(argv=None) -> int:
         print("\n".join(problems)); return 1
     if a.sign:
         if not (a.role and a.by): print("--sign needs --role and --by"); return 2
-        return sign(ms, a.sign, a.role, a.by)
+        return sign(ms, a.sign, a.role, a.by, a.used_in)
+    if a.apply_signoffs:
+        return apply_signoffs(ms, a.apply_signoffs)
     if a.examples:
         f = run_examples(ms, a.only)
         print(f"FAILED: {f} live example(s) failed" if f else "ok: every live example ran")
         return 1 if f else 0
     if a.list:
-        for m in ms: print(f"{m['kind']:<12}{m['language']:<12}{m['status']:<8}{m['version']:<8}{signed_state(m):<38}{m['name']:<28}{m['summary'][:70]}")
+        for m in ms: print(f"{m['kind']:<12}{m['language']:<12}{m['status']:<8}{m['version']:<8}{stage_of(m)['label']:<22}{signed_state(m):<38}{m['name']:<28}{m['summary'][:60]}")
     if a.write:
         for path, content in exports(ms).items():
             os.makedirs(os.path.dirname(path), exist_ok=True)

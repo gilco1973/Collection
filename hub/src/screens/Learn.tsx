@@ -83,8 +83,9 @@ export default function Learn() {
                 <span className="chip line">R1</span>
               </div>
               <div className="cb" style={{ fontSize: 13 }}>
-                Tools, integrations and patterns lifted from products in production: a governed action loop, an untrusted-input guard, connectors, an API client. Each with a five-minute README and tests, under the Tools and Knowledge tabs and in search.{" "}
-                <Link to={ROUTES.discover}>Open Discover</Link>
+                Tools, integrations and patterns lifted from products in production: a governed action loop, an untrusted-input guard, connectors, an API
+                client. Each with a five-minute README and tests, under the Tools and Knowledge tabs and in search. Every one carries a version and two
+                sign-offs; the queue shows who signs what. <Link to={ROUTES.discover}>Open Discover</Link> · <Link to={ROUTES.shelfSignoffs}>Sign-offs</Link>
               </div>
             </div>
             <div className="card">
@@ -93,8 +94,8 @@ export default function Learn() {
                 <span className="sp"></span>
               </div>
               <div className="cb" style={{ fontSize: 13 }}>
-                Best practices, paved roads, the agent skills catalog, tutorials and governance, kept healthy by the librarian. Every component's page is published there too.{" "}
-                <a href={env.VITE_KB_URL}>Open the knowledge base</a>
+                Best practices, paved roads, the agent skills catalog, tutorials and governance, kept healthy by the librarian. Every component's page is
+                published there too. <a href={env.VITE_KB_URL}>Open the knowledge base</a>
               </div>
             </div>
             <div className="card">
@@ -103,8 +104,9 @@ export default function Learn() {
                 <span className="sp"></span>
               </div>
               <div className="cb" style={{ fontSize: 13 }}>
-                One engineer per team, meeting every two weeks to pick one initiative each, build it from the collection on a paved road, and bring the result back. The charter and the initiative brief are in the knowledge base under onboarding.{" "}
-                <Link to={ROUTES.intake}>Start a brief</Link>
+                One engineer per team, meeting every two weeks to pick one initiative each, build it from the collection on a paved road, and bring the result
+                back. The charter and the initiative brief are in the knowledge base under onboarding. <Link to={ROUTES.intake}>Start a brief</Link> ·{" "}
+                <Link to={ROUTES.shelfOnboarding}>Onboarding</Link>
               </div>
             </div>
           </div>
