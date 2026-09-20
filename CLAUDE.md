@@ -21,6 +21,9 @@ them and publishes pages into the knowledge base; it never contains either. `REA
   `kb-librarian index --write` and `kb-librarian check` in the checkout. The publisher is idempotent.
 - Component tags must come from the knowledge base's taxonomy, mirrored in `tools/kb-taxonomy.json`; refresh the
   mirror when the product changes its contract.
+- `services/` are the deployables (hub-api, agent-runtime). They vendor component files through `services/vendor.json`;
+  change the component, then `python3 services/vendor.py --write`; `--check` refuses drift. Each has `settings.py`
+  that fails closed; fakes are refused in staging and production. `scripts/verify.sh` runs every gate.
 - Run tests with `python3 tools/shelf.py --test` (`--only python|typescript|skills`), the live examples with
   `python3 tools/shelf.py --examples`, and `cd hub && pnpm verify`.
 - Every component carries a version, two sign-offs bound to it (owner, AI security engineer; recorded only by a

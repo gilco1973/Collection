@@ -3,37 +3,39 @@ on:
   push:
   pull_request:
 jobs:
-  catalog:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: python3 tools/shelf.py --check
-  components-python:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: python3 -m pip install --user pillow
-      - run: python3 tools/shelf.py --test --only python && python3 tools/shelf.py --test --only skills
-      - run: python3 tools/shelf.py --examples --only python && python3 tools/shelf.py --examples --only skills
-  components-typescript:
+      - run: python3 -m pip install --user pillow   # the pixel-parity skill's example only
+      - run: scripts/verify.sh python
+  typescript:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
-      - run: python3 tools/shelf.py --test --only typescript && python3 tools/shelf.py --examples --only typescript
+      - run: scripts/verify.sh typescript
   hub:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: hub } }
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
         with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm verify
+      - run: scripts/verify.sh hub
+  bundle:
+    runs-on: ubuntu-latest
+    needs: [python, hub]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
+      - run: scripts/bundle.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: release, path: release/ }

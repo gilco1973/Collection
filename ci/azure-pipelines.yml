@@ -1,0 +1,38 @@
+# The same gates on Azure Pipelines: every job calls scripts/verify.sh, so the two runners cannot drift.
+trigger:
+  branches: { include: ["*"] }
+pool: { vmImage: ubuntu-latest }   # or the bank's self-hosted pool; nothing here needs the public internet beyond the tool installers
+stages:
+  - stage: verify
+    jobs:
+      - job: python
+        steps:
+          - task: UsePythonVersion@0
+            inputs: { versionSpec: "3.11" }
+          - script: python3 -m pip install --user pillow
+            displayName: pillow (the pixel-parity skill's example only)
+          - script: scripts/verify.sh python
+            displayName: shelf, vendoring, components, services
+      - job: typescript
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: "22.x" }
+          - script: scripts/verify.sh typescript
+      - job: hub
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: "22.x" }
+          - script: corepack enable && corepack prepare pnpm@10 --activate
+            displayName: pnpm 10
+          - script: scripts/verify.sh hub
+  - stage: release
+    dependsOn: verify
+    jobs:
+      - job: bundle
+        steps:
+          - task: NodeTool@0
+            inputs: { versionSpec: "22.x" }
+          - script: corepack enable && corepack prepare pnpm@10 --activate
+          - script: scripts/bundle.sh
+          - publish: release
+            artifact: release
