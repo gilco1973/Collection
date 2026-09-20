@@ -1,0 +1,14 @@
+{
+  "name": "_template",
+  "kind": "tool",
+  "language": "python",
+  "summary": "The manifest every component carries; see CONTRIBUTING.md for the contract",
+  "status": "draft",
+  "source": {"project": "collection", "path": "", "snapshot": ""},
+  "owner": "gil.klainert",
+  "tags": ["template"],
+  "requires": [],
+  "pairs_with": [],
+  "test": "",
+  "vendored": []
+}
