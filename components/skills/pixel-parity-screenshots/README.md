@@ -6,7 +6,7 @@ Prove a front end matches its design artboards: render the artboard and the app 
 
 ```
 cd components/skills/pixel-parity-screenshots
-APP_BASE=http://127.0.0.1:4173 ARTBOARDS=./artboards node shoot.cjs && python3 diff.py
+APP_BASE=http://localhost:4173 ARTBOARDS=./artboards node shoot.cjs && python3 diff.py
 ```
 
 Read `SKILL.md` for the procedure; it is the same page the knowledge base publishes in its skills catalog.

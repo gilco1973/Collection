@@ -38,6 +38,8 @@ export interface ConsumerSummary {
   /** One line of adoption or ownership shown in the card foot. */
   footNote: string;
   access: Access;
+  /** Listed from the components collection: shown under its kind's tab, in search and on its page, not in the artboard's default "All" tab. */
+  collection?: boolean;
 }
 
 export interface Tile {

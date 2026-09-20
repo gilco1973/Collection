@@ -59,6 +59,11 @@ sections:
     title: Governance
     owner: model-risk-management
     review_every_days: 90
+  - id: components
+    path: components
+    title: Reusable components
+    owner: ai-platform-engineering
+    review_every_days: 120
 
 frontmatter:
   required: [title, owner, status, reviewed, tags, audience]

@@ -113,6 +113,8 @@ export const PRINCIPALS: Record<string, Principal> = {
   },
 };
 
+import { COLLECTION_DETAILS, COLLECTION_LISTINGS } from "./collection";
+
 export const LISTINGS: ConsumerSummary[] = [
   {
     id: "employee-assistant",
@@ -151,6 +153,27 @@ export const LISTINGS: ConsumerSummary[] = [
     footNote: "312 weekly users · 0.90 task success",
     access: "open",
     tagline: "returns and fees",
+  },
+  {
+    id: "first-responder",
+    slug: "first-responder",
+    kind: "agent",
+    name: "First responder",
+    description: "Page to postmortem in the on-call team's chat: assembles the war room, reads with citations, acts under confirmation, mitigates under dual control.",
+    road: "R2",
+    lifecycle: "preview",
+    icon: "w",
+    glyph: "pulse",
+    meta: [
+      { text: "R2 · write", kind: "warn" },
+      { text: "ladder L2", kind: "accent" },
+      { text: "preview", kind: "warn" },
+    ],
+    footNote: "increment 1 on the sandbox · the origin of the collection's action loop",
+    access: "request",
+    requestKind: "access",
+    tagline: "on-call, war room, first read",
+    collection: true,
   },
   {
     id: "policy-and-procedures",
@@ -283,6 +306,9 @@ export const LISTINGS: ConsumerSummary[] = [
   },
 ];
 
+/** Everything Discover and the listing pages can show: the artboard's set plus the components collection. */
+export const ALL_LISTINGS: ConsumerSummary[] = [...LISTINGS, ...COLLECTION_LISTINGS];
+
 export function catalogFor(p: Principal): Catalog {
   const available = LISTINGS.filter((l) => ["employee-assistant", "investigation-triage", "policy-and-procedures", "compliance-narration"].includes(l.id)).map(
     (l) => ({ ...l, access: p.entitlements.includes(l.id) ? ("open" as const) : l.access === "open" ? ("request" as const) : l.access }),
@@ -290,7 +316,7 @@ export function catalogFor(p: Principal): Catalog {
   return {
     availableCount: 4,
     available,
-    listings: LISTINGS.map((l) => ({ ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access })),
+    listings: ALL_LISTINGS.map((l) => ({ ...l, access: p.entitlements.includes(l.id) ? "open" : l.access === "open" ? "request" : l.access })),
     counts: { all: 9, assistants: 2, agents: 3, knowledge: 1, tools: 1, roads: 2 },
     changes: [
       { date: "12 Sep", kind: { text: "new version", kind: "accent" }, text: "Investigation triage 1.4 — claim-support marks on every answer" },
@@ -373,7 +399,7 @@ export const INVESTIGATION_TRIAGE: ConsumerDetail = {
   changelogHref: "https://catalog.crai.internal/consumers/investigation-triage/changelog",
 };
 
-export const DETAILS: Record<string, ConsumerDetail> = { "investigation-triage": INVESTIGATION_TRIAGE };
+export const DETAILS: Record<string, ConsumerDetail> = { "investigation-triage": INVESTIGATION_TRIAGE, ...COLLECTION_DETAILS };
 
 /** The draft on the artboard: step 3 open, steps 1 and 2 done. Filed by gk. */
 export const DRAFT_BRIEF: Brief = {

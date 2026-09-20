@@ -23,6 +23,8 @@ const schema = z
     VITE_OIDC_SCOPE: z.string().default("openid profile email"),
     /** `browser` for a host with rewrites; `hash` for a static host. */
     VITE_ROUTER: z.enum(["browser", "hash"]).default("browser"),
+    /** The knowledge base's console, linked from Learn; relative when served behind the same origin. */
+    VITE_KB_URL: z.string().default("/kb"),
     /** Where telemetry events go until the OpenTelemetry web SDK is wired. */
     VITE_TELEMETRY: z.enum(["none", "console"]).default("none"),
     /** Shown in the footer and sent as a header, so support can pin a report to a build. */

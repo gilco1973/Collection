@@ -42,7 +42,7 @@ export default function Discover() {
     const kind = TABS.find((t) => t.key === tab)?.kind;
     if (kind) return cat.listings.filter((l) => l.kind === kind);
     // "All" is the rest of the catalog: what is not already in "Available to you", roads aside (they have their own tab).
-    return cat.listings.filter((l) => !availableIds.has(l.id) && l.kind !== "road");
+    return cat.listings.filter((l) => !availableIds.has(l.id) && l.kind !== "road" && !l.collection);
   }, [cat, tab, availableIds]);
   const pendingFor = useMemo(() => new Set((requests.data ?? []).filter((r) => r.status === "pending").map((r) => r.consumerId)), [requests.data]);
 

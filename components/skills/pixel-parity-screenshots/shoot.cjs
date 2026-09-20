@@ -12,7 +12,7 @@ const ROOT = process.cwd();
 const SCREENS = JSON.parse(fs.readFileSync(process.env.SCREENS || path.join(ROOT, "screens.json"), "utf8"));
 const UX = process.env.ARTBOARDS || path.join(ROOT, "artboards");
 const OUT = process.env.OUT || path.join(ROOT, "compare");
-const BASE = process.env.APP_BASE || "http://127.0.0.1:4173";
+const BASE = process.env.APP_BASE || "http://localhost:4173";
 const HASH = process.env.HASH_ROUTER === "1";
 const FONTS = process.env.FONTS;
 const INIT = process.env.INIT_SCRIPT ? fs.readFileSync(process.env.INIT_SCRIPT, "utf8") : null;

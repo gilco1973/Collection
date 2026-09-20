@@ -10,7 +10,7 @@ import {
   DRAFT_BRIEF,
   ESTIMATE,
   INITIAL_REQUESTS,
-  LISTINGS,
+  ALL_LISTINGS,
   PRINCIPALS,
   ROAD_R2_READ,
   catalogFor,
@@ -94,7 +94,7 @@ route("GET", "/catalog/search", ({ url, principal }) => {
 });
 
 route("GET", "/consumers/:slug", ({ params, principal }) => {
-  const summary = LISTINGS.find((l) => l.slug === params.slug);
+  const summary = ALL_LISTINGS.find((l) => l.slug === params.slug);
   if (!summary) return problem(404, { title: "Not found", detail: "No listing with that name." });
   const detail = DETAILS[params.slug];
   const youActAt = principal.ladder === "L0" ? "L0" : (detail?.youActAt ?? "L1");
@@ -128,7 +128,7 @@ route("GET", "/me/requests", ({ principal }) => json(principal.id === "u_gk" ? s
 
 route("POST", "/me/requests", ({ principal, body }) => {
   const b = body as { kind: AccessRequest["kind"]; consumerId?: string; ladder?: string; reason?: string };
-  const listing = LISTINGS.find((l) => l.id === b.consumerId);
+  const listing = ALL_LISTINGS.find((l) => l.id === b.consumerId);
   if (b.kind === "ladder" && b.ladder && ["L0", "L1", "L2", "L3"].indexOf(b.ladder) > ["L0", "L1", "L2", "L3"].indexOf(principal.ladder)) {
     return problem(403, {
       title: "Above your ceiling",

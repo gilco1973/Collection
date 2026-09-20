@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { env } from "../config/env";
 import { ROUTES } from "../routes";
 import { usePalette } from "../ui/CommandPalette";
 import { HubFoot, HubNav } from "../ui/HubChrome";
@@ -67,6 +68,46 @@ export default function Learn() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="hsec" id="collection">
+          <div className="hh">
+            <h2>The collection and the knowledge base</h2>
+            <span className="sub">reusable components, the practices behind them, and the AI champions programme</span>
+            <span className="sp"></span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            <div className="card">
+              <div className="ch">
+                <h3>Reusable components</h3>
+                <span className="sp"></span>
+                <span className="chip line">R1</span>
+              </div>
+              <div className="cb" style={{ fontSize: 13 }}>
+                Tools, integrations and patterns lifted from products in production: a governed action loop, an untrusted-input guard, connectors, an API client. Each with a five-minute README and tests. Under the Tools and Knowledge tabs of{" "}
+                <Link to={ROUTES.discover}>Discover</Link>, and in search.
+              </div>
+            </div>
+            <div className="card">
+              <div className="ch">
+                <h3>The knowledge base</h3>
+                <span className="sp"></span>
+              </div>
+              <div className="cb" style={{ fontSize: 13 }}>
+                Best practices, paved roads, the agent skills catalog, tutorials and governance, kept healthy by the librarian. Every component's page is published there too.{" "}
+                <a href={env.VITE_KB_URL}>Open the knowledge base</a>
+              </div>
+            </div>
+            <div className="card">
+              <div className="ch">
+                <h3>AI champions</h3>
+                <span className="sp"></span>
+              </div>
+              <div className="cb" style={{ fontSize: 13 }}>
+                One engineer per team, meeting every two weeks to pick one initiative each, build it from the collection on a paved road, and bring the result back. The charter and the initiative brief are in the knowledge base under onboarding; file the brief here with{" "}
+                <Link to={ROUTES.intake}>Start a brief</Link>.
+              </div>
+            </div>
+          </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div className="card" id="example">

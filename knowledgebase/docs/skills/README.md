@@ -19,6 +19,15 @@ we make good practice reusable instead of tribal.
 | [code-review](code-review/SKILL.md) | Reviewing code, including AI-generated code, against our standards | ai-platform-architecture |
 | [incident-summary](incident-summary/SKILL.md) | Turning an incident channel into a structured post-incident summary | ai-platform-engineering |
 | [policy-qa](policy-qa/SKILL.md) | Answering policy questions with citations from the governed corpus | ai-platform-enablement |
+<!-- collection:start -->
+| [handover](handover/SKILL.md) | The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits | ai-platform-enablement |
+| [pixel-parity-screenshots](pixel-parity-screenshots/SKILL.md) | Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels | ai-platform-enablement |
+| [production-readiness](production-readiness/SKILL.md) | One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner | ai-platform-enablement |
+| [runbook](runbook/SKILL.md) | The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence | ai-platform-enablement |
+| [security-notes](security-notes/SKILL.md) | Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits | ai-platform-enablement |
+| [use-case-to-backlog](use-case-to-backlog/SKILL.md) | One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift | ai-platform-enablement |
+| [walkthrough-video](walkthrough-video/SKILL.md) | A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded | ai-platform-enablement |
+<!-- collection:end -->
 
 ## Writing a skill
 
