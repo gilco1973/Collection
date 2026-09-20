@@ -29,7 +29,9 @@ called with references the harness mints per call. Model access is IAM from the 
 | Deploy system (Azure DevOps) | `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PAT_NAME` | A PAT scoped to read pipelines and releases |
 | Knowledge base | `HUB_KB_URL`, `HUB_KB_SEARCH_URL` | The console URL and, for the bedrock assistant, a search endpoint that returns `[{source, chunk_ref, classification, text}]` |
 | The platform runtime | `HUB_ASSISTANT=http`, `HUB_ASSISTANT_URL`, `HUB_ASSISTANT_TOKEN_NAME` | The runtime that owns the employee assistant and streams `event: view` turns on the same contract |
-| Audit export | `AGENT_AUDIT_EXPORT` | A bucket the task role may `s3:PutObject` to; the chain's export lands there with its head |
+| Audit export | `AGENT_AUDIT_EXPORT`, `AGENT_AUDIT_EXPORT_INTERVAL_S` | A bucket the task role may `s3:PutObject` to; the chain's export lands there with its head. With an interval the task exports itself; without one, a scheduled task runs `export-audit` |
+| Limits | `HUB_RATE_PER_MINUTE`, `AGENT_RUNS_PER_MINUTE`, `HUB_IDEMPOTENCY_TTL_S` | Nothing: the defaults (300 requests and 60 runs per person per minute, replays kept a day) suit a first deployment; both limits must be above 0 outside the sandbox |
+| Readiness and backups | `/api/ready`, `/ready`; `python3 -m hubapi backup <path>`, `python3 -m agentrt backup <path>` | The load balancer's health check pointed at the readiness route; a scheduled task that runs the backup command and copies the file off the volume |
 
 ## Two environments, one build
 

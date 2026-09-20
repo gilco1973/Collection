@@ -23,6 +23,7 @@ configuration change gated by its demonstration, not a new build.
 | Knowledge base: pages published into the product, its checks at zero | DONE | `tools/publish_kb.py`, `kb-librarian check` on a checkout | The pages published into the bank's knowledge base checkout (enablement lead) |
 | MCP: a tool server with elicitation and 403 on taint, a gateway for external servers, a read-only shelf server | DONE | the three components' tests, including the HTTP transport end to end | The official MCP conformance suite run against the tool server with a reviewed expected-failures file (PLT-HAR-33) (platform team) |
 | Model risk | OPEN | the think step records the engine, stage and token counts on the chain; the hub's feedback question is stored per turn | The judge and labels for the first read; the inference profile approved (model risk) |
+| Operations: readiness routes for the load balancer, request ids end to end, per-person rate limits, a versioned record that refuses a newer schema, online backups, the chain exported from inside the task | DONE | `services/*/tests/test_ops.py`; `scripts/smoke-container-tree.sh` hits `/ready` in both trees | The backup job and the alarm on `/ready` created on the bank's account (integrations engineer) |
 | Demonstration video tooling (`demo/`) | OPTIONAL | needs ffmpeg and Chromium; excluded from the bundle | — |
 
 ## What "production ready" means here
