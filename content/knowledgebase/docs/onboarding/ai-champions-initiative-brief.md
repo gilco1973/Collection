@@ -8,52 +8,54 @@ audience: [engineer, product]
 ---
 # The initiative brief
 
-One page per initiative, written by the champion, filed through the hub's intake so it gets a road, a risk tier and
-a reviewer. It mirrors the intake brief's six sections; the answers here are the ones the intake form asks for.
+One page per initiative, written by the champion and filed through the hub's intake. It is the platform's use-case
+brief, step 1 of onboarding: the same six sections the intake form asks for, in the same order, so a champion's brief
+needs no translation. A read-profile consumer on an open road registers itself from it; the platform lead confirms
+only the road, within two working days. Write and money profiles need the lead's confirmation of the brief.
 
-## 1. The use case
+## 1. Use case
 
-- **Team and champion.**
-- **The problem, in one sentence a teammate would recognise.**
-- **Who feels it and how often.** People, times per week, minutes each time.
-- **What "better" measures.** The outcome metric and its baseline today (or "not measured" and who will measure it).
+- **Name** and **team** (the champion's own team).
+- **The problem, in a few sentences a teammate would recognise:** what happens today, who feels it, how often.
+- **Road**, chosen from the consumer classes: tools and knowledge, internal agent, batch with a review queue,
+  knowledge service. Customer and partner assistants are not a champion's first initiative.
+- **Owner:** the champion.
 
-## 2. The road and the model
+## 2. People
 
-- **Road.** Tools and knowledge, internal agent, retrieval service, batch with a review queue; pick one from the [paved roads](../paved-roads/README.md).
-- **Model use.** What the model reads, what it produces, what it never does.
-- **Increments.** Three at most, each ending in a demonstration a teammate uses.
+- **Business owner** and **product owner** (they may be the same person on a small team).
+- **Domain expert** and their weekly labelling allowance in hours; the evaluation suite is written with them.
+- **Approvers** for any W2 action, and the rule that nobody approves their own request.
 
 ## 3. Data and tools
 
-- **Text the model will read** and its classification; every source is untrusted input.
-- **Systems it reads from and writes to**, each with a recorded contract or a named owner who will record one.
-- **The tier ceiling.** R only, W1 under confirmation, or W2 under dual control. Money is out of scope.
+- **Systems of record** it reads from and writes to, each with a recorded contract or the owner who will record one.
+- **Tools needed** (at most fifteen per session) and the **tier ceiling**: R only, W1 under confirmation, or W2 under
+  dual control. Money is out of scope for an initiative.
+- **Data classes read**, and the channel (operator for a champion's initiative).
+- **From the collection:** the components and skills reused, and what the initiative returns to it.
 
-## 4. People
+## 4. Model
 
-- **Owner** (the champion), **business owner**, **domain expert and hours per week**, **approvers** for W2.
-- **Who confirms** each write, and who is never allowed to approve their own request.
+- **Model need:** what the model reads, what it produces (cited JSON, a draft, a classification), what it never does.
+- **Prompts** live in the repository, loaded by version, with an evaluation suite before anything leaves the sandbox.
+- **Substitute:** what happens when the model is unavailable (rules mode, a queue, a person).
 
-## 5. From the collection
+## 5. Outcome
 
-| Reused | Component or skill | What it saves |
-| --- | --- | --- |
-| | | |
-
-| Returned | What the initiative gives back | When |
-| --- | --- | --- |
-| | | |
+- **One outcome metric** with its unit, **today's baseline** and the date it was measured (or "not measured" and who
+  will measure it), and the **target**.
+- **Increments:** three at most, each ending in a demonstration a teammate uses, the first within six weeks.
 
 ## 6. Review
 
-- **Risk tier** proposed under [model risk](../governance/model-risk.md), and why.
-- **The first demonstration**, its command and the numbers it will report.
+- **Materiality tier** proposed under [model risk](../governance/model-risk.md), and why.
 - **What remains on an account** (identity, secrets, a webhook) and who owns each step.
-- Acknowledged by the champion and the team lead.
+- Acknowledged by the champion and the team lead: what happens next is registration, the bootcamp, and a build on
+  the road's template with the platform's embedded engineer for the first two weeks.
 
 ## After filing
 
-The enablement lead confirms the road within two working days. The champion opens the repository folder, copies
-the components named in section 5, writes the first failing test, and brings the first demonstration to a deep dive
+The enablement lead confirms the road within two working days. The champion opens the repository folder, copies the
+components named in section 3, writes the first failing test, and brings the first demonstration to a deep dive
 within six weeks. The `production-readiness` and `handover` skills in the collection are the pages that close it.

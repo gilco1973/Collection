@@ -40,3 +40,7 @@ budget apply. Turn a proposal into a call only through the loop's confirmation a
 
 The engine protocol of Meg's `responder/think.py` (snapshot 2026-09-19), reduced from four engines and eight incident
 stages to two engines and three example stages.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Stage prompts publish to the prompt registry with an evaluation suite (PLT-PRM-2) and load by version; the same cited-JSON contract holds.

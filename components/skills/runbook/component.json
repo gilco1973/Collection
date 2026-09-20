@@ -19,5 +19,18 @@
     "fail-closed-config"
   ],
   "test": "",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "12",
+      "7.1"
+    ],
+    "requirements": [
+      "PLT-OPS-3",
+      "PLT-OPS-12",
+      "PLT-STOP-3"
+    ],
+    "replacement_test": "The road's runbook (degraded modes, kill-switch scopes, on-call, first-week SLO defaults) is this document with the platform's foundation services in the table."
+  }
 }

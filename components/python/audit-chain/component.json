@@ -4,11 +4,35 @@
   "language": "python",
   "summary": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
   "status": "ready",
-  "source": {"project": "meg-first-responder", "path": "meg/crai/audit.py", "snapshot": "2026-09-19"},
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/crai/audit.py",
+    "snapshot": "2026-09-19"
+  },
   "owner": "gil.klainert",
-  "tags": ["governance", "observability", "security"],
+  "tags": [
+    "governance",
+    "observability",
+    "security"
+  ],
   "requires": [],
-  "pairs_with": ["governed-action-loop"],
+  "pairs_with": [
+    "governed-action-loop"
+  ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.7"
+    ],
+    "requirements": [
+      "PLT-AC-25",
+      "PLT-AC-26",
+      "PLT-AUD-1",
+      "PLT-AUD-3",
+      "PLT-AUD-12"
+    ],
+    "replacement_test": "The same records verify under the platform's audit trail and the export head is anchored by a KMS signature; a chain written here imports without a broken link."
+  }
 }

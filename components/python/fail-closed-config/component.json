@@ -19,5 +19,18 @@
     "secrets-by-name"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "5.6",
+      "4.16"
+    ],
+    "requirements": [
+      "PLT-SEC-5",
+      "PLT-GATE-1",
+      "PLT-ONB-5"
+    ],
+    "replacement_test": "The admission gate refuses the same missing settings at the cluster; `check-config` stays as the container's first command."
+  }
 }

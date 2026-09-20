@@ -28,3 +28,7 @@ collection.
 ## Where it came from
 
 The AI Hub's verify:shoot and verify:diff tooling, with the screen list moved to a file.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The UI modules' toolchain gate; a module reaches GA only after the usability pass, with this diff as the pixel evidence.

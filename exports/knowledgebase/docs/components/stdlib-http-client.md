@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # stdlib-http-client
 
-> A component of the collection: `components/python/stdlib-http-client/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/stdlib-http-client/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.3, §4.11 (PLT-HDL-1, PLT-HDL-2, PLT-CTR-1); the replacement test is under Known limits.
 
 
 One HTTP client for every upstream, on `urllib` only: timeouts, bounded retries with exponential backoff on 429 and
@@ -57,3 +57,5 @@ Meg (`meg/responder/httpclient.py`, snapshot 2026-09-19), used by every live con
 
 Synchronous. No connection pooling (urllib opens a connection per request); fine for a service making tens of calls
 per turn, not for a high-throughput proxy.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The generated clients from the contract registry replace the hand-written ones behind the same handler protocol; the recording transport becomes the registry's recorded contracts.

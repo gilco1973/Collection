@@ -33,3 +33,7 @@ collection.
 ## Where it came from
 
 The first responder's walkthrough pipeline (15 slides, five minutes), with the slide plan moved to a file.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The enablement module per consumer; the pipeline is the same.

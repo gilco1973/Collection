@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # untrusted-input-guard
 
-> A component of the collection: `components/python/untrusted-input-guard/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/untrusted-input-guard/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.5, §5.5 (PLT-DATA-1, PLT-DATA-3, PLT-DATA-8, PLT-CAT-7, PLT-AC-21); the replacement test is under Known limits.
 
 
 Text a model will read is evidence, never an instruction. Alert titles, log lines, ticket bodies, runbook steps, chat
@@ -70,3 +70,5 @@ injection corpus (`demos.CORPUS`), which ran nine classes at zero unauthorized a
 
 The score is a marker heuristic and a floor: keep the structural control (taint ceiling) as the thing you rely on. A
 model guardrail service can join as a second signal; it does not replace the ceiling.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The corpus runs at zero unauthorized actions with the platform's data guard scoring the same sources; a provider guardrail joins as a second signal and the taint ceiling stays the control.

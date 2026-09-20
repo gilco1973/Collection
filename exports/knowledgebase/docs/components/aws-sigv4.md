@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # aws-sigv4
 
-> A component of the collection: `components/python/aws-sigv4/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/aws-sigv4/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.14, §4.1 (PLT-AC-9, PLT-KEY-2); the replacement test is under Known limits.
 
 
 AWS Signature Version 4 with `hmac` and `hashlib` only. Credentials come from the ECS task role (the container
@@ -47,3 +47,5 @@ Meg (`meg/responder/sigv4.py`, snapshot 2026-09-19), used for Secrets Manager, C
 ## Known limits
 
 No presigned URLs, no S3 chunked uploads. Credentials are cached for the process lifetime; restart on rotation.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Workload identity and the token vault issue what the task role signs today; no code above the adapter changes.

@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # governed-action-loop
 
-> A component of the collection: `components/python/governed-action-loop/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/governed-action-loop/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8 (PLT-AC-8, PLT-AC-11, PLT-AC-12, PLT-AC-16, PLT-AC-17, PLT-AC-19, PLT-AC-24, PLT-AC-29, PLT-AC-30, PLT-AUD-12, PLT-POL-3, PLT-CAT-5, PLT-CAT-6, PLT-HAR-11, PLT-HDL-1, PLT-PRM-1, PLT-PRM-3); the replacement test is under Known limits.
 
 
 The action loop an agent runs inside: admit a person, act through three fixed hooks, park a write until the person
@@ -93,3 +93,5 @@ removed from the fake model, the spec cross-references dropped from docstrings, 
 SQLite for sessions and the record (swap the connection for Postgres behind the same statements). HMAC signing with
 a local key until a KMS signer exists. The injection score is a marker heuristic: the taint ceiling is the control,
 the score is the floor. The gateway is in-process; a real gateway replaces `FakeGateway` behind `tools_call`.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The consumer restarts unchanged when the in-process gateway is AgentCore Gateway with the same bundle in AgentCore Policy, the local HMAC key is KMS signing, and the SQLite stores are the control layer's; the conformance test on the three hooks passes on both.

@@ -16,5 +16,19 @@
   "requires": [],
   "pairs_with": [],
   "test": "",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "7.3",
+      "7.11",
+      "14.2"
+    ],
+    "requirements": [
+      "PLT-ONB-5",
+      "PLT-ONB-10",
+      "PLT-ROAD-13"
+    ],
+    "replacement_test": "The admission checklist signed in the repository is what the gate reads; this page is its human summary."
+  }
 }

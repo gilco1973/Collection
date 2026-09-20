@@ -20,5 +20,19 @@
     "oidc-pkce-auth"
   ],
   "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "8.1",
+      "8.6",
+      "4.13"
+    ],
+    "requirements": [
+      "PLT-UI-1",
+      "PLT-UI-2",
+      "PLT-TEL-8"
+    ],
+    "replacement_test": "The Hub API client generated from the contract registry carries the same headers and error mapping; the mock server becomes the recorded contract's fixtures."
+  }
 }

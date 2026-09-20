@@ -19,5 +19,17 @@
     "teams-graph-connector"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "7.11",
+      "8.4"
+    ],
+    "requirements": [
+      "PLT-ONB-12",
+      "PLT-UI-15"
+    ],
+    "replacement_test": "The how-to card becomes the consumer's enablement module (PLT-ONB-12) rendered by the UI modules; the pill catalog is the same data."
+  }
 }

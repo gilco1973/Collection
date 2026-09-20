@@ -19,5 +19,17 @@
     "use-case-to-backlog"
   ],
   "test": "",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "14",
+      "7.11"
+    ],
+    "requirements": [
+      "PLT-ONB-6",
+      "PLT-ROAD-13"
+    ],
+    "replacement_test": "Material changes re-enter onboarding step 4 (PLT-ONB-6); the handover names the step per ticket."
+  }
 }

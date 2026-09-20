@@ -18,5 +18,17 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.1"
+    ],
+    "requirements": [
+      "PLT-AC-14",
+      "PLT-ID-1",
+      "PLT-ID-8"
+    ],
+    "replacement_test": "AgentCore's inbound authorizer validates the same issuers and audiences; the verified claims feed the same principal chain."
+  }
 }

@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # typed-api-client
 
-> A component of the collection: `components/typescript/typed-api-client/` in the repository (kind tool, typescript, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/typescript/typed-api-client/` in the repository (kind tool, typescript, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §8.1, §8.6, §4.13 (PLT-UI-1, PLT-UI-2, PLT-TEL-8); the replacement test is under Known limits.
 
 
 The one HTTP client a front end uses. Every request carries the bearer token, an `X-Request-Id`, a W3C
@@ -61,3 +61,5 @@ The AI Hub front end (`src/api/client.ts`, `errors.ts` and the route helper of `
 ## Known limits
 
 Streaming responses use `raw()` and are parsed by the caller (the hub's SSE turn stream is the example).
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The Hub API client generated from the contract registry carries the same headers and error mapping; the mock server becomes the recorded contract's fixtures.

@@ -27,5 +27,18 @@
       "path": "sigv4.py",
       "from": "components/python/aws-sigv4/sigv4.py"
     }
-  ]
+  ],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.8"
+    ],
+    "requirements": [
+      "PLT-AC-29",
+      "PLT-AC-30",
+      "PLT-MDL-1",
+      "PLT-MDL-2"
+    ],
+    "replacement_test": "The model gateway service calls Converse with the same inference profile; this adapter is retired when the gateway serves the same `complete` contract."
+  }
 }

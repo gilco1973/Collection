@@ -34,3 +34,7 @@ Post the customer template only from a principal with the communications role (a
 ## Where it came from
 
 Meg (`meg/responder/templates.py`, snapshot 2026-09-19), with the company name in the disclosure made neutral.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Templates become signed catalog entries with `required_disclosure`; the same renders pass with the registry hash on the record.

@@ -35,3 +35,7 @@ observability target; fake mode is refused in production; `diagnostics()` prints
 ## Where it came from
 
 The shape of Meg's `responder/config.py` (snapshot 2026-09-19), reduced to the generic fields.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The admission gate refuses the same missing settings at the cluster; `check-config` stays as the container's first command.

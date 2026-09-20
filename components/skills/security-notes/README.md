@@ -26,3 +26,7 @@ collection.
 ## Where it came from
 
 The first responder's SECURITY.md, which Security reviews row by row.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The threat-model delta is the review record Security signs at step 5 of onboarding; the template stays.

@@ -28,5 +28,37 @@
       "path": "actionloop/audit.py",
       "from": "components/python/audit-chain/audit.py"
     }
-  ]
+  ],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "5.1",
+      "5.2",
+      "5.5",
+      "6",
+      "4.12",
+      "4.15",
+      "4.8"
+    ],
+    "requirements": [
+      "PLT-AC-8",
+      "PLT-AC-11",
+      "PLT-AC-12",
+      "PLT-AC-16",
+      "PLT-AC-17",
+      "PLT-AC-19",
+      "PLT-AC-24",
+      "PLT-AC-29",
+      "PLT-AC-30",
+      "PLT-AUD-12",
+      "PLT-POL-3",
+      "PLT-CAT-5",
+      "PLT-CAT-6",
+      "PLT-HAR-11",
+      "PLT-HDL-1",
+      "PLT-PRM-1",
+      "PLT-PRM-3"
+    ],
+    "replacement_test": "The consumer restarts unchanged when the in-process gateway is AgentCore Gateway with the same bundle in AgentCore Policy, the local HMAC key is KMS signing, and the SQLite stores are the control layer's; the conformance test on the three hooks passes on both."
+  }
 }

@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # rs256-jwt-verify
 
-> A component of the collection: `components/python/rs256-jwt-verify/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/rs256-jwt-verify/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.1 (PLT-AC-14, PLT-ID-1, PLT-ID-8); the replacement test is under Known limits.
 
 
 RS256 JSON Web Token verification with the standard library. RSA PKCS#1 v1.5 verification is integer arithmetic, so
@@ -57,3 +57,5 @@ Meg (`meg/responder/jwt.py`, snapshot 2026-09-19), where it verifies Bot Framewo
 
 RS256 only (add RS384/512 by changing the DigestInfo prefix). Production never signs here; the sign function exists
 for tests.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): AgentCore's inbound authorizer validates the same issuers and audiences; the verified claims feed the same principal chain.

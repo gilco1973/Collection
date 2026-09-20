@@ -20,5 +20,18 @@
     "secrets-by-name"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "5.3",
+      "4.11",
+      "7.6"
+    ],
+    "requirements": [
+      "PLT-HDL-1",
+      "PLT-CTR-1"
+    ],
+    "replacement_test": "The Teams client is a recorded contract behind a Gateway target; the fake stays as the road's local runner."
+  }
 }

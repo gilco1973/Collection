@@ -21,5 +21,17 @@
     "secrets-by-name"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.14",
+      "4.1"
+    ],
+    "requirements": [
+      "PLT-AC-9",
+      "PLT-KEY-2"
+    ],
+    "replacement_test": "Workload identity and the token vault issue what the task role signs today; no code above the adapter changes."
+  }
 }

@@ -28,8 +28,8 @@ slides you changed.
 
 ## The steps the video walks through
 
-1. The shape: three parts, one repository, one catalog tool.
+1. The shape: three parts, one repository, one shelf tool.
 2. The hub: Discover's Tools tab, a listing page built from a README, search, Learn.
 3. The knowledge base: the components section, a practice page, the skills catalog.
-4. The components: a component running in a terminal, the tests, the catalog tool.
+4. The components: a component running in a terminal, the tests, the shelf tool.
 5. The programme: the champions page, the initiative brief, the first hour.

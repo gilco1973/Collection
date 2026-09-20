@@ -10,7 +10,7 @@ audience: [engineer]
 
 Self-contained pieces of code an engineer copies into a project and uses the same day: tools, integrations and
 patterns lifted from products that run in production, each with a README that gets someone running in five minutes,
-a manifest and tests. They live in the repository under `components/`; the catalog tool publishes their READMEs here
+a manifest and tests. They live in the repository under `components/`; the shelf tool publishes their READMEs here
 and lists them on the hub's Discover page. Skills are in the [agent skills catalog](../skills/README.md).
 
 | Component | Kind | Language | What it is |
@@ -42,4 +42,4 @@ and lists them on the hub's Discover page. Skills are in the [agent skills catal
 ## Contributing one
 
 The contract is `CONTRIBUTING.md` in the repository: one directory, a manifest, a five-minute README, tests behind
-one command, no hidden dependency, no secret. Open a pull request; the catalog tool checks the rest.
+one command, no hidden dependency, no secret. Open a pull request; the shelf tool checks the rest.

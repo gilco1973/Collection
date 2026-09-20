@@ -19,5 +19,18 @@
     "untrusted-input-guard"
   ],
   "test": "",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "11.1",
+      "7.3"
+    ],
+    "requirements": [
+      "PLT-SEC-5",
+      "PLT-SEC-7",
+      "PLT-CAT-7"
+    ],
+    "replacement_test": "The threat-model delta is the review record Security signs at step 5 of onboarding; the template stays."
+  }
 }

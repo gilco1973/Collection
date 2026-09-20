@@ -42,3 +42,5 @@ Meg (`meg/responder/logs.py`, snapshot 2026-09-19), unchanged apart from the log
 ## Known limits
 
 The masks are patterns, not a classifier. Values you know are text should not be passed at all; pass their ids.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The same seeded-text test passes against the platform's telemetry sink; log lines carry ids only there too.

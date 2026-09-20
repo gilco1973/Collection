@@ -46,3 +46,5 @@ Meg (`meg/responder/httpclient.py`, snapshot 2026-09-19), used by every live con
 
 Synchronous. No connection pooling (urllib opens a connection per request); fine for a service making tens of calls
 per turn, not for a high-throughput proxy.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The generated clients from the contract registry replace the hand-written ones behind the same handler protocol; the recording transport becomes the registry's recorded contracts.

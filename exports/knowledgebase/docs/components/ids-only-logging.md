@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # ids-only-logging
 
-> A component of the collection: `components/python/ids-only-logging/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/ids-only-logging/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.13, §4.7 (PLT-AUD-2, PLT-TEL-5); the replacement test is under Known limits.
 
 
 A JSON logger that lets only identifiers through. Long strings are withheld, anything that looks like a secret or an
@@ -53,3 +53,5 @@ Meg (`meg/responder/logs.py`, snapshot 2026-09-19), unchanged apart from the log
 ## Known limits
 
 The masks are patterns, not a classifier. Values you know are text should not be passed at all; pass their ids.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The same seeded-text test passes against the platform's telemetry sink; log lines carry ids only there too.

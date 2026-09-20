@@ -19,5 +19,18 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.12",
+      "4.9"
+    ],
+    "requirements": [
+      "PLT-CH-15",
+      "PLT-CAT-1",
+      "PLT-PRM-3"
+    ],
+    "replacement_test": "Templates become signed catalog entries with `required_disclosure`; the same renders pass with the registry hash on the record."
+  }
 }

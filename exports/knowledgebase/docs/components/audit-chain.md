@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # audit-chain
 
-> A component of the collection: `components/python/audit-chain/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/audit-chain/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.7 (PLT-AC-25, PLT-AC-26, PLT-AUD-1, PLT-AUD-3, PLT-AUD-12); the replacement test is under Known limits.
 
 
 A hash-chained, append-only record in SQLite. One file, no dependencies. Every record carries the hash of the
@@ -66,3 +66,5 @@ file.
 ## Known limits
 
 One writer at a time (SQLite). The body is stored as JSON text; large payloads belong elsewhere with a reference here.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The same records verify under the platform's audit trail and the export head is anchored by a KMS signature; a chain written here imports without a broken link.

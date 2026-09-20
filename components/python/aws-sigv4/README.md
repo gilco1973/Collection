@@ -36,3 +36,5 @@ Meg (`meg/responder/sigv4.py`, snapshot 2026-09-19), used for Secrets Manager, C
 ## Known limits
 
 No presigned URLs, no S3 chunked uploads. Credentials are cached for the process lifetime; restart on rotation.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Workload identity and the token vault issue what the task role signs today; no code above the adapter changes.

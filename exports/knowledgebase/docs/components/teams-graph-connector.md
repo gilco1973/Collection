@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # teams-graph-connector
 
-> A component of the collection: `components/python/teams-graph-connector/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/teams-graph-connector/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.3, §4.11, §7.6 (PLT-HDL-1, PLT-CTR-1); the replacement test is under Known limits.
 
 
 Microsoft Teams as a bot's surface, through Graph and the Bot Framework connector: transitive group membership for
@@ -52,3 +52,5 @@ Meg (`meg/responder/clients/graph.py`, snapshot 2026-09-19). Renamed ids in the 
 ## Known limits
 
 Basic change notifications only (ids, no encryption certificate). No message editing or reactions.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The Teams client is a recorded contract behind a Gateway target; the fake stays as the road's local runner.

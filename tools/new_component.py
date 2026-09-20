@@ -5,7 +5,7 @@
     python3 tools/new_component.py skills my-skill --kind skill --summary "One line"
 
 Creates components/<group>/<name>/ with component.json, README.md and, for a skill, SKILL.md; for python, a tests/
-folder with one passing test so the catalog's --test run is green from the first commit.
+folder with one passing test so the shelf's --test run is green from the first commit.
 """
 from __future__ import annotations
 import argparse, json, os, sys
@@ -30,7 +30,9 @@ def main() -> int:
     test = {"python": "python3 -m unittest discover -s tests -t . -v", "typescript": "npm ci --no-audit --no-fund && npx vitest run", "skills": ""}[a.group]
     manifest = {"name": a.name, "kind": a.kind, "language": language, "summary": a.summary, "status": "draft",
                 "source": {"project": "new", "path": "", "snapshot": ""}, "owner": a.owner, "tags": ["untagged"],
-                "requires": [], "pairs_with": [], "test": test, "vendored": []}
+                "requires": [], "pairs_with": [], "test": test, "vendored": [],
+                "spec": {"document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)", "sections": ["7.1"], "requirements": ["PLT-ROAD-2"],
+                         "replacement_test": "State what the platform must pass before this component is retired (the specification's §14.3 rule)."}}
     json.dump(manifest, open(os.path.join(dest, "component.json"), "w"), indent=2); open(os.path.join(dest, "component.json"), "a").write("\n")
     readme = open(os.path.join(TEMPLATE, "README.md"), encoding="utf-8").read().replace("{{name}}", a.name).replace("{{summary}}", a.summary)
     open(os.path.join(dest, "README.md"), "w", encoding="utf-8").write(readme)
@@ -39,7 +41,7 @@ def main() -> int:
     if a.group == "python":
         os.makedirs(os.path.join(dest, "tests")); open(os.path.join(dest, "tests", "__init__.py"), "w").write("")
         open(os.path.join(dest, "tests", "test_smoke.py"), "w").write("import unittest\n\n\nclass Smoke(unittest.TestCase):\n    def test_imports(self):\n        self.assertTrue(True)\n")
-    print(f"created {os.path.relpath(dest, ROOT)}; fill in README.md and component.json, then run python3 tools/catalog.py --write")
+    print(f"created {os.path.relpath(dest, ROOT)}; fill in README.md and component.json, then run python3 tools/shelf.py --write")
     return 0
 
 

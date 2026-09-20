@@ -12,7 +12,7 @@ pages into a checkout of it with `python3 tools/publish_kb.py <path-to-knowledge
 | `kb.config.section.yaml` | The `components` section the knowledge base's contract gains |
 
 Generated pages (one per component, one SKILL.md per skill, the components index, the skills rows) are written by
-`python3 tools/catalog.py --write` into `exports/knowledgebase/` and published by the same script.
+`python3 tools/shelf.py --write` into `exports/knowledgebase/` and published by the same script.
 
 Rules these pages follow, because the product's own checks enforce them: frontmatter with owner, status, reviewed,
 tags from the taxonomy (`tools/kb-taxonomy.json`) and audience; under 200 lines; organisation-neutral, so no

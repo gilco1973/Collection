@@ -46,3 +46,5 @@ Meg (`meg/responder/jwt.py`, snapshot 2026-09-19), where it verifies Bot Framewo
 
 RS256 only (add RS384/512 by changing the DigestInfo prefix). Production never signs here; the sign function exists
 for tests.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): AgentCore's inbound authorizer validates the same issuers and audiences; the verified claims feed the same principal chain.

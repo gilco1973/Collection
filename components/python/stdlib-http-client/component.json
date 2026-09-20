@@ -21,5 +21,18 @@
     "aws-sigv4"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "5.3",
+      "4.11"
+    ],
+    "requirements": [
+      "PLT-HDL-1",
+      "PLT-HDL-2",
+      "PLT-CTR-1"
+    ],
+    "replacement_test": "The generated clients from the contract registry replace the hand-written ones behind the same handler protocol; the recording transport becomes the registry's recorded contracts."
+  }
 }

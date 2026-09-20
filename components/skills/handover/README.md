@@ -26,3 +26,7 @@ collection.
 ## Where it came from
 
 The first responder's handovers (three versions) and the knowledge base's (five versions).
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Material changes re-enter onboarding step 4 (PLT-ONB-6); the handover names the step per ticket.

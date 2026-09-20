@@ -7,9 +7,9 @@ SKILL=../components/skills/walkthrough-video
 export NODE_PATH="${NODE_PATH:-$PWD/../hub/node_modules}"
 mkdir -p build
 ( cd ../components/python/governed-action-loop && python3 example.py ) > build/term-example.txt
-( cd .. && python3 tools/catalog.py --test --only python 2>&1 | grep -E "^(==|!!|ok|FAILED)" ) > build/term-tests.txt
-( cd .. && python3 tools/catalog.py --list ) > build/term-list.txt
-( cd .. && python3 tools/catalog.py --write && python3 tools/catalog.py --check ) > build/term-check.txt
+( cd .. && python3 tools/shelf.py --test --only python 2>&1 | grep -E "^(==|!!|ok|FAILED)" ) > build/term-tests.txt
+( cd .. && python3 tools/shelf.py --list ) > build/term-list.txt
+( cd .. && python3 tools/shelf.py --write && python3 tools/shelf.py --check ) > build/term-check.txt
 node capture_shots.cjs
 python3 $SKILL/deck.py slides.py
 node $SKILL/build_frames.cjs

@@ -41,3 +41,5 @@ Meg (`meg/responder/clients/graph.py`, snapshot 2026-09-19). Renamed ids in the 
 ## Known limits
 
 Basic change notifications only (ids, no encryption certificate). No message editing or reactions.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The Teams client is a recorded contract behind a Gateway target; the fake stays as the road's local runner.

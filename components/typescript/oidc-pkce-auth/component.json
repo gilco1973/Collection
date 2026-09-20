@@ -24,5 +24,18 @@
     "typed-api-client"
   ],
   "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.1",
+      "8.6"
+    ],
+    "requirements": [
+      "PLT-ID-1",
+      "PLT-AC-14",
+      "PLT-UI-15"
+    ],
+    "replacement_test": "The principal from GET /me is the control layer's; the front-end permits set stays a courtesy, never the control."
+  }
 }

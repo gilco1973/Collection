@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # oidc-pkce-auth
 
-> A component of the collection: `components/typescript/oidc-pkce-auth/` in the repository (kind integration, typescript, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/typescript/oidc-pkce-auth/` in the repository (kind integration, typescript, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.1, §8.6 (PLT-ID-1, PLT-AC-14, PLT-UI-15); the replacement test is under Known limits.
 
 
 Sign-in for a browser application against the company's identity provider: Authorization Code with PKCE through
@@ -58,3 +58,7 @@ undefined principal; opening a consumer is by entitlement, not role.
 ## Where it came from
 
 The AI Hub front end (`src/auth/`, snapshot 2026-09-19), with the provider's dependencies made explicit props.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The principal from GET /me is the control layer's; the front-end permits set stays a courtesy, never the control.

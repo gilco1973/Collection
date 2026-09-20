@@ -55,3 +55,5 @@ file.
 ## Known limits
 
 One writer at a time (SQLite). The body is stored as JSON text; large payloads belong elsewhere with a reference here.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The same records verify under the platform's audit trail and the export head is anchored by a KMS signature; a chain written here imports without a broken link.

@@ -50,3 +50,5 @@ The AI Hub front end (`src/api/client.ts`, `errors.ts` and the route helper of `
 ## Known limits
 
 Streaming responses use `raw()` and are parsed by the caller (the hub's SSE turn stream is the example).
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The Hub API client generated from the contract registry carries the same headers and error mapping; the mock server becomes the recorded contract's fixtures.

@@ -42,3 +42,5 @@ parameter.
 
 `SecretsManager` needs an object with `call(service, prefix, target, payload)` (see `aws-sigv4`). Other vaults are a
 class with one `get` method.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The token vault serves the same names; a handler still refuses to run without a redeemed reference for its own audience.

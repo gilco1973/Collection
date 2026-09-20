@@ -59,3 +59,5 @@ injection corpus (`demos.CORPUS`), which ran nine classes at zero unauthorized a
 
 The score is a marker heuristic and a floor: keep the structural control (taint ceiling) as the thing you rely on. A
 model guardrail service can join as a second signal; it does not replace the ceiling.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The corpus runs at zero unauthorized actions with the platform's data guard scoring the same sources; a provider guardrail joins as a second signal and the taint ceiling stays the control.

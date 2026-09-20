@@ -82,3 +82,5 @@ removed from the fake model, the spec cross-references dropped from docstrings, 
 SQLite for sessions and the record (swap the connection for Postgres behind the same statements). HMAC signing with
 a local key until a KMS signer exists. The injection score is a marker heuristic: the taint ceiling is the control,
 the score is the floor. The gateway is in-process; a real gateway replaces `FakeGateway` behind `tools_call`.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The consumer restarts unchanged when the in-process gateway is AgentCore Gateway with the same bundle in AgentCore Policy, the local HMAC key is KMS signing, and the SQLite stores are the control layer's; the conformance test on the three hooks passes on both.

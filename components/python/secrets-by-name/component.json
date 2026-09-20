@@ -19,5 +19,18 @@
     "aws-sigv4"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.14",
+      "5.3"
+    ],
+    "requirements": [
+      "PLT-AC-9",
+      "PLT-HDL-1",
+      "PLT-KEY-1"
+    ],
+    "replacement_test": "The token vault serves the same names; a handler still refuses to run without a redeemed reference for its own audience."
+  }
 }

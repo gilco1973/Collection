@@ -47,3 +47,7 @@ undefined principal; opening a consumer is by entitlement, not role.
 ## Where it came from
 
 The AI Hub front end (`src/auth/`, snapshot 2026-09-19), with the provider's dependencies made explicit props.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The principal from GET /me is the control layer's; the front-end permits set stays a courtesy, never the control.

@@ -21,5 +21,20 @@
     "cited-llm-engine"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.5",
+      "5.5"
+    ],
+    "requirements": [
+      "PLT-DATA-1",
+      "PLT-DATA-3",
+      "PLT-DATA-8",
+      "PLT-CAT-7",
+      "PLT-AC-21"
+    ],
+    "replacement_test": "The corpus runs at zero unauthorized actions with the platform's data guard scoring the same sources; a provider guardrail joins as a second signal and the taint ceiling stays the control."
+  }
 }

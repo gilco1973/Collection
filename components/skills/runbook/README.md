@@ -26,3 +26,7 @@ collection.
 ## Where it came from
 
 The first responder's runbook, rehearsed by its chaos drill on every release.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The road's runbook (degraded modes, kill-switch scopes, on-call, first-week SLO defaults) is this document with the platform's foundation services in the table.

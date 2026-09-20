@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # comm-templates
 
-> A component of the collection: `components/python/comm-templates/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/comm-templates/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.12, §4.9 (PLT-CH-15, PLT-CAT-1, PLT-PRM-3); the replacement test is under Known limits.
 
 
 Stakeholder and customer messages as owned, versioned templates that a model fills through named fields only. The
@@ -45,3 +45,7 @@ Post the customer template only from a principal with the communications role (a
 ## Where it came from
 
 Meg (`meg/responder/templates.py`, snapshot 2026-09-19), with the company name in the disclosure made neutral.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Templates become signed catalog entries with `required_disclosure`; the same renders pass with the registry hash on the record.

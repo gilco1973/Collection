@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # bedrock-converse-adapter
 
-> A component of the collection: `components/python/bedrock-converse-adapter/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/bedrock-converse-adapter/` in the repository (kind integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8 (PLT-AC-29, PLT-AC-30, PLT-MDL-1, PLT-MDL-2); the replacement test is under Known limits.
 
 
 Claude on Amazon Bedrock Converse behind the one signature the model gateway calls:
@@ -52,3 +52,5 @@ Meg (`meg/responder/clients/bedrock.py`, snapshot 2026-09-19).
 ## Known limits
 
 Converse only, no streaming. The Guardrail is a second signal; keep the taint ceiling as the control.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The model gateway service calls Converse with the same inference profile; this adapter is retired when the gateway serves the same `complete` contract.

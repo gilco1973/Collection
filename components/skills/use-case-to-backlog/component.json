@@ -17,5 +17,18 @@
   "requires": [],
   "pairs_with": [],
   "test": "python3 -m unittest discover -s tests -t . -v && python3 build_backlog.py example_plan.py /tmp/backlog-example",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "7.11",
+      "14"
+    ],
+    "requirements": [
+      "PLT-ONB-1",
+      "PLT-ONB-2",
+      "PLT-ROAD-2"
+    ],
+    "replacement_test": "The intake step files the brief in the portal and the backlog derives from the same plan; nothing to replace."
+  }
 }

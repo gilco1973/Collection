@@ -89,7 +89,7 @@ def main() -> int:
     if not os.path.exists(os.path.join(a.checkout, "kb.config.yaml")):
         print(f"{a.checkout} is not a knowledge-base checkout (no kb.config.yaml)"); return 2
     if not os.path.isdir(os.path.join(EXPORT, "docs")):
-        print("exports/knowledgebase is missing: run python3 tools/catalog.py --write first"); return 2
+        print("exports/knowledgebase is missing: run python3 tools/shelf.py --write first"); return 2
     changes = plan(a.checkout)
     for p in sorted(changes):
         print(("would write " if a.check else "wrote ") + os.path.relpath(p, a.checkout))

@@ -34,3 +34,7 @@ typed it.
 ## Where it came from
 
 Meg's in-room onboarding (`responder/onboarding.py`, snapshot 2026-09-19), with the content made a configuration.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The how-to card becomes the consumer's enablement module (PLT-ONB-12) rendered by the UI modules; the pill catalog is the same data.

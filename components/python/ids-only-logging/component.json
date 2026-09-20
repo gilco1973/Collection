@@ -19,5 +19,17 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.13",
+      "4.7"
+    ],
+    "requirements": [
+      "PLT-AUD-2",
+      "PLT-TEL-5"
+    ],
+    "replacement_test": "The same seeded-text test passes against the platform's telemetry sink; log lines carry ids only there too."
+  }
 }

@@ -41,3 +41,5 @@ Meg (`meg/responder/clients/bedrock.py`, snapshot 2026-09-19).
 ## Known limits
 
 Converse only, no streaming. The Guardrail is a second signal; keep the taint ceiling as the control.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The model gateway service calls Converse with the same inference profile; this adapter is retired when the gateway serves the same `complete` contract.

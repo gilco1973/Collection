@@ -17,5 +17,16 @@
   "requires": [],
   "pairs_with": [],
   "test": "python3 deck.py example_slides.py && test -f deck.html && test $(ls narration/*.txt | wc -l) -eq 5",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "7.11",
+      "8.8"
+    ],
+    "requirements": [
+      "PLT-ONB-12"
+    ],
+    "replacement_test": "The enablement module per consumer; the pipeline is the same."
+  }
 }

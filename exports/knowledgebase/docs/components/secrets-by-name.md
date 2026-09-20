@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # secrets-by-name
 
-> A component of the collection: `components/python/secrets-by-name/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/secrets-by-name/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.14, §5.3 (PLT-AC-9, PLT-HDL-1, PLT-KEY-1); the replacement test is under Known limits.
 
 
 A handler never holds a credential. It asks a provider for a *named* secret at call time; the provider is AWS
@@ -53,3 +53,5 @@ parameter.
 
 `SecretsManager` needs an object with `call(service, prefix, target, payload)` (see `aws-sigv4`). Other vaults are a
 class with one `get` method.
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The token vault serves the same names; a handler still refuses to run without a redeemed reference for its own audience.

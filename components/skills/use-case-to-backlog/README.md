@@ -29,3 +29,7 @@ collection.
 ## Where it came from
 
 The plan and backlog builder of the first responder's use case (28 tickets, 167 points), generalised.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The intake step files the brief in the portal and the backlog derives from the same plan; nothing to replace.

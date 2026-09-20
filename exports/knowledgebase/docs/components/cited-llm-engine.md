@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # cited-llm-engine
 
-> A component of the collection: `components/python/cited-llm-engine/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/cited-llm-engine/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8, §4.9, §4.5 (PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3); the replacement test is under Known limits.
 
 
 The think step behind one adapter. A model reasons over a fenced context and returns strict, cited JSON; it never
@@ -51,3 +51,7 @@ budget apply. Turn a proposal into a call only through the loop's confirmation a
 
 The engine protocol of Meg's `responder/think.py` (snapshot 2026-09-19), reduced from four engines and eight incident
 stages to two engines and three example stages.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): Stage prompts publish to the prompt registry with an evaluation suite (PLT-PRM-2) and load by version; the same cited-JSON contract holds.

@@ -16,5 +16,17 @@
   "requires": [],
   "pairs_with": [],
   "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
-  "vendored": []
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "8.7",
+      "8.8"
+    ],
+    "requirements": [
+      "PLT-DX-3",
+      "PLT-UI-1"
+    ],
+    "replacement_test": "The UI modules' toolchain gate; a module reaches GA only after the usability pass, with this diff as the pixel evidence."
+  }
 }

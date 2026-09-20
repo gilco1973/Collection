@@ -26,3 +26,7 @@ collection.
 ## Where it came from
 
 The first responder's readiness page at increment 3.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The admission checklist signed in the repository is what the gate reads; this page is its human summary.

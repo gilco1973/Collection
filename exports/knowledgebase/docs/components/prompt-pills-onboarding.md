@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # prompt-pills-onboarding
 
-> A component of the collection: `components/python/prompt-pills-onboarding/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the catalog tool.
+> A component of the collection: `components/python/prompt-pills-onboarding/` in the repository (kind pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §7.11, §8.4 (PLT-ONB-12, PLT-UI-15); the replacement test is under Known limits.
 
 
 Explain a bot inside the room it works in. A how-to card posted at the start (and on `help`) with three things to
@@ -45,3 +45,7 @@ typed it.
 ## Where it came from
 
 Meg's in-room onboarding (`responder/onboarding.py`, snapshot 2026-09-19), with the content made a configuration.
+
+## Known limits
+
+**Replacement test** (the platform specification's §14.3 rule for an interim): The how-to card becomes the consumer's enablement module (PLT-ONB-12) rendered by the UI modules; the pill catalog is the same data.
