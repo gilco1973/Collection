@@ -69,3 +69,4 @@ pages exist for it. Numbers, not adjectives: the enablement lead keeps them on t
 
 Ask your team to name you, then post in the champions channel with the problem you want to solve. Your first week:
 clone the repository, run one component's tests, read one practice page, and write the first draft of your brief.
+When your initiative produces a component, [onboarding components](component-onboarding.md) is its way to the shelf.

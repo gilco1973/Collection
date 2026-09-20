@@ -7,7 +7,7 @@ pages into a checkout of it with `python3 tools/publish_kb.py <path-to-knowledge
 | --- | --- |
 | `docs/best-practices/*.md` | The practices behind the components, authored here |
 | `docs/paved-roads/use-case-002-first-responder.md` | The first responder as a paved-road use case |
-| `docs/onboarding/ai-champions*.md` | The AI champions programme and the initiative brief |
+| `docs/onboarding/*.md` | The AI champions programme, the initiative brief, and the onboarding of components and the people who sign them |
 | `sections/<section>.md` | The block each section's README gains (table rows or a paragraph) so every page is linked from its section, as the librarian requires; placed between `<!-- collection:start -->` and `<!-- collection:end -->` markers |
 | `kb.config.section.yaml` | The `components` section the knowledge base's contract gains |
 

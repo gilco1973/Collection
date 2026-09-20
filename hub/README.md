@@ -14,6 +14,8 @@ of the same API contract.
 | `/workspace` | My workspace | `GET /me/workspace` |
 | `/build/intake`, `/build/intake/:briefId` | Intake brief (six sections, autosave, file) | `GET/PATCH /briefs/:id`, `POST …/estimate`, `…/road`, `…/file` |
 | `/settings` | Preferences and account | `GET /me`, `PUT /me/preferences` |
+| `/build/shelf/sign-offs` | Component sign-offs: the queue, the form, the export the shelf tool applies | `GET /shelf`, `POST /shelf/:name/signoffs`, `GET /shelf/signoffs/export` |
+| `/build/shelf/onboarding` | Onboarding: every component's stage on its way to the shelf; how champions, owners and AI security engineers join | `GET /shelf` |
 | `/learn` | Learn (roads, example, office hours) | static |
 | `/signin`, `/auth/callback`, `/403` | Sign-in (OIDC or personas), callback, refused | — |
 
@@ -100,9 +102,10 @@ pnpm verify:e2e          # nav, intake, discover/listing/workspace, assistant, s
 pnpm build:artifact      # static-host bundle (HashRouter, relative assets) in dist-artifact/
 ```
 
-Node ≥ 22, pnpm 10. In mock mode, sign in as one of four personas: **Gil Klainert**
+Node ≥ 22, pnpm 10. In mock mode, sign in as one of five personas: **Gil Klainert**
 (ops.lead, the artboard user), **Ana Petrov** (investigator, ladder L1), **Sam Okafor**
-(employee, no team, prefers assistive technology), **Dana Ruiz** (platform lead).
+(employee, no team, prefers assistive technology), **Dana Ruiz** (platform lead), **Maya Chen**
+(AI security engineer, the `ai.security` role that signs components off).
 `?mockPersona=gk` on any URL signs in without the picker (tests use this).
 
 Against a real server: set `VITE_API_MODE=http`, `VITE_API_BASE`, `VITE_AUTH_MODE=oidc`

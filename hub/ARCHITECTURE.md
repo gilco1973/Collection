@@ -31,6 +31,7 @@ src/
     assistant/           conversations: view-descriptor renderer, SSE streaming, stop, feedback, handoff
     requests/            entitlement / role / ladder requests (POST /me/requests)
     settings/            preferences (PUT /me/preferences), account, data
+    shelf/               the collection's sign-off form and queue, the onboarding tracker (GET /shelf, POST /shelf/:name/signoffs)
   screens/               Learn, SignIn, status pages
   styles/
     ui-core.css          the design system, verbatim from the artboards
