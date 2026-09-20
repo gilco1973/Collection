@@ -575,7 +575,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "leadership"
   ],
   "kind": "page",
-  "text": "- The manifest is the record of a sign-off and the commit is the signature; the hub only records requests.\n- Fakes exist for the sandbox and are refused by configuration in staging and production.\n- Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.\n- The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.\n- Categories, not directories, say what a component is; `agents/`, `python/`, `typescript/`, `skills/` are groups."
+  "text": "- The manifest is the record of a sign-off and the commit is the signature; the hub only records requests.\n- Fakes exist for the sandbox and are refused by configuration in staging and production.\n- Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.\n- The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.\n- Categories, not directories, say what a component is; `agents/`, `python/`, `typescript/`, `skills/` are groups.\n- Operations live in the services, not beside them: `/ready` for the load balancer, request ids end to end, per-person limits, a versioned record with `backup` and `prune` commands, the chain exported on an interval. RUNBOOK.md is the page to have open.\n- The guide in the hub answers only from the repository's own pages (`POST /guide/ask`); adding a page or a README changes what it can say, nothing else does."
  },
  {
   "id": "HANDOVER.md#3",

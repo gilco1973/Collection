@@ -24,6 +24,8 @@ publishes pages into the knowledge base.
 - Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.
 - The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.
 - Categories, not directories, say what a component is; `agents/`, `python/`, `typescript/`, `skills/` are groups.
+- Operations live in the services, not beside them: `/ready` for the load balancer, request ids end to end, per-person limits, a versioned record with `backup` and `prune` commands, the chain exported on an interval. RUNBOOK.md is the page to have open.
+- The guide in the hub answers only from the repository's own pages (`POST /guide/ask`); adding a page or a README changes what it can say, nothing else does.
 
 ## Owners
 
