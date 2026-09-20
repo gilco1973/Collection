@@ -11,11 +11,12 @@ from hubapi.store import Store
 DATA = os.path.join(SERVICE, "data")
 
 
-def make_api(auth=None, assistant=None, settings=None) -> HubApi:
+def make_api(auth=None, assistant=None, settings=None, guide=None) -> HubApi:
+    from hubapi.guide import Corpus, Guide
     s = settings or Settings()
     catalog = Catalog.load(os.path.join(DATA, "consumers.example.json"), os.path.join(DATA, "collection.json"))
     personas = json.load(open(os.path.join(DATA, "examples.json")))["principals"]
-    return HubApi(s, Store(":memory:"), catalog, auth or MockAuth(personas), assistant or FakeAssistant())
+    return HubApi(s, Store(":memory:"), catalog, auth or MockAuth(personas), assistant or FakeAssistant(), guide or Guide(Corpus.load(os.path.join(DATA, "guide-corpus.json"))))
 
 
 class Client:

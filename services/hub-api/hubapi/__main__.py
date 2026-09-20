@@ -35,7 +35,8 @@ def build(s: Settings) -> HubApi:
         auth = MockAuth(personas)
     else:
         auth = OidcAuth(s.idp_issuer, s.idp_audience, s.idp_jwks_url, fetch_json, IdentityMap.load(s.identity_map), s.ai_security_group)
-    return HubApi(s, Store(s.db_path), catalog, auth, build_assistant(s, secrets_for(s)))
+    from .guide import build as build_guide
+    return HubApi(s, Store(s.db_path), catalog, auth, build_assistant(s, secrets_for(s)), build_guide(s))
 
 
 def main(argv=None) -> int:

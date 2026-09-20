@@ -9,3 +9,4 @@ src/screens/Hub*.tsx
 pnpm-lock.yaml
 src/api/mock/collection.ts
 public/fonts
+src/api/mock/guide.ts

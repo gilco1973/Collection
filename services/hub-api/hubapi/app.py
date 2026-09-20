@@ -41,8 +41,8 @@ def now_iso() -> str:
 
 
 class HubApi:
-    def __init__(self, settings, store: Store, catalog: Catalog, auth, assistant):
-        self.s, self.store, self.catalog, self.auth, self.assistant = settings, store, catalog, auth, assistant
+    def __init__(self, settings, store: Store, catalog: Catalog, auth, assistant, guide=None):
+        self.s, self.store, self.catalog, self.auth, self.assistant, self.guide = settings, store, catalog, auth, assistant, guide
         self.routes: list[tuple[str, re.Pattern, list, callable, bool]] = []
         self.seq_lock = threading.Lock(); self.seq = 100
         self._register()
@@ -132,10 +132,19 @@ class HubApi:
         r("POST", "/conversations/:id/turns", self.turn)
         r("POST", "/conversations/:id/feedback", self.feedback)
         r("POST", "/conversations/:id/handoff", lambda c: {"route": "human", "expected_wait_s": 240})
+        r("POST", "/guide/ask", self.guide_ask)
         r("GET", "/shelf", lambda c: [self.catalog.shelf_entry(x, c["principal"], self.store.list("signoff")) for x in self.catalog.shelf])
         r("GET", "/shelf/signoffs/export", lambda c: {"generatedAt": now_iso(), "apply": "python3 tools/shelf.py --apply-signoffs shelf-signoffs.json", "signoffs": self.store.list("signoff")})
         r("GET", "/shelf/:name", self.shelf_get)
         r("POST", "/shelf/:name/signoffs", self.sign)
+
+    def guide_ask(self, c):
+        if not self.guide: raise Problem(404, "Not found", "The guide is not configured.")
+        b = c["body"] or {}
+        audience = b.get("audience") if b.get("audience") in ("engineer", "leadership", "employee") else ("leadership" if "platform.lead" in c["principal"].roles and not c["principal"].teams else "engineer")
+        out = self.guide.ask(str(b.get("question") or ""), audience, b.get("page"))
+        log.info("guide.ask audience=%s mode=%s sources=%d refused=%s", audience, out.get("mode"), len(out.get("sources", [])), out.get("refused", ""))
+        return out
 
     def health(self, c):
         return {"status": "ok", "build": self.s.build_sha, "env": self.s.env, "auth": self.s.auth, "assistant": self.assistant.name, "components": len(self.catalog.shelf), "record": "file" if self.s.db_path != ":memory:" else "memory"}

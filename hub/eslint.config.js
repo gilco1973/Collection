@@ -5,7 +5,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "dist-artifact/**", "dist-http/**", "public/**", "node_modules/**", "tools/**", "extract/**", "artboards/**", "compare/**", "src/screens/*.generated.tsx"] },
+  { ignores: ["dist/**", "dist-artifact/**", "dist-http/**", "public/**", "src/api/mock/guide.ts", "node_modules/**", "tools/**", "extract/**", "artboards/**", "compare/**", "src/screens/*.generated.tsx"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
