@@ -1,6 +1,6 @@
 # The collection's deployables locally, in the sandbox with fakes: no account, no secret, no network.
 #   docker compose -f deploy/compose.yaml up --build
-# hub at http://localhost:8080 (sign in as a persona), the agent at http://localhost:8081 (/health, /mcp, /runs).
+# hub at http://localhost:8080 (sign in as a persona), the agent at http://localhost:8081 (/health, /ready, /mcp, /runs).
 services:
   hub:
     build: { context: .., dockerfile: services/hub-api/deploy/Dockerfile }

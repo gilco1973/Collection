@@ -28,7 +28,7 @@
       {"name": "AGENT_AUDIT_EXPORT", "value": "s3://BUCKET/agents/"}, {"name": "AGENT_BUILD_SHA", "value": "GIT_SHA"}, {"name": "AGENT_LOG_LEVEL", "value": "INFO"}
     ],
     "logConfiguration": {"logDriver": "awslogs", "options": {"awslogs-group": "/ecs/agent-incident-first-read", "awslogs-region": "us-east-1", "awslogs-stream-prefix": "agent"}},
-    "healthCheck": {"command": ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=2).status==200 else 1)\""], "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15},
+    "healthCheck": {"command": ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8081/ready', timeout=2).status==200 else 1)\""], "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15},
     "linuxParameters": {"initProcessEnabled": true, "capabilities": {"drop": ["ALL"]}}
   }]
 }

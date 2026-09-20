@@ -82,6 +82,13 @@ class OidcAuth:
         self.issuer, self.audience, self.map, self.ai_security_group, self.leeway = issuer, audience, identity_map, ai_security_group, leeway_s
         self.jwks = J.Jwks(fetch, jwks_url or J.openid_jwks_url(fetch, issuer.rstrip("/") + "/.well-known/openid-configuration"))
 
+    def ready(self) -> str | None:
+        """The identity provider's keys are cached and fresh, or reachable now; raises when they are not."""
+        if self.jwks._keys and time.time() - self.jwks._at < self.jwks.ttl:
+            return None
+        self.jwks._refresh()
+        return None if self.jwks._keys else "the JWKS has no signing keys"
+
     def principal(self, token: str) -> Principal:
         try:
             claims = J.verify(token, self.jwks, (self.issuer,), (self.audience,), leeway_s=self.leeway)

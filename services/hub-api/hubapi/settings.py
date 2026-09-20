@@ -56,6 +56,8 @@ class Settings:
     web_oidc_post_logout_uri: str = ""                     # <HUB_PUBLIC_URL>/ when empty
     web_oidc_scope: str = "openid profile email"
     max_body_bytes: int = 1_000_000
+    rate_per_minute: int = 300                             # requests per person per minute (a token bucket); 0 disables
+    idempotency_ttl_s: int = 86_400                        # how long a replayed answer is kept
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="HUB_", repr=False)
@@ -74,7 +76,8 @@ class Settings:
                    bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", str(d.bedrock_max_output_tokens))), secrets=e("SECRETS", d.secrets),
                    ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
                    web_oidc_redirect_uri=e("WEB_OIDC_REDIRECT_URI", ""), web_oidc_post_logout_uri=e("WEB_OIDC_POST_LOGOUT_URI", ""), web_oidc_scope=e("WEB_OIDC_SCOPE", d.web_oidc_scope),
-                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), rate_per_minute=int(e("RATE_PER_MINUTE", str(d.rate_per_minute))),
+                   idempotency_ttl_s=int(e("IDEMPOTENCY_TTL_S", str(d.idempotency_ttl_s))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
 
     @property
     def live(self) -> bool:
@@ -99,6 +102,9 @@ class Settings:
             p.append(f"{P}WEB_OIDC_AUTHORITY and {P}WEB_OIDC_CLIENT_ID are required to serve the hub with oidc (they become /config.js)")
         if self.web_oidc_authority and not self.web_oidc_authority.startswith("https://"): p.append(f"{P}WEB_OIDC_AUTHORITY must be https")
         if not 10_000 <= self.max_body_bytes <= 50_000_000: p.append(f"{P}MAX_BODY_BYTES out of range")
+        if not 0 <= self.rate_per_minute <= 100_000: p.append(f"{P}RATE_PER_MINUTE out of range")
+        if self.live and self.rate_per_minute == 0: p.append(f"{P}RATE_PER_MINUTE must be above 0 in staging and production")
+        if not 60 <= self.idempotency_ttl_s <= 30 * 86_400: p.append(f"{P}IDEMPOTENCY_TTL_S out of range (60 s to 30 days)")
         if self.assistant == "http" and not self.assistant_url: p.append(f"{P}ASSISTANT_URL is required with the http assistant")
         if self.assistant == "bedrock":
             if not self.bedrock_region: p.append(f"{P}BEDROCK_REGION (or AWS_REGION) is required with the bedrock assistant")

@@ -18,9 +18,10 @@ sleep 2
 python3 - <<'PY'
 import json, urllib.request
 h = json.loads(urllib.request.urlopen("http://127.0.0.1:18080/api/health", timeout=3).read()); assert h["status"] == "ok" and h["record"] == "file", h
+r = json.loads(urllib.request.urlopen("http://127.0.0.1:18080/api/ready", timeout=3).read()); assert r["status"] == "ready" and r["checks"]["record"] == "ok", r
 page = urllib.request.urlopen("http://127.0.0.1:18080/discover", timeout=3).read().decode(); assert "/config.js" in page and "<title>" in page
 cfg = urllib.request.urlopen("http://127.0.0.1:18080/config.js", timeout=3).read().decode(); assert '"VITE_API_MODE": "http"' in cfg
-print("hub tree: health ok, page served, config.js served")
+print("hub tree: health and ready ok, page served, config.js served")
 PY
 # production must refuse this tree's fakes
 if (cd "$h/app" && HUB_ENV=production HUB_AUTH=mock python3 -m hubapi check-config >/dev/null 2>&1); then echo "hub: production accepted mock identity"; exit 1; fi
@@ -36,7 +37,8 @@ sleep 2
 python3 - <<'PY'
 import json, urllib.request
 h = json.loads(urllib.request.urlopen("http://127.0.0.1:18081/health", timeout=3).read()); assert h["status"] == "ok" and h["engine"] == "rules", h
-print("agent tree: health ok, record verified at start")
+r = json.loads(urllib.request.urlopen("http://127.0.0.1:18081/ready", timeout=3).read()); assert r["status"] == "ready", r
+print("agent tree: health and ready ok, record verified at start")
 PY
 if (cd "$a/app" && AGENT_ENV=production python3 -m agentrt check-config >/dev/null 2>&1); then echo "agent: production accepted fakes"; exit 1; fi
 echo "agent tree: production refuses fakes"

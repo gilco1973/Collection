@@ -1,16 +1,19 @@
 """The runtime's HTTP surface: the MCP transport from mcp-tool-server, plus a small run API and health.
 
-    GET  /health                       anonymous
+    GET  /health                       anonymous: the wiring by name and the chain's length
+    GET  /ready                        anonymous: 200 when the record verifies and the keys are reachable, else 503
     POST /mcp, GET /.well-known/...    the MCP server (the template's tools; W1 as elicitation; 403 on taint)
     POST /runs {ticket_key, service}   the agent's first read as one call: read, think, propose, park the write
     POST /runs/{session}/confirm {hash}   the person confirms the exact parked write; it runs once
     GET  /runs/{session}               the run's record so far
-Every route but /health carries the person's bearer. Logs are ids only.
+Every route but /health and /ready carries the person's bearer. Logs are ids only, each line with the request id
+the caller sent (or one minted here) so a report and a log line meet. Runs are rate-limited per person.
 """
 from __future__ import annotations
-import json, logging, threading, time
+import hashlib, json, logging, threading, time
 from http.server import ThreadingHTTPServer
 from . import vendor  # noqa: F401
+from .ops import RateLimiter, current_request_id, readiness, request_id
 from actionloop.harness import Stop
 from mcpserver.transports import make_http_handler
 
@@ -21,13 +24,39 @@ def make_handler(w, resource: str):
     Base = make_http_handler(w.server, resource=resource)
     runs: dict[str, dict] = {}
     lock = threading.Lock()
+    limiter = RateLimiter(getattr(w.settings, "runs_per_minute", 0))
+
+    def idp_ready():
+        """The identity provider's keys are cached and fresh, or reachable now; the fake provider has none to fetch."""
+        jwks = getattr(w.idp, "jwks", None)
+        if jwks is None: return None
+        if jwks._keys and time.time() - jwks._at < jwks.ttl: return None
+        jwks._refresh()
+        return None if jwks._keys else "the JWKS has no signing keys"
 
     class Handler(Base):
+        def parse_request(self):
+            ok = super().parse_request()
+            if ok: request_id(self.headers.get("X-Request-Id"))
+            return ok
+
+        def send_response(self, code, message=None):
+            super().send_response(code, message)
+            self.send_header("X-Request-Id", current_request_id())
+
         def _json(self, status, body, headers=None):
             raw = json.dumps(body).encode()
             self.send_response(status); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(raw)))
             for k, v in (headers or {}).items(): self.send_header(k, v)
             self.end_headers(); self.wfile.write(raw)
+
+        def _limited(self) -> bool:
+            """One bucket per bearer (hashed, never logged); a 429 costs nothing downstream: no admit, no record."""
+            token = self._bearer() or ""
+            wait = limiter.check(hashlib.sha256(token.encode()).hexdigest()[:16]) if token else 0
+            if wait:
+                self._json(429, {"title": "Too many requests", "detail": "the limit is per person and per minute"}, {"Retry-After": str(int(wait))}); return True
+            return False
 
         def _session(self):
             token = self._bearer()
@@ -42,6 +71,9 @@ def make_handler(w, resource: str):
             if self.path == "/health":
                 return self._json(200, {"status": "ok", "agent": w.template["name"], "env": w.settings.env, "build": w.settings.build_sha, "identity": w.settings.identity, "signing": w.settings.signing,
                                         "engine": w.settings.engine, "targets": {t: type(c).__name__ for t, c in w.targets.items()}, "records": w.audit.verify()})
+            if self.path == "/ready":
+                ok, detail = readiness({"record": w.audit.verify, "identity": idp_ready, "catalog": lambda: None if w.template.get("tools") else "no tools"})
+                return self._json(200 if ok else 503, {"status": "ready" if ok else "not ready", "checks": detail})
             if self.path.startswith("/runs/"):
                 sid = self.path.split("/")[2]
                 with lock:
@@ -66,6 +98,7 @@ def make_handler(w, resource: str):
 
         def do_POST(self):
             if self.path == "/runs":
+                if self._limited(): return
                 t0 = time.time(); body = self._body()
                 if body is None: return
                 s = self._session()
@@ -83,6 +116,7 @@ def make_handler(w, resource: str):
                 log.info("run session=%s tainted=%s parked=%s blocked=%s ms=%d", s.id, r["tainted"], bool(r["parked"]), r["blocked"], int((time.time() - t0) * 1000))
                 return self._json(200, out)
             if self.path.startswith("/runs/") and self.path.endswith("/confirm"):
+                if self._limited(): return
                 sid = self.path.split("/")[2]; body = self._body()
                 if body is None: return
                 with lock:

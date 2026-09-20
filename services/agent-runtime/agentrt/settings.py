@@ -80,8 +80,10 @@ class Settings:
     deploys_pat_name: str = "agents/ado-pat"
     deploys_pipelines: dict = field(default_factory=dict)   # service=pipeline id
     audit_export: str = ""                         # s3://bucket/prefix/ or empty
+    audit_export_interval_s: int = 0               # export the chain from inside the task every N seconds; 0 leaves it to a scheduled task
     secrets: str = "env"
     max_body_bytes: int = 1_000_000
+    runs_per_minute: int = 60                      # runs and confirmations per person per minute (a token bucket); 0 disables
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="AGENT_", repr=False)
@@ -97,7 +99,9 @@ class Settings:
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""), bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", "1500")),
                    targets=_list(e("TARGETS")), jira_url=e("JIRA_URL", ""), jira_token_name=e("JIRA_TOKEN_NAME", d.jira_token_name), jira_user=e("JIRA_USER", ""), jira_auth=e("JIRA_AUTH", "basic"),
                    deploys_url=e("DEPLOYS_URL", ""), deploys_project=e("DEPLOYS_PROJECT", ""), deploys_pat_name=e("DEPLOYS_PAT_NAME", d.deploys_pat_name), deploys_pipelines=_map(e("DEPLOYS_PIPELINES")),
-                   audit_export=e("AUDIT_EXPORT", ""), secrets=e("SECRETS", d.secrets), max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   audit_export=e("AUDIT_EXPORT", ""), audit_export_interval_s=int(e("AUDIT_EXPORT_INTERVAL_S", "0")), secrets=e("SECRETS", d.secrets),
+                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), runs_per_minute=int(e("RUNS_PER_MINUTE", str(d.runs_per_minute))),
+                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
 
     @property
     def live(self) -> bool:
@@ -128,6 +132,10 @@ class Settings:
         if "tickets" in self.targets and not self.jira_url: p.append(f"{P}JIRA_URL is required when tickets is a real target")
         if "deploys" in self.targets and not (self.deploys_url and self.deploys_project and self.deploys_pipelines): p.append(f"{P}DEPLOYS_URL, {P}DEPLOYS_PROJECT and {P}DEPLOYS_PIPELINES are required when deploys is a real target")
         if self.audit_export and not self.audit_export.startswith("s3://"): p.append(f"{P}AUDIT_EXPORT must be s3://bucket/prefix/ or empty")
+        if self.audit_export_interval_s and not self.audit_export: p.append(f"{P}AUDIT_EXPORT_INTERVAL_S needs {P}AUDIT_EXPORT")
+        if not 0 <= self.audit_export_interval_s <= 7 * 86_400: p.append(f"{P}AUDIT_EXPORT_INTERVAL_S out of range (0, or up to 7 days)")
+        if not 0 <= self.runs_per_minute <= 10_000: p.append(f"{P}RUNS_PER_MINUTE out of range")
+        if self.live and self.runs_per_minute == 0: p.append(f"{P}RUNS_PER_MINUTE must be above 0 in staging and production")
         if self.live:
             if self.identity == "fake": p.append("the fake identity provider is refused in staging and production")
             if self.signing == "local": p.append("local signing is refused in staging and production; use kms")

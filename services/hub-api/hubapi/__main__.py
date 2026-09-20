@@ -1,6 +1,7 @@
 """    python3 -m hubapi check-config      # exit 0 on config ok, 2 with every problem listed; the entrypoint's first command
     python3 -m hubapi serve             # the hub API (and the hub itself when HUB_STATIC_DIR points at its dist/)
     python3 -m hubapi mock-token <persona>   # a mock bearer for development (refused in production)
+    python3 -m hubapi backup <path>     # a consistent copy of the record (SQLite online backup) for the bank's backup job
 """
 from __future__ import annotations
 import json, logging, os, sys, threading, urllib.request
@@ -8,6 +9,7 @@ from .app import HubApi, serve
 from .assistant import build as build_assistant
 from .auth import IdentityMap, MockAuth, OidcAuth
 from .catalog import Catalog
+from .ops import install_logging
 from .settings import SERVICE, Settings, check_config
 from .store import Store
 
@@ -36,7 +38,7 @@ def build(s: Settings) -> HubApi:
     else:
         auth = OidcAuth(s.idp_issuer, s.idp_audience, s.idp_jwks_url, fetch_json, IdentityMap.load(s.identity_map), s.ai_security_group)
     from .guide import build as build_guide
-    return HubApi(s, Store(s.db_path), catalog, auth, build_assistant(s, secrets_for(s)), build_guide(s))
+    return HubApi(s, Store(s.db_path, s.idempotency_ttl_s), catalog, auth, build_assistant(s, secrets_for(s)), build_guide(s))
 
 
 def main(argv=None) -> int:
@@ -45,7 +47,12 @@ def main(argv=None) -> int:
     if cmd == "check-config":
         return check_config()
     s = Settings.from_env()
-    logging.basicConfig(level=getattr(logging, s.log_level.upper(), logging.INFO), format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    install_logging(s.log_level)
+    if cmd == "backup":
+        if len(argv) < 2 or s.db_path == ":memory:":
+            print("usage: backup <path>; the record must be a file (HUB_DB)"); return 2
+        pages = Store(s.db_path, s.idempotency_ttl_s).backup(argv[1])
+        print(f"backup written: {argv[1]} ({pages} pages)"); return 0
     if cmd == "mock-token":
         if s.env == "production" or s.auth != "mock":
             print("mock tokens exist only with HUB_AUTH=mock outside production"); return 2

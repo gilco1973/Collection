@@ -12,5 +12,5 @@ RUN chmod 0555 /app/entrypoint.sh && python3 -m compileall -q /app/hubapi
 USER hub
 VOLUME ["/var/hub"]
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=2).status==200 else 1)"
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/api/ready', timeout=2).status==200 else 1)"
 ENTRYPOINT ["/app/entrypoint.sh"]

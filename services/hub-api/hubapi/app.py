@@ -11,6 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from . import briefs as B
 from .auth import AuthError, bearer
 from .catalog import Catalog
+from .ops import RateLimiter, current_request_id, readiness, request_id
 from .store import Store
 
 log = logging.getLogger("hubapi")
@@ -45,6 +46,7 @@ class HubApi:
         self.s, self.store, self.catalog, self.auth, self.assistant, self.guide = settings, store, catalog, auth, assistant, guide
         self.routes: list[tuple[str, re.Pattern, list, callable, bool]] = []
         self.seq_lock = threading.Lock(); self.seq = 100
+        self.limiter = RateLimiter(getattr(settings, "rate_per_minute", 0))
         self._register()
 
     def route(self, method: str, path: str, handler, anonymous: bool = False):
@@ -75,6 +77,10 @@ class HubApi:
                 principal = self.auth.principal(token)
             except AuthError as e:
                 return self.problem(Problem(e.status, e.title, e.detail, e.code), {"WWW-Authenticate": "Bearer"})
+        if principal:
+            wait = self.limiter.check(principal.id)
+            if wait:
+                return self.problem(Problem(429, "Too many requests", "Slow down; the limit is per person and per minute.", "rate.limited"), {"Retry-After": str(int(wait))})
         key = headers.get("Idempotency-Key")
         if key and principal:
             hit = self.store.replay(key, principal.id)
@@ -108,6 +114,7 @@ class HubApi:
     def _register(self):
         r = self.route
         r("GET", "/health", self.health, anonymous=True)
+        r("GET", "/ready", self.ready, anonymous=True)
         r("GET", "/me", lambda c: {**c["principal"].to_json(), "preferences": self.store.get("prefs", c["principal"].id) or c["principal"].preferences})
         r("PUT", "/me/preferences", self.put_prefs)
         r("GET", "/catalog", lambda c: self.catalog.catalog_for(c["principal"]))
@@ -148,6 +155,15 @@ class HubApi:
 
     def health(self, c):
         return {"status": "ok", "build": self.s.build_sha, "env": self.s.env, "auth": self.s.auth, "assistant": self.assistant.name, "components": len(self.catalog.shelf), "record": "file" if self.s.db_path != ":memory:" else "memory"}
+
+    def ready(self, c):
+        """Whether this process should receive traffic: the record answers a write, the identity provider's keys are reachable, the guide is loaded."""
+        checks = {"record": self.store.ping, "identity": getattr(self.auth, "ready", lambda: None), "catalog": lambda: None if self.catalog.shelf else "no components loaded",
+                  "guide": lambda: None if self.guide else "not configured"}
+        ok, detail = readiness(checks)
+        if not ok:
+            raise Problem(503, "Not ready", json.dumps(detail), "not.ready")
+        return {"status": "ready", "checks": detail, "schema": self.store.version()}
 
     def put_prefs(self, c):
         p = c["body"]
@@ -309,6 +325,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self.send_header(k, v)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Request-Id", current_request_id())
             self.end_headers()
             if self.command != "HEAD":
                 self.wfile.write(body)
@@ -316,6 +333,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
         def _dispatch(self):
             t0 = time.time()
             path = self.path
+            request_id(self.headers.get("X-Request-Id"))
             if urllib.parse.urlparse(path).path == "/config.js":
                 raw = ("// Runtime configuration from hub-api's settings; public values only.\nwindow.__HUB_CONFIG__ = " + json.dumps(api.s.web_config()) + ";\n").encode("utf-8")
                 self.send_response(200); self.send_header("Content-Type", "application/javascript"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-cache"); self.end_headers()
@@ -335,7 +353,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             body = self.rfile.read(length) if length else b""
             res = api.handle(self.command, path[len(api_prefix):] or "/", self.headers, body)
             if isinstance(res, Stream):
-                self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.send_header("Cache-Control", "no-cache"); self.send_header("Connection", "close"); self.end_headers()
+                self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.send_header("Cache-Control", "no-cache"); self.send_header("Connection", "close"); self.send_header("X-Request-Id", current_request_id()); self.end_headers()
                 aborted = False
                 try:
                     for ev in res.events:
@@ -364,12 +382,21 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             data = open(full, "rb").read()
             cache = "public, max-age=31536000, immutable" if "/assets/" in full else "no-cache"
             self.send_response(200); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(data))); self.send_header("Cache-Control", cache)
-            self.send_header("X-Content-Type-Options", "nosniff"); self.send_header("X-Frame-Options", "DENY"); self.send_header("Referrer-Policy", "no-referrer"); self.end_headers()
+            self.send_header("X-Content-Type-Options", "nosniff"); self.send_header("X-Frame-Options", "DENY"); self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Security-Policy", CSP)
+            if api.s.public_url.startswith("https://"):
+                self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+            self.end_headers()
             self.wfile.write(data)
 
         do_GET = do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = _dispatch
 
     return Handler
+
+
+# The hub is one origin: its scripts, styles, fonts and API all come from here. Inline styles are React's style
+# attributes; inline scripts are not allowed, so an injected page cannot run code even if it got into a response.
+CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
 
 def serve(api: HubApi, host: str, port: int, static_dir: str = "") -> ThreadingHTTPServer:

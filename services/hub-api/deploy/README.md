@@ -13,7 +13,7 @@ account, id or address.
 4. **Secrets**: `hub/assistant-token` (when `HUB_ASSISTANT=http`) under the `hub/` prefix the task role may read.
 5. **Task definition and role**: `ecs-task-definition.json`, `iam-task-role-policy.json`; the record volume is EFS
    with an access point owned by uid 10001.
-6. **Verify**: `/api/health` answers; `GET /api/me` with a real bearer resolves the expected principal; the checks
+6. **Verify**: `/api/health` answers and `/api/ready` says `ready` (the load balancer and the task health check use `/api/ready`); `GET /api/me` with a real bearer resolves the expected principal; the checks
    in `CONFIGURATION.md`.
 
 Local, with fakes: `deploy/compose.yaml` at the repository root.

@@ -274,10 +274,21 @@
     "engineer"
    ],
    "kind": "page",
-   "text": " An asymmetric KMS key; the task role allowed `kms:Sign` and `kms:GetPublicKey` on it |\n| Ticket system (Jira) | `AGENT_JIRA_URL`, `AGENT_JIRA_TOKEN_NAME` | A service account with read on the incident projects and comment on them |\n| Deploy system (Azure DevOps) | `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PAT_NAME` | A PAT scoped to read pipelines and releases |\n| Knowledge base | `HUB_KB_URL`, `HUB_KB_SEARCH_URL` | The console URL and, for the bedrock assistant, a search endpoint that returns `[{source, chunk_ref, classification, text}]` |\n| The platform runtime | `HUB_ASSISTANT=http`, `HUB_ASSISTANT_URL`, `HUB_ASSISTANT_TOKEN_NAME` | The runtime that owns the employee assistant and streams `event: view` turns on the same contract |\n| Audit export | `AGENT_AUDIT_EXPORT` | A bucket the task role may `s3:PutObject` to; the chain's export lands there with its head |"
+   "text": " An asymmetric KMS key; the task role allowed `kms:Sign` and `kms:GetPublicKey` on it |\n| Ticket system (Jira) | `AGENT_JIRA_URL`, `AGENT_JIRA_TOKEN_NAME` | A service account with read on the incident projects and comment on them |\n| Deploy system (Azure DevOps) | `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PAT_NAME` | A PAT scoped to read pipelines and releases |\n| Knowledge base | `HUB_KB_URL`, `HUB_KB_SEARCH_URL` | The console URL and, for the bedrock assistant, a search endpoint that returns `[{source, chunk_ref, classification, text}]` |\n| The platform runtime | `HUB_ASSISTANT=http`, `HUB_ASSISTANT_URL`, `HUB_ASSISTANT_TOKEN_NAME` | The runtime that owns the employee assistant and streams `event: view` turns on the same contract |\n| Audit export | `AGENT_AUDIT_EXPORT`, `AGENT_AUDIT_EXPORT_INTERVAL_S` | A bucket the task role may `s3:PutObject` to; the chain's export lands there with its head. With an interval the task exports itself; without one, a scheduled task runs `export-audit` |\n| Limits | `HUB_RATE_PER_MINUTE`, `AGENT_RUNS_PER_MINUTE`, `HUB_IDEMPOTENCY_TTL_S` | Nothing: the defaults (300 requests and 60 runs per person per minute, replays kept a day) suit a first deployment; both limits must be above 0 outside the sandbox |\n| Readiness and backups | `/api/ready`, `/ready`; `python3 -m hubapi backup <path>`, `python3 -m agentrt backup <path>` | The l"
   },
   {
    "id": "CONFIGURATION.md#4",
+   "source": "CONFIGURATION.md",
+   "title": "Configuring for the bank",
+   "section": "Systems, one by one",
+   "audience": [
+    "engineer"
+   ],
+   "kind": "page",
+   "text": "oad balancer's health check pointed at the readiness route; a scheduled task that runs the backup command and copies the file off the volume |"
+  },
+  {
+   "id": "CONFIGURATION.md#5",
    "source": "CONFIGURATION.md",
    "title": "Configuring for the bank",
    "section": "Two environments, one build",
@@ -288,7 +299,7 @@
    "text": "The same image runs in sandbox with fakes and in production against the bank: only the environment changes.\n`sandbox` allows mock identity, the fake assistant, the rules engine and fake targets; `staging` and `production`\nrefuse them, require https public URLs, a file-backed record, a non-environment secrets provider and, for the\nagent, KMS signing. Increments are configuration too: `AGENT_TARGETS` names which systems are real, so a first\nproduction deployment reads from real systems and writes to none."
   },
   {
-   "id": "CONFIGURATION.md#5",
+   "id": "CONFIGURATION.md#6",
    "source": "CONFIGURATION.md",
    "title": "Configuring for the bank",
    "section": "The hub's build",
@@ -299,7 +310,7 @@
    "text": "The hub is built once, anywhere, and configured at runtime: hub-api serves `/config.js` from its `HUB_WEB_*`\nsettings (the identity provider's authority and client id, the redirect URI, the knowledge base URL, the build\nsha), and the page reads it before anything else. So the `hub/dist` in the release bundle is the production hub;\nthe bank never needs Node or a package store to point it at its identity provider. `HUB_STATIC_DIR` serves it\nfrom the same process, so a deployable is one container. Fonts are served from the same origin; no request\nleaves the bank's network for the page itself. `hub/.env.production.example` remains for a hub served by a\nstatic host without hub-api, where the values are baked in at build time instead."
   },
   {
-   "id": "CONFIGURATION.md#6",
+   "id": "CONFIGURATION.md#7",
    "source": "CONFIGURATION.md",
    "title": "Configuring for the bank",
    "section": "What to check before the first deployment",
@@ -355,10 +366,22 @@
     "leadership"
    ],
    "kind": "page",
-   "text": "ory verifies its manifest and passes `scripts/verify.sh python` without network or Node | The bundle transferred through the bank's approved channel and its sha256 recorded (release manager) |\n| CI: one script, two runners | DONE | `scripts/verify.sh`; `.github/workflows/ci.yml` and `ci/azure-pipelines.yml` call it | The pipeline created on the bank's runner with a pnpm store for the hub job (platform team) |\n| Knowledge base: pages published into the product, its checks at zero | DONE | `tools/publish_kb.py`, `kb-librarian check` on a checkout | The pages published into the bank's knowledge base checkout (enablement lead) |\n| MCP: a tool server with elicitation and 403 on taint, a gateway for external servers, a read-only shelf server | DONE | the three components' tests, including the HTTP transport end to end | The official MCP conformance suite run against the tool server with a reviewed expected-failures file (PLT-HAR-33) (platform team) |\n| Model risk | OPEN | the think step records the engine, stage and token counts on the chain; the hub's feedback question is stored per turn | The judge and labels for the first read; the inference profile approved (model risk) |\n| Demonstration video tooling (`demo/`) | OPTIONAL | needs ffmpeg and Chromium; excluded from the bundle | — |"
+   "text": "ory verifies its manifest and passes `scripts/verify.sh python` without network or Node | The bundle transferred through the bank's approved channel and its sha256 recorded (release manager) |\n| CI: one script, two runners | DONE | `scripts/verify.sh`; `.github/workflows/ci.yml` and `ci/azure-pipelines.yml` call it | The pipeline created on the bank's runner with a pnpm store for the hub job (platform team) |\n| Knowledge base: pages published into the product, its checks at zero | DONE | `tools/publish_kb.py`, `kb-librarian check` on a checkout | The pages published into the bank's knowledge base checkout (enablement lead) |\n| MCP: a tool server with elicitation and 403 on taint, a gateway for external servers, a read-only shelf server | DONE | the three components' tests, including the HTTP transport end to end | The official MCP conformance suite run against the tool server with a reviewed expected-failures file (PLT-HAR-33) (platform team) |\n| Model risk | OPEN | the think step records the engine, stage and token counts on the chain; the hub's feedback question is stored per turn | The judge and labels for the first read; the inference profile approved (model risk) |\n| Operations: readiness routes for the load balancer, request ids end to end, per-person rate limits, a versioned record that refuses a newer schema, online backups, the chain exported from inside the task | DON"
   },
   {
    "id": "PRODUCTION-READINESS.md#4",
+   "source": "PRODUCTION-READINESS.md",
+   "title": "Production readiness",
+   "section": "Production readiness: the collection",
+   "audience": [
+    "engineer",
+    "leadership"
+   ],
+   "kind": "page",
+   "text": "E | `services/*/tests/test_ops.py`; `scripts/smoke-container-tree.sh` hits `/ready` in both trees | The backup job and the alarm on `/ready` created on the bank's account (integrations engineer) |\n| Demonstration video tooling (`demo/`) | OPTIONAL | needs ffmpeg and Chromium; excluded from the bundle | — |"
+  },
+  {
+   "id": "PRODUCTION-READINESS.md#5",
    "source": "PRODUCTION-READINESS.md",
    "title": "Production readiness",
    "section": "What \"production ready\" means here",
@@ -389,7 +412,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "- Hub: `GET /api/health` → `{\"status\":\"ok\",\"env\",\"auth\",\"assistant\",\"components\",\"record\"}`. `record: \"memory\"` in staging or production is a misconfiguration; the entrypoint should have refused it.\n- Agent: `GET /health` → the wiring by name (`identity`, `signing`, `engine`, `targets` as class names) and `records`, the chain's length after a verify. A fake class name in production is a misconfiguration."
+   "text": "- Hub: `GET /api/health` → `{\"status\":\"ok\",\"env\",\"auth\",\"assistant\",\"components\",\"record\"}`. `record: \"memory\"` in staging or production is a misconfiguration; the entrypoint should have refused it.\n- Agent: `GET /health` → the wiring by name (`identity`, `signing`, `engine`, `targets` as class names) and `records`, the chain's length after a verify. A fake class name in production is a misconfiguration.\n- Readiness, for the load balancer and the task health check: `GET /api/ready` and `GET /ready` answer 200 with each check named (`record`, `identity`, `catalog`, and the hub's `guide`) or 503 with the failing check's exception class. A task that is up but not ready is taken out of rotation, not restarted; the usual cause is the identity provider's key set being unreachable.\n- Every response carries `X-Request-Id`: the hub's own id when it sent one, else one minted by the service. A person's support line quotes it; every log line for that request carries `rid=<id>`.\n- Limits: `429 Too many requests` with `Retry-After` when one person exceeds `HUB_RATE_PER_MINUTE` or `AGENT_RUNS_PER_MINUTE`. A person seeing it steadily is a runaway client, not a capacity problem."
   },
   {
    "id": "RUNBOOK.md#2",
@@ -411,10 +434,21 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "| Situation | What to do |\n| --- | --- |\n| Roll out a new build | Build the image with the new `GIT_SHA`, update the task definition, deploy; both services are stateless beyond their volume, so a rolling deploy is safe |\n| A component was signed off | Download the queue's export on the hub, `python3 tools/shelf.py --apply-signoffs`, commit, `--write`, rebuild the image (the shelf's `collection.json` is shipped in it) |\n| Add a listing the hub should show | Edit `consumers.json` on the config volume and restart the hub task |\n| Grant a person a role | Add their group to `identity-map.json`, or add them to the group; the hub reads the map at start |\n| Change which systems the agent writes to | `AGENT_TARGETS`; a target not named is a fake and refused outside the sandbox |\n| Stop the agent now | The kill switch is in the record: `python3 -m agentrt` has no remote stop by design; scale the service to zero, then set the kill switch through the harness before scaling back (`actionloop.kill`) |\n| Rotate a credential | Rotate it in the secrets provider under the same name; nothing restarts, the next call reads the new value (a five-minute cache) |\n| Export the chain | `python3 -m agentrt export-audit` inside the task (a scheduled task nightly); `latest.json` in the bucket points at the newest object |"
+   "text": "| Situation | What to do |\n| --- | --- |\n| Roll out a new build | Build the image with the new `GIT_SHA`, update the task definition, deploy; both services are stateless beyond their volume, so a rolling deploy is safe |\n| A component was signed off | Download the queue's export on the hub, `python3 tools/shelf.py --apply-signoffs`, commit, `--write`, rebuild the image (the shelf's `collection.json` is shipped in it) |\n| Add a listing the hub should show | Edit `consumers.json` on the config volume and restart the hub task |\n| Grant a person a role | Add their group to `identity-map.json`, or add them to the group; the hub reads the map at start |\n| Change which systems the agent writes to | `AGENT_TARGETS`; a target not named is a fake and refused outside the sandbox |\n| Stop the agent now | The kill switch is in the record: `python3 -m agentrt` has no remote stop by design; scale the service to zero, then set the kill switch through the harness before scaling back (`actionloop.kill`) |\n| Rotate a credential | Rotate it in the secrets provider under the same name; nothing restarts, the next call reads the new value (a five-minute cache) |\n| Back up the record | `python3 -m hubapi backup /var/hub/backup.db` and `python3 -m agentrt backup /var/agent/backup.db` inside the task (SQLite's online backup: consistent while serving), then copy the file off the volume; restore by stoppi"
   },
   {
    "id": "RUNBOOK.md#4",
+   "source": "RUNBOOK.md",
+   "title": "Runbook",
+   "section": "Common operations",
+   "audience": [
+    "engineer"
+   ],
+   "kind": "page",
+   "text": "ng the task and putting the file back as the record. A record from a newer build refuses to open under an older one; restore before rolling back |\n| Export the chain | `python3 -m agentrt export-audit` inside the task, or set `AGENT_AUDIT_EXPORT_INTERVAL_S` and the task exports itself (a failed export is logged and retried at the next interval; the chain stays local meanwhile); `latest.json` in the bucket points at the newest object |"
+  },
+  {
+   "id": "RUNBOOK.md#5",
    "source": "RUNBOOK.md",
    "title": "Runbook",
    "section": "The record is broken",
@@ -425,7 +459,7 @@
    "text": "`verify-record` fails when a row was edited or removed. Do not repair rows. Restore the volume from its last\nsnapshot, compare the chain's head with the last `latest.json` in the bucket, and open an incident: a chain that\ndoes not verify is a security event."
   },
   {
-   "id": "RUNBOOK.md#5",
+   "id": "RUNBOOK.md#6",
    "source": "RUNBOOK.md",
    "title": "Runbook",
    "section": "Upstream outages",
@@ -436,7 +470,7 @@
    "text": "The connectors raise typed errors; the harness records `handler.errors` and the run answers 502 with the\nsession id. Nothing is retried on a write. When the system is back, the person runs again; the parked write (if\nany) was never sent."
   },
   {
-   "id": "RUNBOOK.md#6",
+   "id": "RUNBOOK.md#7",
    "source": "RUNBOOK.md",
    "title": "Runbook",
    "section": "Escalation",
@@ -468,7 +502,7 @@
     "leadership"
    ],
    "kind": "page",
-   "text": "pository's own pages; a question that reads as an instruction is refused before any ranking or model call, answers are cite-or-drop, and the log carries ids only | `hub-api/guide.py`, `hub-api/tests/test_guide.py`, `hub/src/api/mock/guideRules.ts` |\n| A tool outside the catalog | The catalog is built from the template and signed; an unknown tool fails at the catalog hook; an external server's tools are an allowlist | `incident-first-read-agent`, `mcp-gateway-client` |\n| A held credential leaking | None held: names resolved at call time, references minted per call and redeemed once per audience, SigV4 from the task role, KMS for signing | `secrets-by-name`, `actionloop/identity.py`, `signing.KmsKey`, connector tests (no token in a URL) |\n| PII reaching a model or a log | Results projected to declared shapes and masked; logs ids only; the assistant's citations carry the classification | `dataguard.py`, `ids-only-logging`, `hub-api/tests/test_assistant.py` |\n| A tampered record | Hash-chained, verified at every start, exported with its head; a break is an incident | `audit-chain`, `agent-runtime/export.py`, `RUNBOOK.md` |\n| A misconfigured production process | Fail-closed settings: fakes refused, https required, file-backed record, non-environment secrets; the entrypoint checks before listening | `services/*/settings.py`, `scripts/verify.sh` (the refusal gates) |\n| An unapproved e"
+   "text": "pository's own pages; a question that reads as an instruction is refused before any ranking or model call, answers are cite-or-drop, and the log carries ids only | `hub-api/guide.py`, `hub-api/tests/test_guide.py`, `hub/src/api/mock/guideRules.ts` |\n| A tool outside the catalog | The catalog is built from the template and signed; an unknown tool fails at the catalog hook; an external server's tools are an allowlist | `incident-first-read-agent`, `mcp-gateway-client` |\n| A held credential leaking | None held: names resolved at call time, references minted per call and redeemed once per audience, SigV4 from the task role, KMS for signing | `secrets-by-name`, `actionloop/identity.py`, `signing.KmsKey`, connector tests (no token in a URL) |\n| PII reaching a model or a log | Results projected to declared shapes and masked; logs ids only; the assistant's citations carry the classification | `dataguard.py`, `ids-only-logging`, `hub-api/tests/test_assistant.py` |\n| A tampered record | Hash-chained, verified at every start, exported with its head; a break is an incident | `audit-chain`, `agent-runtime/export.py`, `RUNBOOK.md` |\n| One client exhausting the service for everyone | A token bucket per person on the hub's API and on the agent's runs (`429`, `Retry-After`); the bank's gateway limits by network in front of it | `hub-api/ops.py`, `hub-api/tests/test_ops.py`, `agent-runtime/tests"
   },
   {
    "id": "SECURITY.md#2",
@@ -480,7 +514,7 @@
     "leadership"
    ],
    "kind": "page",
-   "text": "xternal request from the hub page | Fonts and assets served from the same origin; the API is same-origin; no CDN | `hub/public/fonts`, `hub-api/app.py` (security headers) |\n| Supply chain | Standard library only in every Python deployable; the hub's lockfile pinned; base image digests pinned by the bank; vendored files checked byte for byte | `services/vendor.py`, `tools/shelf.py --check`, `deploy/Dockerfile` |"
+   "text": "/test_ops.py` |\n| Script injection into the served hub | Content-Security-Policy on every page: scripts, styles, fonts, images and connections from the hub's origin only, no inline script, never framed; HSTS behind https | `hub-api/app.py` (`CSP`), `hub-api/tests/test_ops.py` |\n| A misconfigured production process | Fail-closed settings: fakes refused, https required, file-backed record, non-environment secrets; the entrypoint checks before listening | `services/*/settings.py`, `scripts/verify.sh` (the refusal gates) |\n| An unapproved external request from the hub page | Fonts and assets served from the same origin; the API is same-origin; no CDN | `hub/public/fonts`, `hub-api/app.py` (security headers) |\n| Supply chain | Standard library only in every Python deployable; the hub's lockfile pinned; base image digests pinned by the bank; vendored files checked byte for byte | `services/vendor.py`, `tools/shelf.py --check`, `deploy/Dockerfile` |"
   },
   {
    "id": "SECURITY.md#3",
