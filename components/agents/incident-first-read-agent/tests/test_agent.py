@@ -57,7 +57,7 @@ class Run(unittest.TestCase):
             self.w.harness.call(self.s, "deploys___rollback", {"run_id": 4822})
 
     def test_the_model_only_sees_projected_masked_sources(self):
-        self.w.tickets.tickets["INC-7"]["body"] += " reporter dana@example.test, card 4111111111111111"
+        self.w.tickets.tickets["INC-7"]["description"] += " reporter dana@example.test, card 4111111111111111"
         seen = []
         class Engine:
             def answer(self, stage, ctx, payload=None):

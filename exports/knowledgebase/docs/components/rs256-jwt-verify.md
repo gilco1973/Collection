@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # rs256-jwt-verify
 
-> A component of the collection: `components/python/rs256-jwt-verify/` in the repository (category tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.1 (PLT-AC-14, PLT-ID-1, PLT-ID-8); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/rs256-jwt-verify/` in the repository (category tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.1 (PLT-AC-14, PLT-ID-1, PLT-ID-8); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 RS256 JSON Web Token verification with the standard library. RSA PKCS#1 v1.5 verification is integer arithmetic, so

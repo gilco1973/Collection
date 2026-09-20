@@ -1,0 +1,52 @@
+{
+  "name": "jira-connector",
+  "version": "1.0.0",
+  "category": "integration",
+  "language": "python",
+  "summary": "Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference",
+  "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
+  "used_in": [],
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/clients/change.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "atlassian",
+    "agents",
+    "security"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "governed-action-loop",
+    "incident-first-read-agent",
+    "secrets-by-name",
+    "stdlib-http-client"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.12",
+      "4.1",
+      "5.2"
+    ],
+    "requirements": [
+      "PLT-CAT-6",
+      "PLT-ID-6",
+      "PLT-AC-16"
+    ],
+    "replacement_test": "The same operations are a recorded contract in the registry with generated clients behind a Gateway target; the handlers here bind to the same contract operations, and the harness's conformance tests through the target pass on both."
+  }
+}

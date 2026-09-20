@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Sid": "SecretsByName", "Effect": "Allow", "Action": ["secretsmanager:GetSecretValue"], "Resource": ["arn:aws:secretsmanager:us-east-1:ACCOUNT:secret:hub/*"]},
+    {"Sid": "BedrockAssistantOnlyWhenHubAssistantIsBedrock", "Effect": "Allow", "Action": ["bedrock:InvokeModel"],
+     "Resource": ["arn:aws:bedrock:us-east-1:ACCOUNT:application-inference-profile/hub-assistant"]},
+    {"Sid": "RecordVolume", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+     "Resource": ["arn:aws:elasticfilesystem:us-east-1:ACCOUNT:file-system/fs-HUBRECORD"],
+     "Condition": {"StringEquals": {"elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:us-east-1:ACCOUNT:access-point/fsap-HUBRECORD"}}},
+    {"Sid": "ConfigVolume", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount"],
+     "Resource": ["arn:aws:elasticfilesystem:us-east-1:ACCOUNT:file-system/fs-HUBCONFIG"]}
+  ]
+}

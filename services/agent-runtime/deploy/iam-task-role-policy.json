@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Sid": "SecretsByName", "Effect": "Allow", "Action": ["secretsmanager:GetSecretValue"], "Resource": ["arn:aws:secretsmanager:us-east-1:ACCOUNT:secret:agents/*"]},
+    {"Sid": "CatalogSigning", "Effect": "Allow", "Action": ["kms:Sign", "kms:Verify", "kms:GetPublicKey"], "Resource": ["arn:aws:kms:us-east-1:ACCOUNT:key/KEY_ID"]},
+    {"Sid": "ThinkStep", "Effect": "Allow", "Action": ["bedrock:InvokeModel"], "Resource": ["arn:aws:bedrock:us-east-1:ACCOUNT:application-inference-profile/incident-first-read"]},
+    {"Sid": "AuditExport", "Effect": "Allow", "Action": ["s3:PutObject"], "Resource": ["arn:aws:s3:::BUCKET/agents/*"],
+     "Condition": {"StringEquals": {"s3:x-amz-server-side-encryption": "aws:kms"}}},
+    {"Sid": "RecordVolume", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+     "Resource": ["arn:aws:elasticfilesystem:us-east-1:ACCOUNT:file-system/fs-AGENTRECORD"],
+     "Condition": {"StringEquals": {"elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:us-east-1:ACCOUNT:access-point/fsap-AGENTRECORD"}}}
+  ]
+}

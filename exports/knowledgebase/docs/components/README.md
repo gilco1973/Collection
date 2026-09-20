@@ -54,8 +54,10 @@ For engineers connecting a system. Each one has a client for an external system 
 
 | Component | Language | What it is |
 | --- | --- | --- |
+| [Ado connector](ado-connector.md) | python | Azure DevOps as a harness target: recent runs, the latest deploy before a trigger, run a pipeline as a rollback; a fake; the PAT a name; gated handlers |
 | [AWS sigv4](aws-sigv4.md) | python | AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock |
 | [Bedrock converse adapter](bedrock-converse-adapter.md) | python | Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned |
+| [Jira connector](jira-connector.md) | python | Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference |
 | [Mcp gateway client](mcp-gateway-client.md) | python | The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake |
 | [OIDC pkce auth](oidc-pkce-auth.md) | typescript | Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set |
 | [Teams graph connector](teams-graph-connector.md) | python | Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake |

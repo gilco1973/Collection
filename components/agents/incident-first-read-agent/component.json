@@ -1,6 +1,6 @@
 {
   "name": "incident-first-read-agent",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "agent",
   "language": "python",
   "summary": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
@@ -115,6 +115,10 @@
     {
       "path": "mcpserver/transports.py",
       "from": "components/python/mcp-tool-server/mcpserver/transports.py"
+    },
+    {
+      "path": "actionloop/jwt_rs256.py",
+      "from": "components/python/governed-action-loop/actionloop/jwt_rs256.py"
     }
   ],
   "spec": {

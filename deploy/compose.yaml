@@ -1,0 +1,35 @@
+# The collection's deployables locally, in the sandbox with fakes: no account, no secret, no network.
+#   docker compose -f deploy/compose.yaml up --build
+# hub at http://localhost:8080 (sign in as a persona), the agent at http://localhost:8081 (/health, /mcp, /runs).
+services:
+  hub:
+    build: { context: .., dockerfile: services/hub-api/deploy/Dockerfile }
+    environment:
+      HUB_ENV: sandbox
+      HUB_AUTH: mock
+      HUB_ASSISTANT: fake
+      HUB_SECRETS: env
+      HUB_DB: /var/hub/hub.db
+      HUB_PUBLIC_URL: http://localhost:8080
+      HUB_IDENTITY_MAP: /app/data/identity-map.example.json
+      HUB_CONSUMERS_FILE: /app/data/consumers.example.json
+    volumes:
+      - hub-record:/var/hub
+      - ../services/hub-api/data:/app/data:ro
+    ports: ["8080:8080"]
+  agent:
+    build: { context: .., dockerfile: services/agent-runtime/deploy/Dockerfile }
+    environment:
+      AGENT_ENV: sandbox
+      AGENT_IDENTITY: fake
+      AGENT_SIGNING: local
+      AGENT_ENGINE: rules
+      AGENT_SECRETS: env
+      AGENT_DB: /var/agent/record.db
+      AGENT_PUBLIC_URL: http://localhost:8081/mcp
+    volumes:
+      - agent-record:/var/agent
+    ports: ["8081:8081"]
+volumes:
+  hub-record: {}
+  agent-record: {}

@@ -1,0 +1,52 @@
+{
+  "name": "ado-connector",
+  "version": "1.0.0",
+  "category": "integration",
+  "language": "python",
+  "summary": "Azure DevOps as a harness target: recent runs, the latest deploy before a trigger, run a pipeline as a rollback; a fake; the PAT a name; gated handlers",
+  "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
+  "used_in": [],
+  "source": {
+    "project": "meg-first-responder",
+    "path": "meg/responder/clients/change.py",
+    "snapshot": "2026-09-19"
+  },
+  "owner": "gil.klainert",
+  "tags": [
+    "agents",
+    "security",
+    "paved-road"
+  ],
+  "requires": [],
+  "pairs_with": [
+    "governed-action-loop",
+    "incident-first-read-agent",
+    "secrets-by-name",
+    "stdlib-http-client"
+  ],
+  "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
+  "vendored": [],
+  "spec": {
+    "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",
+    "sections": [
+      "4.12",
+      "4.1",
+      "5.2"
+    ],
+    "requirements": [
+      "PLT-CAT-6",
+      "PLT-ID-6",
+      "PLT-AC-16"
+    ],
+    "replacement_test": "The same operations are a recorded contract in the registry with generated clients behind a Gateway target; the handlers here bind to the same contract operations, and the harness's conformance tests through the target pass on both."
+  }
+}

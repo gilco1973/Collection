@@ -30,7 +30,7 @@ def main():
     tools = c.call("tools/list")["tools"]
     print("tools/list from the template:", [(t["title"], "read-only" if t["annotations"]["readOnlyHint"] else "write") for t in tools])
     r = c.call("tools/call", {"name": "tickets___get", "arguments": {"key": "INC-7"}})
-    print("read:", r["structuredContent"]["title"], "| tainted:", r["_meta"]["tainted"])
+    print("read:", r["structuredContent"]["summary"], "| tainted:", r["_meta"]["tainted"])
     r = c.call("tools/call", {"name": "tickets___comment", "arguments": {"key": "INC-7", "body": "First read posted over MCP."}})
     print("W1 after the person accepted the elicitation:", r["structuredContent"], "| asked:", asked[-1][:48], "...")
     try:

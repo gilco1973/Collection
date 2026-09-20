@@ -42,7 +42,7 @@ the record.
 
 Copy the directory. Edit `TEMPLATE.md` first: the role sentence, the stages, the tools with their tiers and result
 shapes, the `never` list. Then replace the two fakes in `example.py` with clients for your ticket system and your
-deploy pipeline (same method shapes, `handler(args, credential)`), keep `build()` as it is, and write one test per
+deploy pipeline (same method shapes, `handler(args, credential)`; the `jira-connector` and `ado-connector` components are those clients, with the field names the template's result shapes expect), keep `build()` as it is, and write one test per
 `never` line before you write anything else. The rules bundle in `example.py` is yours to change; the harness's
 hooks are not. To use a model instead of the rules engine, hand `ModelEngine(complete, role=template["role"])` to
 `FirstReadAgent`; `complete` is any `(system, user) -> text` callable, for example the `bedrock-converse-adapter`.

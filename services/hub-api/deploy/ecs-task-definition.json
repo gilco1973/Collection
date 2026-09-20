@@ -1,0 +1,33 @@
+{
+  "family": "ai-hub",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "runtimePlatform": {"operatingSystemFamily": "LINUX", "cpuArchitecture": "X86_64"},
+  "executionRoleArn": "arn:aws:iam::ACCOUNT:role/ai-hub-execution",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT:role/ai-hub-task",
+  "volumes": [{"name": "hub-record", "efsVolumeConfiguration": {"fileSystemId": "fs-HUBRECORD", "transitEncryption": "ENABLED", "authorizationConfig": {"accessPointId": "fsap-HUBRECORD", "iam": "ENABLED"}}},
+              {"name": "hub-config", "efsVolumeConfiguration": {"fileSystemId": "fs-HUBCONFIG", "transitEncryption": "ENABLED", "authorizationConfig": {"accessPointId": "fsap-HUBCONFIG", "iam": "ENABLED"}}}],
+  "containerDefinitions": [{
+    "name": "hub",
+    "image": "ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/ai-hub:GIT_SHA",
+    "essential": true,
+    "readonlyRootFilesystem": true,
+    "user": "10001",
+    "portMappings": [{"containerPort": 8080, "protocol": "tcp"}],
+    "mountPoints": [{"sourceVolume": "hub-record", "containerPath": "/var/hub"}, {"sourceVolume": "hub-config", "containerPath": "/app/config", "readOnly": true}],
+    "environment": [
+      {"name": "HUB_ENV", "value": "production"}, {"name": "HUB_AUTH", "value": "oidc"}, {"name": "HUB_SECRETS", "value": "aws"}, {"name": "AWS_REGION", "value": "us-east-1"},
+      {"name": "HUB_PUBLIC_URL", "value": "https://hub.bank.example"}, {"name": "HUB_KB_URL", "value": "https://kb.bank.example"},
+      {"name": "HUB_IDP_ISSUER", "value": "https://idp.bank.example/TENANT_ID/v2.0"}, {"name": "HUB_IDP_AUDIENCE", "value": "HUB_WEB_CLIENT_ID"},
+      {"name": "HUB_IDENTITY_MAP", "value": "/app/config/identity-map.json"}, {"name": "HUB_CONSUMERS_FILE", "value": "/app/config/consumers.json"},
+      {"name": "HUB_AI_SECURITY_GROUP", "value": "GROUP_ID_AI_SECURITY"},
+      {"name": "HUB_ASSISTANT", "value": "http"}, {"name": "HUB_ASSISTANT_URL", "value": "https://runtime.bank.example"}, {"name": "HUB_ASSISTANT_TOKEN_NAME", "value": "hub/assistant-token"},
+      {"name": "HUB_BUILD_SHA", "value": "GIT_SHA"}, {"name": "HUB_LOG_LEVEL", "value": "INFO"}
+    ],
+    "logConfiguration": {"logDriver": "awslogs", "options": {"awslogs-group": "/ecs/ai-hub", "awslogs-region": "us-east-1", "awslogs-stream-prefix": "hub"}},
+    "healthCheck": {"command": ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/api/health', timeout=2).status==200 else 1)\""], "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15},
+    "linuxParameters": {"initProcessEnabled": true, "capabilities": {"drop": ["ALL"]}}
+  }]
+}

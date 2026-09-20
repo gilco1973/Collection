@@ -18,12 +18,12 @@ def fetch_json(url: str) -> dict:
 
 
 def secrets_for(s: Settings):
-    from .vendor import secrets as S
+    from .vendor import secretsbyname as S
     def aws_factory():
         from .vendor.sigv4 import AwsJson
         from .assistant import UrllibHttp
         return AwsJson(UrllibHttp(15.0), s.bedrock_region or os.environ.get("AWS_REGION", ""))
-    os.environ.setdefault(s.prefix + "SECRETS", s.secrets)
+    os.environ[s.prefix + "SECRETS"] = s.secrets
     return S.provider_from_env(aws_factory, s.prefix)
 
 

@@ -85,6 +85,10 @@
     {
       "path": "mcpgateway/protocol.py",
       "from": "components/python/mcp-tool-server/mcpserver/protocol.py"
+    },
+    {
+      "path": "actionloop/jwt_rs256.py",
+      "from": "components/python/governed-action-loop/actionloop/jwt_rs256.py"
     }
   ],
   "spec": {

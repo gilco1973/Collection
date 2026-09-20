@@ -57,6 +57,14 @@ Copy the `actionloop/` directory into your service and write your own `example.p
 The model never calls `Harness.call` directly. Your think step (see `cited-llm-engine`) proposes; your command layer
 turns proposals into calls; the loop decides.
 
+## Production adapters
+
+The fakes have production counterparts behind the same two methods, so the loop does not change between the
+sandbox and the bank: `identity.JwksIdP` verifies the bank's RS256 tokens against its JWKS and maps directory groups
+to roles (`roles_map`); `signing.KmsKey` signs and verifies catalogs and bundles on an asymmetric KMS key through the
+`aws-sigv4` component's `AwsJson` (the private key never leaves KMS); `signing.FakeKms` stands in for tests.
+`tests/test_production_adapters.py` proves both against a generated key and the fake.
+
 ## Rules it enforces
 
 - Three hooks in a fixed order on every call; a consumer cannot add a fourth or reach a handler around them.

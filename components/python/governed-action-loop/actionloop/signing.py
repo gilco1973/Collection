@@ -1,4 +1,4 @@
-"""Signing with a local key (the interim before a KMS-backed signer).
+"""Signing: a local key for the sandbox, an asymmetric KMS key for staging and production, the same two methods.
 
 Two-approver signing of catalogs and rule bundles. A signature is an HMAC over the canonical JSON of
 the payload; a signed object carries the payload, the hash and one signature per approver. Verification
@@ -30,6 +30,53 @@ class LocalKey:
         return hmac.compare_digest(self.sign(payload_hash, approver), sig)
 
 
+class KmsKey:
+    """The same two methods on an asymmetric KMS key: Sign and Verify through the JSON protocol, SigV4 from the
+    task role. `aws` is an `AwsJson`-like object (`call(service, endpoint_prefix, target, payload) -> dict`, the
+    aws-sigv4 component's). The private key never leaves KMS; a signature is base64 as KMS returns it."""
+
+    def __init__(self, aws, key_id: str, algorithm: str = "RSASSA_PKCS1_V1_5_SHA_256"):
+        self.aws, self.key_id, self.algorithm = aws, key_id, algorithm
+
+    @staticmethod
+    def _message(payload_hash: str, approver: str) -> str:
+        import base64
+        return base64.b64encode(f"{payload_hash}|{approver}".encode()).decode()
+
+    def sign(self, payload_hash: str, approver: str) -> str:
+        r = self.aws.call("kms", "kms", "TrentService.Sign", {"KeyId": self.key_id, "Message": self._message(payload_hash, approver), "MessageType": "RAW", "SigningAlgorithm": self.algorithm})
+        if "Signature" not in r:
+            raise SigningError("KMS returned no signature")
+        return r["Signature"]
+
+    def verify(self, payload_hash: str, approver: str, sig: str) -> bool:
+        try:
+            r = self.aws.call("kms", "kms", "TrentService.Verify", {"KeyId": self.key_id, "Message": self._message(payload_hash, approver), "MessageType": "RAW", "SigningAlgorithm": self.algorithm, "Signature": sig})
+        except Exception:  # KMS answers an invalid signature with an error, which is a false, never a raise
+            return False
+        return bool(r.get("SignatureValid"))
+
+
+class FakeKms:
+    """KMS in memory behind the same `call`: one key, deterministic signatures, invalid ones refused with an error as KMS does."""
+
+    def __init__(self, key_id: str, secret: bytes = b"fake-kms-key"):
+        self.key_id, self._secret, self.calls = key_id, secret, []
+
+    def call(self, service: str, endpoint_prefix: str, target: str, payload: dict, content_type: str = "") -> dict:
+        self.calls.append(target)
+        if payload.get("KeyId") != self.key_id:
+            raise SigningError("NotFoundException: unknown key")
+        sig = hmac.new(self._secret, payload["Message"].encode(), hashlib.sha256).hexdigest()
+        if target == "TrentService.Sign":
+            return {"KeyId": self.key_id, "Signature": sig, "SigningAlgorithm": payload["SigningAlgorithm"]}
+        if target == "TrentService.Verify":
+            if not hmac.compare_digest(sig, payload.get("Signature", "")):
+                raise SigningError("KMSInvalidSignatureException")
+            return {"KeyId": self.key_id, "SignatureValid": True}
+        raise SigningError(f"unknown target {target}")
+
+
 @dataclass
 class Signed:
     payload: dict
@@ -49,14 +96,14 @@ class SigningError(Exception):
     pass
 
 
-def sign(payload: dict, key: LocalKey, approvers: list[str]) -> Signed:
+def sign(payload: dict, key, approvers: list[str]) -> Signed:
     if len(set(approvers)) < 2:
         raise SigningError("two distinct approvers are required")
     h = sha256(payload)
     return Signed(payload, h, key.key_id, {a: key.sign(h, a) for a in approvers})
 
 
-def verify(signed: Signed, key: LocalKey) -> None:
+def verify(signed: Signed, key) -> None:
     """Raises SigningError unless the payload matches its hash and carries two valid, distinct signatures."""
     if signed.key_id != key.key_id:
         raise SigningError("unknown key")

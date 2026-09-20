@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # incident-first-read-agent
 
-> A component of the collection: `components/agents/incident-first-read-agent/` in the repository (category agent, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.1, §5.2, §5.5, §4.8, §4.5 (PLT-AC-8, PLT-AC-11, PLT-AC-16, PLT-AC-21, PLT-HAR-11, PLT-MDL-1, PLT-PRM-1, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/agents/incident-first-read-agent/` in the repository (category agent, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.1, §5.2, §5.5, §4.8, §4.5 (PLT-AC-8, PLT-AC-11, PLT-AC-16, PLT-AC-21, PLT-HAR-11, PLT-MDL-1, PLT-PRM-1, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 An agent, complete: a template (role, stages, tools by tier, what it never does), tools called only through the
@@ -53,7 +53,7 @@ the record.
 
 Copy the directory. Edit `TEMPLATE.md` first: the role sentence, the stages, the tools with their tiers and result
 shapes, the `never` list. Then replace the two fakes in `example.py` with clients for your ticket system and your
-deploy pipeline (same method shapes, `handler(args, credential)`), keep `build()` as it is, and write one test per
+deploy pipeline (same method shapes, `handler(args, credential)`; the `jira-connector` and `ado-connector` components are those clients, with the field names the template's result shapes expect), keep `build()` as it is, and write one test per
 `never` line before you write anything else. The rules bundle in `example.py` is yours to change; the harness's
 hooks are not. To use a model instead of the rules engine, hand `ModelEngine(complete, role=template["role"])` to
 `FirstReadAgent`; `complete` is any `(system, user) -> text` callable, for example the `bedrock-converse-adapter`.

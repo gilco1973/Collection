@@ -21,7 +21,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.0.1",
      "kind": "mono"
     },
     {
@@ -54,7 +54,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.1.0",
      "kind": "mono"
     },
     {
@@ -219,7 +219,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.0.1",
      "kind": "mono"
     },
     {
@@ -398,6 +398,39 @@
    "collection": true
   },
   {
+   "id": "ado-connector",
+   "slug": "ado-connector",
+   "kind": "tool",
+   "name": "Ado connector",
+   "description": "Azure DevOps as a harness target: recent runs, the latest deploy before a trigger, run a pipeline as a rollback; a fake; the PAT a name; gated handlers",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, paved-road",
+   "collection": true
+  },
+  {
    "id": "aws-sigv4",
    "slug": "aws-sigv4",
    "kind": "tool",
@@ -461,6 +494,39 @@
    "footNote": "from meg-first-responder · 2026-09-19",
    "access": "open",
    "tagline": "agents, security, cost",
+   "collection": true
+  },
+  {
+   "id": "jira-connector",
+   "slug": "jira-connector",
+   "kind": "tool",
+   "name": "Jira connector",
+   "description": "Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "atlassian, agents, security",
    "collection": true
   },
   {
@@ -914,7 +980,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.0.1",
      "kind": "mono"
     },
     {
@@ -1010,7 +1076,7 @@
       "op": "tickets.get",
       "tier": "R",
       "classes": "internal",
-      "note": "the incident ticket: title and body, projected and masked before the model sees them"
+      "note": "the incident ticket: summary and description, projected and masked before the model sees them"
      },
      {
       "op": "deploys.recent",
@@ -1110,7 +1176,7 @@
    ],
    "versions": [
     {
-     "version": "1.0.0",
+     "version": "1.0.1",
      "state": "current",
      "date": "2026-09-19"
     }
@@ -1137,7 +1203,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.1.0",
      "kind": "mono"
     },
     {
@@ -1199,8 +1265,8 @@
     },
     {
      "label": "Pairs with",
-     "value": "4",
-     "note": "audit-chain, untrusted-input-guard, bedrock-converse-adapter, rs256-jwt-verify"
+     "value": "5",
+     "note": "audit-chain, aws-sigv4, bedrock-converse-adapter, rs256-jwt-verify, untrusted-input-guard"
     }
    ],
    "does": [
@@ -1360,7 +1426,7 @@
    ],
    "versions": [
     {
-     "version": "1.0.0",
+     "version": "1.1.0",
      "state": "current",
      "date": "2026-09-19"
     }
@@ -2208,7 +2274,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.0",
+     "text": "v1.0.1",
      "kind": "mono"
     },
     {
@@ -2377,7 +2443,7 @@
    ],
    "versions": [
     {
-     "version": "1.0.0",
+     "version": "1.0.1",
      "state": "current",
      "date": "2026-09-19"
     }
@@ -3399,6 +3465,213 @@
    ],
    "changelogHref": "components/python/untrusted-input-guard/README.md"
   },
+  "ado-connector": {
+   "id": "ado-connector",
+   "slug": "ado-connector",
+   "kind": "tool",
+   "name": "Ado connector",
+   "description": "Azure DevOps as a harness target: recent runs, the latest deploy before a trigger, run a pipeline as a rollback; a fake; the PAT a name; gated handlers",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, paved-road",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Ado connector"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.12, §4.1, §5.2",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "paved-road",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "4",
+     "note": "governed-action-loop, incident-first-read-agent, secrets-by-name, stdlib-http-client"
+    }
+   ],
+   "does": [
+    "The deploy system is the first thing an incident agent reads (\"what changed?\") and the last thing it may act on (a rollback, under dual control). This is Azure DevOps as a gateway target: the recent runs of a pipeline, the latest finished deploy shaped as the agent reads it (run id, service, minutes before the trigger), and running a pipeline as the rollback action, with an in-memory fake behind the same methods.",
+    "A service not in the pipeline map is refused before any call; the agent cannot name a pipeline id directly.",
+    "No handler runs without a redeemed reference for its audience; the rollback records the acting person and the reason in the run's variables.",
+    "The PAT is a name resolved at call time; it appears only in an Authorization header."
+   ],
+   "catalog": {
+    "name": "ado-connector · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "ado.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`AdoClient` (`recent_runs`, `get_run`, `latest_deploy`, `run_pipeline`), `FakeAdo`, `handlers(client, audience, pipeline"
+     },
+     {
+      "op": "example.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The fake seeded with two runs, the unknown-service refusal, a rollback, the real client against a recording double"
+     },
+     {
+      "op": "tests/test_ado.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "URLs and auth, minutes-before-the-trigger, the service map and the credential rules"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "3",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.12, §4.1, §5.2",
+     "note": "PLT-CAT-6, PLT-ID-6, PLT-AC-16"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/ado-connector/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/ado-connector/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/ado-connector/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/ado-connector/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/ado-connector.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same operations are a recorded contract in the registry with generated clients behind a Gateway target; th…",
+     "href": "components/python/ado-connector/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `ado.py`. Build the client with your HTTP and secrets provider, the organisation URL,",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/clients/change.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/ado-connector/README.md"
+  },
   "aws-sigv4": {
    "id": "aws-sigv4",
    "slug": "aws-sigv4",
@@ -3808,6 +4081,213 @@
     }
    ],
    "changelogHref": "components/python/bedrock-converse-adapter/README.md"
+  },
+  "jira-connector": {
+   "id": "jira-connector",
+   "slug": "jira-connector",
+   "kind": "tool",
+   "name": "Jira connector",
+   "description": "Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "atlassian, agents, security",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Jira connector"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.12, §4.1, §5.2",
+     "kind": "accent"
+    },
+    {
+     "text": "atlassian",
+     "kind": "line"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "4",
+     "note": "governed-action-loop, incident-first-read-agent, secrets-by-name, stdlib-http-client"
+    }
+   ],
+   "does": [
+    "An agent that reads incidents and posts its first read needs Jira, and it must reach it the way the loop reaches every system: through a gateway target whose handlers run only with a reference the harness minted for that call, with a credential nobody holds. This is that target for Jira Cloud (email and API token) and Jira Data Center (a personal access token), plus an in-memory fake with the same methods so every test, demonstration and sandbox runs without an account.",
+    "No handler runs without a redeemed reference for its own audience; the acting person comes from the reference, never from an argument.",
+    "The token is a name resolved at call time; it appears in an Authorization header and nowhere else.",
+    "Every write carries the acting person's name in Jira's own record."
+   ],
+   "catalog": {
+    "name": "jira-connector · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "jira.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`JiraClient` (`get_issue`, `search`, `add_comment`, `create_issue`), `FakeJira`, `handlers(client, audience)` for the ha"
+     },
+     {
+      "op": "example.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The fake and the real client against a recording double"
+     },
+     {
+      "op": "tests/test_jira.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Auth schemes and shapes, writes carrying the acting person, handlers gated by audience, the fake's outage switch"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "3",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.12, §4.1, §5.2",
+     "note": "PLT-CAT-6, PLT-ID-6, PLT-AC-16"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/jira-connector/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/jira-connector/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/jira-connector/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/jira-connector/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/jira-connector.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same operations are a recorded contract in the registry with generated clients behind a Gateway target; th…",
+     "href": "components/python/jira-connector/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `jira.py`. Build the client with your HTTP (`stdlib-http-client`'s `Http`, or anythin",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/clients/change.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/jira-connector/README.md"
   },
   "mcp-gateway-client": {
    "id": "mcp-gateway-client",
@@ -6460,7 +6940,7 @@
   {
    "name": "incident-first-read-agent",
    "title": "Incident first read agent",
-   "version": "1.0.0",
+   "version": "1.0.1",
    "category": "agent",
    "language": "python",
    "owner": "gil.klainert",
@@ -6494,7 +6974,7 @@
   {
    "name": "governed-action-loop",
    "title": "Governed action loop",
-   "version": "1.0.0",
+   "version": "1.1.0",
    "category": "harness",
    "language": "python",
    "owner": "gil.klainert",
@@ -6664,7 +7144,7 @@
   {
    "name": "rs256-jwt-verify",
    "title": "RS256 jwt verify",
-   "version": "1.0.0",
+   "version": "1.0.1",
    "category": "tool",
    "language": "python",
    "owner": "gil.klainert",
@@ -6866,6 +7346,40 @@
    "repoPath": "components/python/untrusted-input-guard"
   },
   {
+   "name": "ado-connector",
+   "title": "Ado connector",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Azure DevOps as a harness target: recent runs, the latest deploy before a trigger, run a pipeline as a rollback; a fake; the PAT a name; gated handlers",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/ado-connector",
+   "repoPath": "components/python/ado-connector"
+  },
+  {
    "name": "aws-sigv4",
    "title": "AWS sigv4",
    "version": "1.0.0",
@@ -6932,6 +7446,40 @@
    "exampleRun": "python3 example.py",
    "hubPath": "/discover/tools/bedrock-converse-adapter",
    "repoPath": "components/python/bedrock-converse-adapter"
+  },
+  {
+   "name": "jira-connector",
+   "title": "Jira connector",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/jira-connector",
+   "repoPath": "components/python/jira-connector"
   },
   {
    "name": "mcp-gateway-client",

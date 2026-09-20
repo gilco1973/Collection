@@ -81,6 +81,10 @@
     {
       "path": "actionloop/telemetry.py",
       "from": "components/python/governed-action-loop/actionloop/telemetry.py"
+    },
+    {
+      "path": "actionloop/jwt_rs256.py",
+      "from": "components/python/governed-action-loop/actionloop/jwt_rs256.py"
     }
   ],
   "spec": {

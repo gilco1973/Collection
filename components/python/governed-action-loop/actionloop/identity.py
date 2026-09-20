@@ -1,7 +1,7 @@
 """Identity library.
 
-The only validator any consumer uses. Tokens are compact HMAC-signed JSON (a stand-in for the company IdP's
-JWTs; pair with `rs256-jwt-verify` for real ones); the issuer allowlist is the authorizer standard every endpoint carries.
+The only validator any consumer uses. Tokens are compact HMAC-signed JSON from the fake, or RS256 JWTs from the
+bank's provider through `JwksIdP` (the verifier is `jwt_rs256.py`, vendored from rs256-jwt-verify); the issuer allowlist is the authorizer standard every endpoint carries.
 The principal chain is Tenant + Human + Agent. Outbound identity is a *reference* bound to audience and
 deadline that a handler redeems, never a token it holds (the credential-helper pattern).
 """
@@ -47,6 +47,32 @@ class FakeIdP:
         if body.get("exp", 0) < time.time():
             raise IdentityError("expired")
         return body
+
+
+class JwksIdP:
+    """The bank's identity provider: RS256 JWTs verified against its JWKS (signature, exp, nbf, iss, aud).
+
+    Behind the same `_check(token) -> claims` the fake offers, so `IdentityLibrary` does not change. `roles_map`
+    turns the directory's `groups` claim into the roles the policy reads (group id -> role); a token without
+    groups has no roles. `fetch(url) -> dict` is the consumer's HTTP (the JWKS is cached with a TTL).
+    """
+
+    def __init__(self, issuer: str, audiences: tuple, fetch, jwks_url: str | None = None, roles_map: dict | None = None, leeway_s: int = 60, ttl_s: int = 3600):
+        from . import jwt_rs256 as J
+        self._J, self.issuer, self.audiences, self.roles_map, self.leeway = J, issuer, tuple(audiences), dict(roles_map or {}), leeway_s
+        self.jwks = J.Jwks(fetch, jwks_url or J.openid_jwks_url(fetch, issuer.rstrip("/") + "/.well-known/openid-configuration"), ttl_s)
+
+    def _check(self, token: str) -> dict:
+        try:
+            claims = self._J.verify(token, self.jwks, (self.issuer,), self.audiences, leeway_s=self.leeway)
+        except self._J.JwtError as e:
+            raise IdentityError(str(e))
+        except Exception as e:  # anything the verifier cannot read is not a token
+            raise IdentityError(f"unreadable token ({type(e).__name__})")
+        roles = [self.roles_map[g] for g in (claims.get("groups") or []) if g in self.roles_map]
+        aud = claims.get("aud")
+        return {**claims, "aud": aud[0] if isinstance(aud, list) and len(aud) == 1 else aud, "roles": sorted(set(roles + list(claims.get("roles") or []))),
+                "name": claims.get("name") or claims.get("preferred_username") or claims.get("sub")}
 
 
 @dataclass(frozen=True)
@@ -106,7 +132,8 @@ class AuthorizerConfig:
 
 
 class IdentityLibrary:
-    def __init__(self, idp: FakeIdP, authorizer: AuthorizerConfig, registry: AgentRegistry, tenant: str = "company"):
+    def __init__(self, idp, authorizer: AuthorizerConfig, registry: AgentRegistry, tenant: str = "company"):
+        """`idp` is anything with `_check(token) -> claims`: the fake, or `JwksIdP` for the bank's provider."""
         self.idp, self.authorizer, self.registry, self.tenant = idp, authorizer, registry, tenant
         self._links: dict[str, dict] = {}  # human id -> linked external accounts
         self._references: dict[str, dict] = {}
