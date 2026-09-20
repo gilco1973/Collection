@@ -35,17 +35,3 @@ jobs:
         with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
-  knowledgebase:
-    runs-on: ubuntu-latest
-    defaults: { run: { working-directory: knowledgebase } }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pipx install poetry
-      - run: poetry install --no-interaction
-      - run: poetry run ruff check . && poetry run ruff format --check .
-      - run: poetry run pytest -q
-      - run: scripts/verify-layout.sh
-      - run: poetry run kb-librarian check
-      - run: poetry run python scripts/validate_k8s.py deploy/k8s

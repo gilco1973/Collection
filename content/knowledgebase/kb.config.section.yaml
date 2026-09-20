@@ -1,0 +1,5 @@
+  - id: components
+    path: components
+    title: Reusable components
+    owner: ai-platform-engineering
+    review_every_days: 120

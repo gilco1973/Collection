@@ -1,0 +1,25 @@
+{
+  "source": "the knowledge base's kb.config.yaml, taxonomy.tags; refresh when the product changes it",
+  "tags": [
+    "onboarding",
+    "paved-road",
+    "best-practice",
+    "security",
+    "governance",
+    "model-risk",
+    "prompting",
+    "agents",
+    "rag",
+    "evaluation",
+    "observability",
+    "cost",
+    "atlassian",
+    "tutorial",
+    "video",
+    "skill",
+    "glossary",
+    "adr",
+    "faq",
+    "data"
+  ]
+}

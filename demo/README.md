@@ -7,7 +7,7 @@ the components, from real screenshots of the running products. Built with the `w
 | File | What it is |
 | --- | --- |
 | `slides.py` | The fifteen slides with their narration (the authoritative script) |
-| `capture_shots.cjs` | Drives the hub (`pnpm preview`) and the knowledge-base console (`deploy/serve.py`) with Playwright and screenshots each step; renders the terminal outputs |
+| `capture_shots.cjs` | Drives the hub (`pnpm preview`) and the knowledge-base console (the product's `deploy/serve.py`, run from its own checkout) with Playwright and screenshots each step; renders the terminal outputs |
 | `build.sh` | The whole pipeline: terminal outputs, shots, deck, frames, narration, video |
 | `out/collection-walkthrough.mp4` | The result (not committed): about five minutes, captions burned in, plus `.en.vtt` and a no-captions copy |
 
@@ -15,7 +15,8 @@ the components, from real screenshots of the running products. Built with the `w
 
 ```
 cd hub && pnpm install && pnpm build && pnpm preview &                       # :4173
-cd knowledgebase && poetry install && (cd web && npm ci && npm run build) && \
+python3 tools/publish_kb.py ../knowledge-base                                  # a checkout of the product, with the Collection's pages applied
+cd ../knowledge-base && poetry install && (cd web && npm ci && npm run build) && \
   KB_API_KEY=<any-placeholder-key> KB_ROOT=$PWD poetry run python deploy/serve.py &   # :8765
 python3 -m pip install --user imageio-ffmpeg                                   # an ffmpeg if none is installed
 cd demo && CHROMIUM_PATH=/path/to/chromium NODE_PATH=../hub/node_modules ./build.sh

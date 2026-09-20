@@ -10,8 +10,9 @@ Standard library only. A component is a directory under components/ that holds a
 in CONTRIBUTING.md). Nothing here reads a component's code; the manifest and the README are the interface.
 
 Exports: CATALOG.md (the human index); hub/src/api/mock/collection.ts (every component as a listing on the hub's
-Discover page, with a detail page built from its README); knowledgebase/docs/components/<name>.md and
-docs/skills/<name>/SKILL.md (pages the librarian keeps healthy). Tags must come from the knowledge base's taxonomy.
+Discover page, with a detail page built from its README); exports/knowledgebase/ (one page per component, one
+SKILL.md per skill, the components index and the skills rows) that tools/publish_kb.py applies to a checkout of the
+knowledge base, a standalone product. Tags must come from that product's taxonomy (tools/kb-taxonomy.json).
 """
 from __future__ import annotations
 import argparse, json, os, re, subprocess, sys
@@ -20,10 +21,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPONENTS = os.path.join(ROOT, "components")
 CATALOG_MD = os.path.join(ROOT, "CATALOG.md")
 HUB_TS = os.path.join(ROOT, "hub", "src", "api", "mock", "collection.ts")
-KB = os.path.join(ROOT, "knowledgebase")
-KB_DOCS = os.path.join(KB, "docs")
-KB_CONFIG = os.path.join(KB, "kb.config.yaml")
-MARK_START, MARK_END = "<!-- collection:start -->", "<!-- collection:end -->"
+KB_EXPORT = os.path.join(ROOT, "exports", "knowledgebase")
+KB_TAXONOMY = os.path.join(ROOT, "tools", "kb-taxonomy.json")
 
 KINDS = ("tool", "integration", "skill", "pattern")
 LANGUAGES = ("python", "typescript", "markdown", "mixed")
@@ -98,14 +97,10 @@ _taxonomy: set | None = None
 
 
 def kb_taxonomy() -> set:
-    """The tags kb.config.yaml allows, parsed from its `taxonomy: tags:` block without a YAML library."""
+    """The tags the knowledge base's contract allows, mirrored in tools/kb-taxonomy.json."""
     global _taxonomy
     if _taxonomy is None:
-        _taxonomy = set()
-        if os.path.exists(KB_CONFIG):
-            block = re.search(r"^taxonomy:\n\s+tags:\n((?:\s+- .+\n)+)", open(KB_CONFIG, encoding="utf-8").read(), re.M)
-            if block:
-                _taxonomy = {line.strip()[2:].strip() for line in block.group(1).splitlines() if line.strip().startswith("- ")}
+        _taxonomy = set(json.load(open(KB_TAXONOMY, encoding="utf-8"))["tags"]) if os.path.exists(KB_TAXONOMY) else set()
     return _taxonomy
 
 
@@ -216,7 +211,8 @@ def hub_detail(m: dict, listing: dict) -> dict:
 
 
 def kb_href(m: dict) -> str:
-    return f"docs/skills/{m['name']}/SKILL.md" if m["kind"] == "skill" else f"docs/components/{m['name']}.md"
+    """The page's route in the knowledge base's console, relative to its base URL."""
+    return f"/kb/page/skills/{m['name']}/SKILL.md" if m["kind"] == "skill" else f"/kb/page/components/{m['name']}.md"
 
 
 def render_hub(ms: list[dict]) -> str:
@@ -293,30 +289,25 @@ def kb_skill_rows(ms: list[dict]) -> str:
     return "\n".join(f"| [{m['name']}]({m['name']}/SKILL.md) | {m['summary']} | {KB_OWNER['skill']} |" for m in ms if m["kind"] == "skill")
 
 
-def splice(text: str, rows: str) -> str:
-    if MARK_START not in text or MARK_END not in text:
-        raise CatalogError("docs/skills/README.md lacks the collection markers")
-    a, b = text.index(MARK_START) + len(MARK_START), text.index(MARK_END)
-    return text[:a] + "\n" + rows + "\n" + text[b:]
-
-
 def kb_outputs(ms: list[dict]) -> dict:
-    """path -> content for every knowledge-base file the collection owns."""
-    out = {os.path.join(KB_DOCS, "components", "README.md"): render_kb_components_index(ms)}
+    """path -> content under exports/knowledgebase/, mirroring the product's docs/ layout; tools/publish_kb.py applies it."""
+    docs = os.path.join(KB_EXPORT, "docs")
+    out = {os.path.join(docs, "components", "README.md"): render_kb_components_index(ms),
+           os.path.join(KB_EXPORT, "sections", "skills.md"): kb_skill_rows(ms) + "\n",
+           os.path.join(KB_EXPORT, "README.md"): "# Generated for the knowledge base\n\nWritten by `python3 tools/catalog.py --write`; do not edit. `docs/` mirrors the product's layout; `sections/skills.md` is the block "
+                                                "its skills README gains. Apply with `python3 tools/publish_kb.py <checkout>`.\n"}
     for m in ms:
         if m["kind"] == "skill":
-            out[os.path.join(KB_DOCS, "skills", m["name"], "SKILL.md")] = open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read()
+            out[os.path.join(docs, "skills", m["name"], "SKILL.md")] = open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read()
         else:
-            out[os.path.join(KB_DOCS, "components", f"{m['name']}.md")] = render_kb_component(m)
-    skills_readme = os.path.join(KB_DOCS, "skills", "README.md")
-    out[skills_readme] = splice(open(skills_readme, encoding="utf-8").read(), kb_skill_rows(ms))
+            out[os.path.join(docs, "components", f"{m['name']}.md")] = render_kb_component(m)
     return out
 
 
 def exports(ms: list[dict]) -> dict:
     out = {CATALOG_MD: render(ms)}
     if os.path.isdir(os.path.dirname(HUB_TS)): out[HUB_TS] = render_hub(ms)
-    if os.path.isdir(KB_DOCS): out.update(kb_outputs(ms))
+    out.update(kb_outputs(ms))
     return out
 
 
@@ -361,7 +352,7 @@ def main(argv=None) -> int:
         for path, content in exports(ms).items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
             open(path, "w", encoding="utf-8").write(content)
-        print(f"wrote CATALOG.md, the hub's collection.ts and the knowledge-base pages ({len(ms)} components)")
+        print(f"wrote CATALOG.md, the hub's collection.ts and exports/knowledgebase ({len(ms)} components)")
     if a.check:
         stale = [rel(p) for p, c in exports(ms).items() if not os.path.exists(p) or open(p, encoding="utf-8").read() != c]
         if stale:

@@ -801,7 +801,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/audit-chain.md",
+        "href": "/kb/page/components/audit-chain.md",
         "icon": "db"
       }
     ],
@@ -957,7 +957,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/comm-templates.md",
+        "href": "/kb/page/components/comm-templates.md",
         "icon": "db"
       }
     ],
@@ -1157,7 +1157,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/governed-action-loop.md",
+        "href": "/kb/page/components/governed-action-loop.md",
         "icon": "db"
       }
     ],
@@ -1325,7 +1325,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/ids-only-logging.md",
+        "href": "/kb/page/components/ids-only-logging.md",
         "icon": "db"
       }
     ],
@@ -1483,7 +1483,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/rs256-jwt-verify.md",
+        "href": "/kb/page/components/rs256-jwt-verify.md",
         "icon": "db"
       }
     ],
@@ -1635,7 +1635,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/secrets-by-name.md",
+        "href": "/kb/page/components/secrets-by-name.md",
         "icon": "db"
       }
     ],
@@ -1791,7 +1791,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/stdlib-http-client.md",
+        "href": "/kb/page/components/stdlib-http-client.md",
         "icon": "db"
       }
     ],
@@ -1963,7 +1963,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/typed-api-client.md",
+        "href": "/kb/page/components/typed-api-client.md",
         "icon": "db"
       }
     ],
@@ -2133,7 +2133,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/untrusted-input-guard.md",
+        "href": "/kb/page/components/untrusted-input-guard.md",
         "icon": "db"
       }
     ],
@@ -2289,7 +2289,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/aws-sigv4.md",
+        "href": "/kb/page/components/aws-sigv4.md",
         "icon": "db"
       }
     ],
@@ -2455,7 +2455,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/bedrock-converse-adapter.md",
+        "href": "/kb/page/components/bedrock-converse-adapter.md",
         "icon": "db"
       }
     ],
@@ -2659,7 +2659,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/oidc-pkce-auth.md",
+        "href": "/kb/page/components/oidc-pkce-auth.md",
         "icon": "db"
       }
     ],
@@ -2815,7 +2815,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/teams-graph-connector.md",
+        "href": "/kb/page/components/teams-graph-connector.md",
         "icon": "db"
       }
     ],
@@ -2971,7 +2971,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/handover/SKILL.md",
+        "href": "/kb/page/skills/handover/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3135,7 +3135,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/pixel-parity-screenshots/SKILL.md",
+        "href": "/kb/page/skills/pixel-parity-screenshots/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3287,7 +3287,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/production-readiness/SKILL.md",
+        "href": "/kb/page/skills/production-readiness/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3443,7 +3443,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/runbook/SKILL.md",
+        "href": "/kb/page/skills/runbook/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3599,7 +3599,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/security-notes/SKILL.md",
+        "href": "/kb/page/skills/security-notes/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3767,7 +3767,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/use-case-to-backlog/SKILL.md",
+        "href": "/kb/page/skills/use-case-to-backlog/SKILL.md",
         "icon": "db"
       }
     ],
@@ -3947,7 +3947,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/skills/walkthrough-video/SKILL.md",
+        "href": "/kb/page/skills/walkthrough-video/SKILL.md",
         "icon": "db"
       }
     ],
@@ -4113,7 +4113,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/cited-llm-engine.md",
+        "href": "/kb/page/components/cited-llm-engine.md",
         "icon": "db"
       }
     ],
@@ -4269,7 +4269,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/fail-closed-config.md",
+        "href": "/kb/page/components/fail-closed-config.md",
         "icon": "db"
       }
     ],
@@ -4425,7 +4425,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       },
       {
         "label": "Knowledge base page",
-        "href": "docs/components/prompt-pills-onboarding.md",
+        "href": "/kb/page/components/prompt-pills-onboarding.md",
         "icon": "db"
       }
     ],

@@ -1,4 +1,0 @@
-/* Tailwind entry point only: no custom rules live here; all styling is utility classes in TSX. */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
