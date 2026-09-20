@@ -1,9 +1,14 @@
 {
   "name": "audit-chain",
+  "version": "1.0.0",
   "kind": "tool",
   "language": "python",
   "summary": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/crai/audit.py",
@@ -20,6 +25,11 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

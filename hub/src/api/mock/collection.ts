@@ -11,7 +11,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Audit chain",
     "description": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -24,8 +24,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -40,7 +44,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Comm templates",
     "description": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "layers",
     "meta": [
@@ -53,8 +57,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -69,7 +77,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Governed action loop",
     "description": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -82,8 +90,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -98,7 +110,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Ids-only logging",
     "description": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -111,8 +123,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -127,7 +143,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "RS256 jwt verify",
     "description": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -140,8 +156,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -156,7 +176,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Secrets by name",
     "description": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -169,8 +189,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -185,7 +209,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Stdlib http client",
     "description": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "layers",
     "meta": [
@@ -198,8 +222,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -214,7 +242,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Typed API client",
     "description": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -227,8 +255,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -243,7 +275,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Untrusted input guard",
     "description": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -256,8 +288,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -272,7 +308,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "AWS sigv4",
     "description": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -285,8 +321,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -301,7 +341,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Bedrock converse adapter",
     "description": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -314,8 +354,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -330,7 +374,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "OIDC pkce auth",
     "description": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -343,8 +387,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -359,7 +407,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Teams graph connector",
     "description": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "bolt",
     "meta": [
@@ -372,8 +420,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -388,7 +440,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Handover",
     "description": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -401,8 +453,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -417,7 +473,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Pixel parity screenshots",
     "description": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -430,8 +486,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -446,7 +506,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Production readiness",
     "description": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -459,8 +519,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -475,7 +539,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Runbook",
     "description": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -488,8 +552,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -504,7 +572,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Security notes",
     "description": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -517,8 +585,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -533,7 +605,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Use case to backlog",
     "description": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -546,8 +618,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -562,7 +638,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Walkthrough video",
     "description": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -575,8 +651,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -591,7 +671,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Cited llm engine",
     "description": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "pen",
     "meta": [
@@ -604,8 +684,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -620,7 +704,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Fail closed config",
     "description": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -633,8 +717,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -649,7 +737,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
     "name": "Prompt pills onboarding",
     "description": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "pen",
     "meta": [
@@ -662,8 +750,12 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -681,7 +773,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Audit chain",
     "description": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -694,8 +786,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -795,6 +891,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.7",
         "note": "PLT-AC-25, PLT-AC-26, PLT-AUD-1, PLT-AUD-3, PLT-AUD-12"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -802,6 +908,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/audit-chain/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/audit-chain/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/audit-chain/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -844,7 +960,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -858,7 +974,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Comm templates",
     "description": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "layers",
     "meta": [
@@ -871,8 +987,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -965,6 +1085,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.12, §4.9",
         "note": "PLT-CH-15, PLT-CAT-1, PLT-PRM-3"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -972,6 +1102,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/comm-templates/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/comm-templates/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/comm-templates/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1014,7 +1154,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1028,7 +1168,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Governed action loop",
     "description": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -1041,8 +1181,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -1179,6 +1323,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8",
         "note": "PLT-AC-8, PLT-AC-11, PLT-AC-12, PLT-AC-16, PLT-AC-17, PLT-AC-19, PLT-AC-24, PLT-AC-29, PLT-AC-30, PLT-AUD-12, PLT-POL-3, PLT-CAT-5, PLT-CAT-6, PLT-HAR-11, PLT-HDL-1, PLT-PRM-1, PLT-PRM-3"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -1186,6 +1340,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/governed-action-loop/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/governed-action-loop/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/governed-action-loop/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1240,7 +1404,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1254,7 +1418,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Ids-only logging",
     "description": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -1267,8 +1431,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -1361,6 +1529,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.13, §4.7",
         "note": "PLT-AUD-2, PLT-TEL-5"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -1368,6 +1546,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/ids-only-logging/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/ids-only-logging/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/ids-only-logging/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1410,7 +1598,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1424,7 +1612,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "RS256 jwt verify",
     "description": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -1437,8 +1625,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -1533,6 +1725,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.1",
         "note": "PLT-AC-14, PLT-ID-1, PLT-ID-8"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -1540,6 +1742,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/rs256-jwt-verify/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/rs256-jwt-verify/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/rs256-jwt-verify/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1582,7 +1794,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1596,7 +1808,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Secrets by name",
     "description": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -1609,8 +1821,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -1699,6 +1915,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.14, §5.3",
         "note": "PLT-AC-9, PLT-HDL-1, PLT-KEY-1"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -1706,6 +1932,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/secrets-by-name/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/secrets-by-name/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/secrets-by-name/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1748,7 +1984,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1762,7 +1998,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Stdlib http client",
     "description": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "layers",
     "meta": [
@@ -1775,8 +2011,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -1869,6 +2109,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§5.3, §4.11",
         "note": "PLT-HDL-1, PLT-HDL-2, PLT-CTR-1"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -1876,6 +2126,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/stdlib-http-client/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/stdlib-http-client/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/stdlib-http-client/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -1918,7 +2178,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1932,7 +2192,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Typed API client",
     "description": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -1945,8 +2205,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -2055,6 +2319,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§8.1, §8.6, §4.13",
         "note": "PLT-UI-1, PLT-UI-2, PLT-TEL-8"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2062,6 +2336,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/typescript/typed-api-client/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/typescript/typed-api-client/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: npx tsx example.ts",
+        "href": "components/typescript/typed-api-client/example.ts",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -2104,7 +2388,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2118,7 +2402,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Untrusted input guard",
     "description": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -2131,8 +2415,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -2239,6 +2527,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.5, §5.5",
         "note": "PLT-DATA-1, PLT-DATA-3, PLT-DATA-8, PLT-CAT-7, PLT-AC-21"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2246,6 +2544,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/untrusted-input-guard/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/untrusted-input-guard/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/untrusted-input-guard/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -2288,7 +2596,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2302,7 +2610,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "AWS sigv4",
     "description": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -2315,8 +2623,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -2409,6 +2721,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.14, §4.1",
         "note": "PLT-AC-9, PLT-KEY-2"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2416,6 +2738,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/aws-sigv4/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/aws-sigv4/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/aws-sigv4/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -2458,7 +2790,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2472,7 +2804,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Bedrock converse adapter",
     "description": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -2485,8 +2817,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -2589,6 +2925,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.8",
         "note": "PLT-AC-29, PLT-AC-30, PLT-MDL-1, PLT-MDL-2"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2596,6 +2942,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/bedrock-converse-adapter/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/bedrock-converse-adapter/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/bedrock-converse-adapter/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -2650,7 +3006,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2664,7 +3020,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "OIDC pkce auth",
     "description": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -2677,8 +3033,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -2807,6 +3167,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.1, §8.6",
         "note": "PLT-ID-1, PLT-AC-14, PLT-UI-15"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2814,6 +3184,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/typescript/oidc-pkce-auth/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/typescript/oidc-pkce-auth/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: npx tsx example.ts",
+        "href": "components/typescript/oidc-pkce-auth/example.ts",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -2856,7 +3236,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2870,7 +3250,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Teams graph connector",
     "description": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "bolt",
     "meta": [
@@ -2883,8 +3263,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -2977,6 +3361,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§5.3, §4.11, §7.6",
         "note": "PLT-HDL-1, PLT-CTR-1"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -2984,6 +3378,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/teams-graph-connector/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/teams-graph-connector/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/teams-graph-connector/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3026,7 +3430,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3040,7 +3444,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Handover",
     "description": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -3053,8 +3457,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -3147,6 +3555,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§14, §7.11",
         "note": "PLT-ONB-6, PLT-ROAD-13"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -3154,6 +3572,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/handover/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/handover/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: EXAMPLE.md",
+        "href": "components/skills/handover/EXAMPLE.md",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3196,7 +3624,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3210,7 +3638,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Pixel parity screenshots",
     "description": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -3223,8 +3651,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from crossriver-ai-hub · 2026-09-19",
@@ -3264,7 +3696,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       {
         "label": "Language",
         "value": "mixed",
-        "note": "no runtime dependency"
+        "note": "pillow (for diff.py)"
       },
       {
         "label": "Status",
@@ -3325,6 +3757,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§8.7, §8.8",
         "note": "PLT-DX-3, PLT-UI-1"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -3332,6 +3774,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/pixel-parity-screenshots/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/pixel-parity-screenshots/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/skills/pixel-parity-screenshots/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3374,7 +3826,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3388,7 +3840,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Production readiness",
     "description": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -3401,8 +3853,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -3491,6 +3947,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§7.3, §7.11, §14.2",
         "note": "PLT-ONB-5, PLT-ONB-10, PLT-ROAD-13"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -3498,6 +3964,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/production-readiness/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/production-readiness/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: EXAMPLE.md",
+        "href": "components/skills/production-readiness/EXAMPLE.md",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3540,7 +4016,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3554,7 +4030,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Runbook",
     "description": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -3567,8 +4043,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -3661,6 +4141,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§12, §7.1",
         "note": "PLT-OPS-3, PLT-OPS-12, PLT-STOP-3"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -3668,6 +4158,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/runbook/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/runbook/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: EXAMPLE.md",
+        "href": "components/skills/runbook/EXAMPLE.md",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3710,7 +4210,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3724,7 +4224,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Security notes",
     "description": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -3737,8 +4237,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -3831,6 +4335,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§11.1, §7.3",
         "note": "PLT-SEC-5, PLT-SEC-7, PLT-CAT-7"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -3838,6 +4352,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/security-notes/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/security-notes/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: EXAMPLE.md",
+        "href": "components/skills/security-notes/EXAMPLE.md",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -3880,7 +4404,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -3894,7 +4418,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Use case to backlog",
     "description": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -3907,8 +4431,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -4013,6 +4541,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§7.11, §14",
         "note": "PLT-ONB-1, PLT-ONB-2, PLT-ROAD-2"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -4020,6 +4558,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/use-case-to-backlog/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/use-case-to-backlog/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 build_backlog.py example_plan.py /tmp/backlog-example && cat /tmp/backlog-example/README.md | head -20 && rm -rf /tmp/backlog-example",
+        "href": "components/skills/use-case-to-backlog/example_plan.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -4062,7 +4610,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -4076,7 +4624,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Walkthrough video",
     "description": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "book",
     "meta": [
@@ -4089,8 +4637,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -4207,6 +4759,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§7.11, §8.8",
         "note": "PLT-ONB-12"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -4214,6 +4776,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/skills/walkthrough-video/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/skills/walkthrough-video/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 deck.py example_slides.py && head -c 300 deck.html && echo && rm -rf deck.html slides.json narration",
+        "href": "components/skills/walkthrough-video/example_slides.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -4256,7 +4828,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -4270,7 +4842,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Cited llm engine",
     "description": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "pen",
     "meta": [
@@ -4283,8 +4855,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -4387,6 +4963,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§4.8, §4.9, §4.5",
         "note": "PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -4394,6 +4980,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/cited-llm-engine/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/cited-llm-engine/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/cited-llm-engine/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -4436,7 +5032,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -4450,7 +5046,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Fail closed config",
     "description": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "m",
     "glyph": "shield",
     "meta": [
@@ -4463,8 +5059,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -4557,6 +5157,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§5.6, §4.16",
         "note": "PLT-SEC-5, PLT-GATE-1, PLT-ONB-5"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -4564,6 +5174,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/fail-closed-config/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/fail-closed-config/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/fail-closed-config/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -4606,7 +5226,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -4620,7 +5240,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     "name": "Prompt pills onboarding",
     "description": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
     "road": "R1",
-    "lifecycle": "GA",
+    "lifecycle": "preview",
     "icon": "",
     "glyph": "pen",
     "meta": [
@@ -4633,8 +5253,12 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "GA",
-        "kind": "ok"
+        "text": "v1.0.0",
+        "kind": "mono"
+      },
+      {
+        "text": "sign-off pending",
+        "kind": "warn"
       }
     ],
     "footNote": "from meg-first-responder · 2026-09-19",
@@ -4727,6 +5351,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "Implements",
         "value": "§7.11, §8.4",
         "note": "PLT-ONB-12, PLT-UI-15"
+      },
+      {
+        "label": "Owner sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
+      },
+      {
+        "label": "AI security sign-off",
+        "value": "pending",
+        "note": "signs with tools/shelf.py --sign"
       }
     ],
     "evidence": [
@@ -4734,6 +5368,16 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "label": "README",
         "href": "components/python/prompt-pills-onboarding/README.md",
         "icon": "doc"
+      },
+      {
+        "label": "Walkthrough, step by step",
+        "href": "components/python/prompt-pills-onboarding/WALKTHROUGH.md",
+        "icon": "doc"
+      },
+      {
+        "label": "Live example: python3 example.py",
+        "href": "components/python/prompt-pills-onboarding/example.py",
+        "icon": "pulse"
       },
       {
         "label": "Tests",
@@ -4776,7 +5420,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "2026-09-19",
+        "version": "1.0.0",
         "state": "current",
         "date": "2026-09-19"
       }

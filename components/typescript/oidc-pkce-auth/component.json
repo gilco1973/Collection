@@ -1,9 +1,14 @@
 {
   "name": "oidc-pkce-auth",
+  "version": "1.0.0",
   "kind": "integration",
   "language": "typescript",
   "summary": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "crossriver-ai-hub",
     "path": "src/auth/",
@@ -24,6 +29,11 @@
     "typed-api-client"
   ],
   "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.ts",
+    "run": "npx tsx example.ts"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

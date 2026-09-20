@@ -28,9 +28,10 @@ def main() -> int:
     os.makedirs(dest)
     language = {"python": "python", "typescript": "typescript", "skills": "markdown"}[a.group]
     test = {"python": "python3 -m unittest discover -s tests -t . -v", "typescript": "npm ci --no-audit --no-fund && npx vitest run", "skills": ""}[a.group]
-    manifest = {"name": a.name, "kind": a.kind, "language": language, "summary": a.summary, "status": "draft",
-                "source": {"project": "new", "path": "", "snapshot": ""}, "owner": a.owner, "tags": ["untagged"],
-                "requires": [], "pairs_with": [], "test": test, "vendored": [],
+    manifest = {"name": a.name, "version": "0.1.0", "kind": a.kind, "language": language, "summary": a.summary, "status": "draft", "signoff": {"owner": None, "ai_security": None},
+                "source": {"project": "new", "path": "", "snapshot": ""}, "owner": a.owner, "tags": ["paved-road"],
+                "requires": [], "pairs_with": [], "test": test, "walkthrough": "WALKTHROUGH.md",
+                "example": {"path": "example.py" if a.group == "python" else ("example.ts" if a.group == "typescript" else "EXAMPLE.md"), "run": {"python": "python3 example.py", "typescript": "npx tsx example.ts", "skills": ""}[a.group]}, "vendored": [],
                 "spec": {"document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)", "sections": ["7.1"], "requirements": ["PLT-ROAD-2"],
                          "replacement_test": "State what the platform must pass before this component is retired (the specification's §14.3 rule)."}}
     json.dump(manifest, open(os.path.join(dest, "component.json"), "w"), indent=2); open(os.path.join(dest, "component.json"), "a").write("\n")
@@ -38,6 +39,9 @@ def main() -> int:
     open(os.path.join(dest, "README.md"), "w", encoding="utf-8").write(readme)
     if a.kind == "skill":
         open(os.path.join(dest, "SKILL.md"), "w", encoding="utf-8").write(open(os.path.join(TEMPLATE, "SKILL.md"), encoding="utf-8").read().replace("{{name}}", a.name).replace("{{summary}}", a.summary))
+    open(os.path.join(dest, "WALKTHROUGH.md"), "w").write(f"# Walkthrough: {a.name}\n\n## 1. Run the live example\n\n```\ncd components/{a.group}/{a.name} && <the example command>\n```\n\nWhat you see.\n\n## 2. Copy it into your project\n\n## 3. Wire it\n\n## 4. Prove it\n")
+    ex = {"python": '"""Live example: what this shows, in one line."""\nprint("replace me with something real")\n', "typescript": '// Live example. Run: npx tsx example.ts\nconsole.log("replace me with something real");\n', "skills": "# Example\n\nA filled example from a real use.\n"}[a.group]
+    open(os.path.join(dest, manifest["example"]["path"]), "w").write(ex)
     if a.group == "python":
         os.makedirs(os.path.join(dest, "tests")); open(os.path.join(dest, "tests", "__init__.py"), "w").write("")
         open(os.path.join(dest, "tests", "test_smoke.py"), "w").write("import unittest\n\n\nclass Smoke(unittest.TestCase):\n    def test_imports(self):\n        self.assertTrue(True)\n")

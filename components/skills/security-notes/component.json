@@ -1,9 +1,14 @@
 {
   "name": "security-notes",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "markdown",
   "summary": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/SECURITY.md",
@@ -19,6 +24,11 @@
     "untrusted-input-guard"
   ],
   "test": "",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "EXAMPLE.md",
+    "run": ""
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

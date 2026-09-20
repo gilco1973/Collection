@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # typed-api-client
 
-> A component of the collection: `components/typescript/typed-api-client/` in the repository (kind tool, typescript, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §8.1, §8.6, §4.13 (PLT-UI-1, PLT-UI-2, PLT-TEL-8); the replacement test is under Known limits.
+> A component of the collection: `components/typescript/typed-api-client/` in the repository (kind tool, typescript, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §8.1, §8.6, §4.13 (PLT-UI-1, PLT-UI-2, PLT-TEL-8); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.ts`.
 
 
 The one HTTP client a front end uses. Every request carries the bearer token, an `X-Request-Id`, a W3C

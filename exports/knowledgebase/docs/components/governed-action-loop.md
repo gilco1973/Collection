@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # governed-action-loop
 
-> A component of the collection: `components/python/governed-action-loop/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8 (PLT-AC-8, PLT-AC-11, PLT-AC-12, PLT-AC-16, PLT-AC-17, PLT-AC-19, PLT-AC-24, PLT-AC-29, PLT-AC-30, PLT-AUD-12, PLT-POL-3, PLT-CAT-5, PLT-CAT-6, PLT-HAR-11, PLT-HDL-1, PLT-PRM-1, PLT-PRM-3); the replacement test is under Known limits.
+> A component of the collection: `components/python/governed-action-loop/` in the repository (kind tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8 (PLT-AC-8, PLT-AC-11, PLT-AC-12, PLT-AC-16, PLT-AC-17, PLT-AC-19, PLT-AC-24, PLT-AC-29, PLT-AC-30, PLT-AUD-12, PLT-POL-3, PLT-CAT-5, PLT-CAT-6, PLT-HAR-11, PLT-HDL-1, PLT-PRM-1, PLT-PRM-3); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 The action loop an agent runs inside: admit a person, act through three fixed hooks, park a write until the person

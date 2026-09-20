@@ -1,9 +1,14 @@
 {
   "name": "secrets-by-name",
+  "version": "1.0.0",
   "kind": "tool",
   "language": "python",
   "summary": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/secrets.py + clients/__init__.py",
@@ -19,6 +24,11 @@
     "aws-sigv4"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

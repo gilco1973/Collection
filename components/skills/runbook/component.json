@@ -1,9 +1,14 @@
 {
   "name": "runbook",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "markdown",
   "summary": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/RUNBOOK.md",
@@ -19,6 +24,11 @@
     "fail-closed-config"
   ],
   "test": "",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "EXAMPLE.md",
+    "run": ""
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

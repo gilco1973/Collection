@@ -1,9 +1,14 @@
 {
   "name": "bedrock-converse-adapter",
+  "version": "1.0.0",
   "kind": "integration",
   "language": "python",
   "summary": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/clients/bedrock.py",
@@ -22,6 +27,11 @@
     "stdlib-http-client"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [
     {
       "path": "sigv4.py",

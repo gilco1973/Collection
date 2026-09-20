@@ -1,9 +1,14 @@
 {
   "name": "comm-templates",
+  "version": "1.0.0",
   "kind": "tool",
   "language": "python",
   "summary": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/templates.py",
@@ -19,6 +24,11 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

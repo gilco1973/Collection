@@ -1,9 +1,14 @@
 {
   "name": "production-readiness",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "markdown",
   "summary": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/PRODUCTION-READINESS.md",
@@ -16,6 +21,11 @@
   "requires": [],
   "pairs_with": [],
   "test": "",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "EXAMPLE.md",
+    "run": ""
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

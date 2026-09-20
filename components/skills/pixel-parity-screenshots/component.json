@@ -1,9 +1,14 @@
 {
   "name": "pixel-parity-screenshots",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "mixed",
   "summary": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "crossriver-ai-hub",
     "path": "tools/shoot.cjs + tools/diff.py",
@@ -13,9 +18,16 @@
   "tags": [
     "evaluation"
   ],
-  "requires": [],
+  "requires": [
+    "pillow (for diff.py)"
+  ],
   "pairs_with": [],
   "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

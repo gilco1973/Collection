@@ -1,9 +1,14 @@
 {
   "name": "walkthrough-video",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "mixed",
   "summary": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/walkthrough/",
@@ -17,6 +22,11 @@
   "requires": [],
   "pairs_with": [],
   "test": "python3 deck.py example_slides.py && test -f deck.html && test $(ls narration/*.txt | wc -l) -eq 5",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example_slides.py",
+    "run": "python3 deck.py example_slides.py && head -c 300 deck.html && echo && rm -rf deck.html slides.json narration"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

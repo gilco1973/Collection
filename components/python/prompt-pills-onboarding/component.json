@@ -1,9 +1,14 @@
 {
   "name": "prompt-pills-onboarding",
+  "version": "1.0.0",
   "kind": "pattern",
   "language": "python",
   "summary": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/onboarding.py",
@@ -19,6 +24,11 @@
     "teams-graph-connector"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

@@ -1,9 +1,14 @@
 {
   "name": "handover",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "markdown",
   "summary": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/HANDOVER.md",
@@ -19,6 +24,11 @@
     "use-case-to-backlog"
   ],
   "test": "",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "EXAMPLE.md",
+    "run": ""
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

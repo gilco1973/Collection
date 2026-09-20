@@ -1,9 +1,14 @@
 {
   "name": "aws-sigv4",
+  "version": "1.0.0",
   "kind": "integration",
   "language": "python",
   "summary": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/sigv4.py",
@@ -21,6 +26,11 @@
     "secrets-by-name"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

@@ -1,9 +1,14 @@
 {
   "name": "use-case-to-backlog",
+  "version": "1.0.0",
   "kind": "skill",
   "language": "mixed",
   "summary": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "usecases/meg/build/meg_plan.py + jira/",
@@ -17,6 +22,11 @@
   "requires": [],
   "pairs_with": [],
   "test": "python3 -m unittest discover -s tests -t . -v && python3 build_backlog.py example_plan.py /tmp/backlog-example",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example_plan.py",
+    "run": "python3 build_backlog.py example_plan.py /tmp/backlog-example && cat /tmp/backlog-example/README.md | head -20 && rm -rf /tmp/backlog-example"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

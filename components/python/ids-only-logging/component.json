@@ -1,9 +1,14 @@
 {
   "name": "ids-only-logging",
+  "version": "1.0.0",
   "kind": "tool",
   "language": "python",
   "summary": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/logs.py",
@@ -19,6 +24,11 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

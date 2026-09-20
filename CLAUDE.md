@@ -21,7 +21,11 @@ them and publishes pages into the knowledge base; it never contains either. `REA
   `kb-librarian index --write` and `kb-librarian check` in the checkout. The publisher is idempotent.
 - Component tags must come from the knowledge base's taxonomy, mirrored in `tools/kb-taxonomy.json`; refresh the
   mirror when the product changes its contract.
-- Run tests with `python3 tools/shelf.py --test` (`--only python|typescript|skills`) and `cd hub && pnpm verify`.
+- Run tests with `python3 tools/shelf.py --test` (`--only python|typescript|skills`), the live examples with
+  `python3 tools/shelf.py --examples`, and `cd hub && pnpm verify`.
+- Every component carries a version, two sign-offs bound to it (owner, AI security engineer; recorded only by a
+  named person through `tools/shelf.py --sign`, never written by hand or invented), `WALKTHROUGH.md` and a live
+  example. A change a consumer would notice bumps the version, which makes the sign-offs stale.
 - Never put a secret, a real tenant id, a real group id or a real URL anywhere. Placeholders must look like
   placeholders.
 - Keep READMEs in the template's shape; the "five-minute start" must actually run.

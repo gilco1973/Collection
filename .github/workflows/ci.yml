@@ -16,14 +16,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
+      - run: python3 -m pip install --user pillow
       - run: python3 tools/shelf.py --test --only python && python3 tools/shelf.py --test --only skills
+      - run: python3 tools/shelf.py --examples --only python && python3 tools/shelf.py --examples --only skills
   components-typescript:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
-      - run: python3 tools/shelf.py --test --only typescript
+      - run: python3 tools/shelf.py --test --only typescript && python3 tools/shelf.py --examples --only typescript
   hub:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: hub } }

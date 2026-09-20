@@ -1,9 +1,14 @@
 {
   "name": "fail-closed-config",
+  "version": "1.0.0",
   "kind": "pattern",
   "language": "python",
   "summary": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/config.py",
@@ -19,6 +24,11 @@
     "secrets-by-name"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

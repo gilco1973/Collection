@@ -1,9 +1,14 @@
 {
   "name": "rs256-jwt-verify",
+  "version": "1.0.0",
   "kind": "tool",
   "language": "python",
   "summary": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/jwt.py",
@@ -18,6 +23,11 @@
     "governed-action-loop"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [],
   "spec": {
     "document": "CrossRiver AI Platform on AgentCore, design specification 0.21 (2026-09-16)",

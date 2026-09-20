@@ -9,7 +9,7 @@ meeting every two weeks, each carrying one initiative built from what is here an
 | --- | --- | --- |
 | `hub/` | The employee AI hub: Discover (the catalog, including every component here), My workspace, Build (the intake brief), Learn. React, pixel-identical to its design artboards, runs against an in-browser API | `cd hub && pnpm install && pnpm dev` |
 | `content/knowledgebase/` | The pages the Collection authors for the knowledge base: the practices behind the components, the first responder as use case 002, the AI champions programme and the initiative brief | `python3 tools/publish_kb.py <checkout>` |
-| `components/` | 23 self-contained components lifted from products in production: Python tools and integrations (standard library only), TypeScript pieces, and skills with templates and scripts. Each has a five-minute README, a manifest and tests | `python3 tools/shelf.py --test` |
+| `components/` | 23 self-contained components lifted from products in production: Python tools and integrations (standard library only), TypeScript pieces, and skills with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |
 | `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |
 | `tools/publish_kb.py` | Applies `exports/knowledgebase/` and `content/knowledgebase/` to a checkout of the knowledge base, idempotently | `python3 tools/publish_kb.py <checkout>` |
 
@@ -40,7 +40,7 @@ names where each part came from and where the standalone products live.
 
 ## Gates
 
-CI runs the shelf check, every component's tests, and the hub's typecheck, lint, tests and build. The knowledge
+CI runs the shelf check, every component's tests and live examples, and the hub's typecheck, lint, tests and build. The knowledge
 base's own checks run in its repository after `publish_kb.py`. Locally:
 
 ```

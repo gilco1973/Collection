@@ -1,9 +1,14 @@
 {
   "name": "cited-llm-engine",
+  "version": "1.0.0",
   "kind": "pattern",
   "language": "python",
   "summary": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
   "status": "ready",
+  "signoff": {
+    "owner": null,
+    "ai_security": null
+  },
   "source": {
     "project": "meg-first-responder",
     "path": "meg/responder/think.py",
@@ -22,6 +27,11 @@
     "bedrock-converse-adapter"
   ],
   "test": "python3 -m unittest discover -s tests -t . -v",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {
+    "path": "example.py",
+    "run": "python3 example.py"
+  },
   "vendored": [
     {
       "path": "guard.py",
