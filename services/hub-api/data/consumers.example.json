@@ -1,0 +1,852 @@
+{
+ "about": "The bank's own listings and registry as the hub shows them; example values transcribed from the design artboards. Replace with the bank's records; tools/shelf.py adds the collection's components.",
+ "availableIds": [
+  "employee-assistant",
+  "investigation-triage",
+  "policy-and-procedures",
+  "compliance-narration"
+ ],
+ "listings": [
+  {
+   "id": "employee-assistant",
+   "slug": "employee-assistant",
+   "kind": "assistant",
+   "name": "Employee assistant",
+   "description": "Ask about policies, procedures and your own cases. Reads what your role can read; never writes.",
+   "road": "R2",
+   "lifecycle": "GA",
+   "icon": "a",
+   "glyph": "sparkle",
+   "meta": [
+    {
+     "text": "R2 · read",
+     "kind": ""
+    },
+    {
+     "text": "internal",
+     "kind": "line"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "1,180 weekly users",
+   "access": "open",
+   "tagline": "policies, procedures, your cases"
+  },
+  {
+   "id": "investigation-triage",
+   "slug": "investigation-triage",
+   "kind": "agent",
+   "name": "Investigation triage",
+   "description": "Triages payment returns and case notes; proposes fee reversals for your confirmation.",
+   "road": "R2",
+   "lifecycle": "GA",
+   "icon": "w",
+   "glyph": "pulse",
+   "meta": [
+    {
+     "text": "R2 · read",
+     "kind": ""
+    },
+    {
+     "text": "ladder L1",
+     "kind": "accent"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "312 weekly users · 0.90 task success",
+   "access": "open",
+   "tagline": "returns and fees"
+  },
+  {
+   "id": "first-responder",
+   "slug": "first-responder",
+   "kind": "agent",
+   "name": "First responder",
+   "description": "Page to postmortem in the on-call team's chat: assembles the war room, reads with citations, acts under confirmation, mitigates under dual control.",
+   "road": "R2",
+   "lifecycle": "preview",
+   "icon": "w",
+   "glyph": "pulse",
+   "meta": [
+    {
+     "text": "R2 · write",
+     "kind": "warn"
+    },
+    {
+     "text": "ladder L2",
+     "kind": "accent"
+    },
+    {
+     "text": "preview",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "increment 1 on the sandbox · the origin of the collection's action loop",
+   "access": "request",
+   "requestKind": "access",
+   "tagline": "on-call, war room, first read",
+   "collection": true
+  },
+  {
+   "id": "policy-and-procedures",
+   "slug": "policy-and-procedures",
+   "kind": "knowledge",
+   "name": "Policy and procedures",
+   "description": "Retrieval over runbooks, the policy manual and incidents, with provenance on every chunk.",
+   "road": "R5",
+   "lifecycle": "GA",
+   "icon": "m",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R5 · retrieval",
+     "kind": ""
+    },
+    {
+     "text": "internal",
+     "kind": "line"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "2,400 queries a week",
+   "access": "open"
+  },
+  {
+   "id": "compliance-narration",
+   "slug": "compliance-narration",
+   "kind": "agent",
+   "name": "Compliance narration",
+   "description": "Drafts return and recall narrations for a reviewer. Every draft is a labelled example.",
+   "road": "R4",
+   "lifecycle": "preview",
+   "icon": "p",
+   "glyph": "pen",
+   "meta": [
+    {
+     "text": "R4 · drafts",
+     "kind": ""
+    },
+    {
+     "text": "confidential",
+     "kind": "line"
+    },
+    {
+     "text": "preview",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "reviewer role needed",
+   "access": "request",
+   "requestKind": "role"
+  },
+  {
+   "id": "online-banking-assistant",
+   "slug": "online-banking-assistant",
+   "kind": "assistant",
+   "name": "Online banking assistant",
+   "description": "The customer-channel assistant on road R3, with handoff and templates. View only for staff.",
+   "road": "R3",
+   "lifecycle": "GA",
+   "icon": "a",
+   "glyph": "chat",
+   "meta": [
+    {
+     "text": "R3 · customer",
+     "kind": ""
+    },
+    {
+     "text": "money · W1",
+     "kind": "warn"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "owner digital-channels",
+   "access": "view"
+  },
+  {
+   "id": "payments-exception-agent",
+   "slug": "payments-exception-agent",
+   "kind": "agent",
+   "name": "Payments exception agent",
+   "description": "Proposes hold releases and payee updates under dual control for the payments desk.",
+   "road": "R2",
+   "lifecycle": "GA",
+   "icon": "w",
+   "glyph": "bolt",
+   "meta": [
+    {
+     "text": "R2 · write",
+     "kind": "warn"
+    },
+    {
+     "text": "ladder L2",
+     "kind": "accent"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "approver role needed",
+   "access": "request",
+   "requestKind": "role",
+   "tagline": "holds and payees, dual control"
+  },
+  {
+   "id": "sanctions-screening",
+   "slug": "sanctions-screening",
+   "kind": "tool",
+   "name": "Sanctions screening",
+   "description": "The position-5 screening client every money road calls. A tool, not an assistant.",
+   "road": "R1",
+   "lifecycle": "GA",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "tool · M",
+     "kind": "money"
+    },
+    {
+     "text": "contract v4",
+     "kind": "mono"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "called from harness only",
+   "access": "contract"
+  },
+  {
+   "id": "road-r2-template",
+   "slug": "road-r2-template",
+   "kind": "road",
+   "name": "R2 internal agent template",
+   "description": "crai new --road R2: the loop, gateway, elicitation and ladder wired; three weeks to sandbox.",
+   "road": "R2",
+   "lifecycle": "GA",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "road · R2",
+     "kind": "line"
+    },
+    {
+     "text": "template v7",
+     "kind": "mono"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "reference consumer green",
+   "access": "view"
+  },
+  {
+   "id": "road-r4-template",
+   "slug": "road-r4-template",
+   "kind": "road",
+   "name": "R4 batch agent template",
+   "description": "Scheduled drafting into a review queue; per-item sessions and sampling; two weeks to sandbox.",
+   "road": "R4",
+   "lifecycle": "GA",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "road · R4",
+     "kind": "line"
+    },
+    {
+     "text": "template v3",
+     "kind": "mono"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "reference consumer green",
+   "access": "view"
+  }
+ ],
+ "details": {
+  "investigation-triage": {
+   "id": "investigation-triage",
+   "slug": "investigation-triage",
+   "kind": "agent",
+   "name": "Investigation triage",
+   "description": "Triages payment returns and case notes; proposes fee reversals for your confirmation.",
+   "road": "R2",
+   "lifecycle": "GA",
+   "icon": "w",
+   "glyph": "pulse",
+   "meta": [
+    {
+     "text": "R2 · read",
+     "kind": ""
+    },
+    {
+     "text": "ladder L1",
+     "kind": "accent"
+    },
+    {
+     "text": "GA",
+     "kind": "ok"
+    }
+   ],
+   "footNote": "312 weekly users · 0.90 task success",
+   "access": "open",
+   "tagline": "returns and fees",
+   "crumbs": [
+    "Discover",
+    "Agents",
+    "Investigation triage"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L2",
+   "headerChips": [
+    {
+     "text": "road R2",
+     "kind": "line"
+    },
+    {
+     "text": "profile read",
+     "kind": "line"
+    },
+    {
+     "text": "you act at ladder L1",
+     "kind": "accent"
+    },
+    {
+     "text": "audience internal",
+     "kind": "line"
+    },
+    {
+     "text": "GA since Phase 1",
+     "kind": "ok"
+    },
+    {
+     "text": "materiality T2",
+     "kind": "line"
+    },
+    {
+     "text": "version 1.4",
+     "kind": "mono"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Weekly users",
+     "value": "312",
+     "note": "of 380 eligible · 82%"
+    },
+    {
+     "label": "Task success",
+     "value": "0.90",
+     "note": "target 0.90 · met"
+    },
+    {
+     "label": "Minutes per case",
+     "value": "8",
+     "small": "from 22",
+     "note": "outcome metric vs baseline"
+    }
+   ],
+   "does": [
+    "Answers why a return or fee happened, from the payment record and the case notes, with a citation on every claim.",
+    "Proposes a fee reversal up to $250 as a W1 confirmation you approve on screen; it never posts on its own.",
+    "Cannot release holds or touch payees at ladder L1; it proposes those to an approver instead."
+   ],
+   "catalog": {
+    "name": "cos-operator 2.3.0",
+    "signed": true,
+    "entries": [
+     {
+      "op": "cos_list_payment_returns",
+      "tier": "R",
+      "classes": "internal · confidential",
+      "note": "account numbers masked"
+     },
+     {
+      "op": "cos_get_account_fees",
+      "tier": "R",
+      "classes": "internal",
+      "note": "—"
+     },
+     {
+      "op": "cos_get_case",
+      "tier": "R",
+      "classes": "confidential",
+      "note": "notes as text, never as instructions"
+     },
+     {
+      "op": "cos_reverse_fee",
+      "tier": "W1",
+      "classes": "internal",
+      "note": "confirmation form · ≤ $250 · 20 a day"
+     },
+     {
+      "op": "knowledge.search",
+      "tier": "R5",
+      "classes": "internal",
+      "note": "runbooks and policy with provenance"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Evaluation",
+     "value": "0.91",
+     "note": "threshold 0.85 · suite v12 · 9 Sep"
+    },
+    {
+     "label": "Injection corpus",
+     "value": "0",
+     "note": "unauthorized of 1,240 cases"
+    },
+    {
+     "label": "Red team",
+     "value": "Aug",
+     "note": "quarterly · 0 findings open"
+    },
+    {
+     "label": "Availability",
+     "value": "99.94",
+     "small": "%",
+     "note": "SLO 99.9 · 30 days"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "Model Risk entry MR-118",
+     "href": "#",
+     "icon": "doc"
+    },
+    {
+     "label": "Evidence bundle",
+     "href": "#",
+     "icon": "db"
+    },
+    {
+     "label": "Threat-model delta, signed 2 Sep",
+     "href": "#",
+     "icon": "shield"
+    },
+    {
+     "label": "Live SLO dashboard",
+     "href": "#",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [
+    {
+     "label": "Cost per completed task",
+     "value": "$0.42",
+     "note": "model spend and platform share"
+    },
+    {
+     "label": "This month, your team",
+     "value": "$1,146",
+     "note": "shown back; charged back from Phase 2"
+    },
+    {
+     "label": "Budget per session",
+     "value": "200k tokens · 60 calls",
+     "note": "15 minutes · no money"
+    }
+   ],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Open it in the portal",
+     "small": "your role already grants it",
+     "state": "done"
+    },
+    {
+     "n": "2",
+     "title": "Enablement module · 12 minutes",
+     "small": "lesson 3 of 3 left: confirmations and step-up",
+     "state": "on"
+    },
+    {
+     "n": "3",
+     "title": "Your first case",
+     "small": "the pilot lead reviews your first ten turns",
+     "state": ""
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "team-payments-ops"
+    },
+    {
+     "label": "business owner",
+     "value": "D. Ruiz, Payments operations"
+    },
+    {
+     "label": "domain expert",
+     "value": "S. Okafor · 4 h a week labelling"
+    },
+    {
+     "label": "support",
+     "value": "P1 in 15 min · office hour Thu 11:00"
+    },
+    {
+     "label": "escalation",
+     "value": "platform lead"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.4",
+     "state": "current",
+     "date": "12 Sep"
+    },
+    {
+     "version": "1.3",
+     "state": "supported",
+     "date": "2 Aug"
+    },
+    {
+     "version": "1.2",
+     "state": "retired",
+     "date": "1 Jul"
+    }
+   ],
+   "changelogHref": "https://catalog.crai.internal/consumers/investigation-triage/changelog"
+  }
+ },
+ "registrySystems": [
+  {
+   "id": "cos-payments",
+   "name": "COS · payments",
+   "owner": "Payments engineering",
+   "contract": "recorded"
+  },
+  {
+   "id": "cos-case-notes",
+   "name": "COS · case notes",
+   "owner": "Operations engineering",
+   "contract": "recorded"
+  },
+  {
+   "id": "knowledge-ops",
+   "name": "Knowledge index · ops",
+   "owner": "Platform",
+   "contract": "recorded"
+  },
+  {
+   "id": "cos-customers",
+   "name": "COS · customers",
+   "owner": "Payments engineering",
+   "contract": "recorded"
+  },
+  {
+   "id": "ledger",
+   "name": "General ledger",
+   "owner": "Finance systems",
+   "contract": "recorded"
+  },
+  {
+   "id": "crm-service",
+   "name": "CRM · service desk",
+   "owner": "Customer operations",
+   "contract": "missing"
+  }
+ ],
+ "registryTools": [
+  {
+   "name": "cos_list_payment_returns",
+   "systemId": "cos-payments",
+   "tier": "R",
+   "classes": [
+    "internal",
+    "confidential"
+   ],
+   "description": "Returns for a date range, with reason codes"
+  },
+  {
+   "name": "cos_get_case",
+   "systemId": "cos-case-notes",
+   "tier": "R",
+   "classes": [
+    "confidential"
+   ],
+   "description": "One case with its notes and history"
+  },
+  {
+   "name": "cos_reverse_fee",
+   "systemId": "cos-payments",
+   "tier": "W1",
+   "classes": [
+    "internal"
+   ],
+   "description": "Reverse a fee on a return · confirmation"
+  },
+  {
+   "name": "cos_close_case",
+   "systemId": "cos-case-notes",
+   "tier": "W1",
+   "classes": [
+    "confidential"
+   ],
+   "description": "Close a case with a disposition · confirmation"
+  },
+  {
+   "name": "cos_search_customer",
+   "systemId": "cos-customers",
+   "tier": "R",
+   "classes": [
+    "confidential",
+    "restricted"
+   ],
+   "description": "Find a customer by identifier or name"
+  },
+  {
+   "name": "cos_post_adjustment",
+   "systemId": "cos-payments",
+   "tier": "W2",
+   "classes": [
+    "internal",
+    "confidential"
+   ],
+   "description": "Post a balance adjustment · dual control"
+  },
+  {
+   "name": "kb_search_ops",
+   "systemId": "knowledge-ops",
+   "tier": "R",
+   "classes": [
+    "internal"
+   ],
+   "description": "Search the operations knowledge index"
+  },
+  {
+   "name": "ledger_get_entry",
+   "systemId": "ledger",
+   "tier": "R",
+   "classes": [
+    "internal"
+   ],
+   "description": "Read a ledger entry"
+  }
+ ],
+ "estimate": {
+  "modelSpendMonthly": 210,
+  "modelSpendBasis": "at 300 cases a week",
+  "reviewHours": 6,
+  "reviewNote": "Security and Privacy delta",
+  "platformShare": "included through Phase 1",
+  "basis": "platform calculator v3 · compared with actuals at each phase exit"
+ },
+ "roadR2Read": {
+  "road": "R2",
+  "title": "Read profile on an open road",
+  "subtitle": "agent with tools · ladder up to L1",
+  "selfService": true,
+  "note": "Registration, namespaces and the playground follow automatically. The platform lead confirms only the road, within two working days.",
+  "next": [
+   {
+    "week": "W0",
+    "title": "Brief filed",
+    "small": "road assignment · system record opened"
+   },
+   {
+    "week": "W1",
+    "title": "Registered",
+    "small": "principal, budgets, playground · 2-day bootcamp"
+   },
+   {
+    "week": "W2",
+    "title": "Build with an embedded engineer",
+    "small": "repository from the road template"
+   },
+   {
+    "week": "W4",
+    "title": "Sandbox",
+    "small": "evaluation and corpus gates in CI"
+   }
+  ]
+ },
+ "assistantMeta": {
+  "employee-assistant": {
+   "name": "Employee assistant",
+   "sub": "reads what your role can read · never writes · session memory only",
+   "chips": [
+    {
+     "text": "R2 · read",
+     "kind": "line"
+    },
+    {
+     "text": "internal",
+     "kind": "line"
+    }
+   ]
+  },
+  "investigation-triage": {
+   "name": "Investigation triage",
+   "sub": "returns and fees · proposes, you confirm · ladder L1",
+   "chips": [
+    {
+     "text": "R2 · read",
+     "kind": "line"
+    },
+    {
+     "text": "ladder L1",
+     "kind": "accent"
+    },
+    {
+     "text": "confidential",
+     "kind": "model"
+    }
+   ]
+  },
+  "payments-exception-agent": {
+   "name": "Payments exception agent",
+   "sub": "hold releases and payee updates under dual control",
+   "chips": [
+    {
+     "text": "R2 · write",
+     "kind": "warn"
+    },
+    {
+     "text": "ladder L2",
+     "kind": "accent"
+    }
+   ]
+  }
+ },
+ "changes": [
+  {
+   "date": "12 Sep",
+   "kind": {
+    "text": "new version",
+    "kind": "accent"
+   },
+   "text": "Investigation triage 1.4 — claim-support marks on every answer"
+  },
+  {
+   "date": "10 Sep",
+   "kind": {
+    "text": "preview",
+    "kind": "warn"
+   },
+   "text": "Compliance narration opened to the reviewer role"
+  },
+  {
+   "date": "8 Sep",
+   "kind": {
+    "text": "deprecates",
+    "kind": "crit"
+   },
+   "text": "cos_add_case_note 2.2 retires 1 December; 2.3 in the catalog now"
+  }
+ ],
+ "suggestions": [
+  "Why did return R-1187 bounce?",
+  "Draft an ACH return narration",
+  "Late inbound file procedure",
+  "Which tools can my role call?"
+ ],
+ "workspace": {
+  "assistants": [
+   {
+    "consumerId": "employee-assistant",
+    "name": "Employee assistant",
+    "sub": "R2 · read",
+    "lifecycle": "GA",
+    "ai": true
+   },
+   {
+    "consumerId": "investigation-triage",
+    "name": "Investigation triage",
+    "sub": "R2 · read · ladder L1",
+    "lifecycle": "GA",
+    "ai": false
+   },
+   {
+    "consumerId": "policy-and-procedures",
+    "name": "Policy and procedures",
+    "sub": "R5",
+    "lifecycle": "GA",
+    "ai": false
+   }
+  ],
+  "teamConsumers": [
+   {
+    "teamId": "team-payments-ops",
+    "id": "agent:investigation-triage",
+    "name": "agent:investigation-triage",
+    "status": {
+     "text": "production",
+     "kind": "ok"
+    },
+    "step": 7,
+    "stepNote": "step 7 · operate · monthly review",
+    "pipe": [
+     "done",
+     "done",
+     "done",
+     "done",
+     "done",
+     "done",
+     "done"
+    ],
+    "note": "time to sandbox 9 days · to production 38 days"
+   },
+   {
+    "teamId": "team-payments-ops",
+    "id": "agent:compliance-narration",
+    "name": "agent:compliance-narration",
+    "status": {
+     "text": "sandbox",
+     "kind": "warn"
+    },
+    "step": 4,
+    "stepNote": "step 4 · sandbox · corpus gate running",
+    "pipe": [
+     "done",
+     "done",
+     "done",
+     "on",
+     "",
+     "",
+     ""
+    ],
+    "note": "labelling backlog 4 days · under the 2-week limit"
+   }
+  ],
+  "usage": {
+   "sandboxMonth": "not measured",
+   "sandboxNote": "shown back, not charged",
+   "productionNote": "",
+   "playgroundToday": "not measured",
+   "playgroundBudget": "not set",
+   "playgroundPct": 0
+  },
+  "playground": {
+   "gateway": "sandbox.gw.example.internal",
+   "keyMasked": "crai_pg_…",
+   "fixtures": "synthetic",
+   "example": "Run the 15-minute R2 example"
+  }
+ }
+}

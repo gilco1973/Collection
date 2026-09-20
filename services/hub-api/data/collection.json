@@ -1,0 +1,7379 @@
+{
+ "generated_by": "python3 tools/shelf.py --write; do not edit",
+ "listings": [
+  {
+   "id": "incident-first-read-agent",
+   "slug": "incident-first-read-agent",
+   "kind": "agent",
+   "name": "Incident first read agent",
+   "description": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · agent",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true
+  },
+  {
+   "id": "governed-action-loop",
+   "slug": "governed-action-loop",
+   "kind": "tool",
+   "name": "Governed action loop",
+   "description": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · harness",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true
+  },
+  {
+   "id": "mcp-tool-server",
+   "slug": "mcp-tool-server",
+   "kind": "tool",
+   "name": "Mcp tool server",
+   "description": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · harness",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true
+  },
+  {
+   "id": "audit-chain",
+   "slug": "audit-chain",
+   "kind": "tool",
+   "name": "Audit chain",
+   "description": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, observability, security",
+   "collection": true
+  },
+  {
+   "id": "comm-templates",
+   "slug": "comm-templates",
+   "kind": "tool",
+   "name": "Comm templates",
+   "description": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, prompting",
+   "collection": true
+  },
+  {
+   "id": "ids-only-logging",
+   "slug": "ids-only-logging",
+   "kind": "tool",
+   "name": "Ids-only logging",
+   "description": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, security",
+   "collection": true
+  },
+  {
+   "id": "rs256-jwt-verify",
+   "slug": "rs256-jwt-verify",
+   "kind": "tool",
+   "name": "RS256 jwt verify",
+   "description": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security",
+   "collection": true
+  },
+  {
+   "id": "secrets-by-name",
+   "slug": "secrets-by-name",
+   "kind": "tool",
+   "name": "Secrets by name",
+   "description": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security",
+   "collection": true
+  },
+  {
+   "id": "shelf-mcp-server",
+   "slug": "shelf-mcp-server",
+   "kind": "tool",
+   "name": "Shelf mcp server",
+   "description": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from new · 2026-09-20",
+   "access": "open",
+   "tagline": "agents, paved-road, skill",
+   "collection": true
+  },
+  {
+   "id": "stdlib-http-client",
+   "slug": "stdlib-http-client",
+   "kind": "tool",
+   "name": "Stdlib http client",
+   "description": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, observability",
+   "collection": true
+  },
+  {
+   "id": "typed-api-client",
+   "slug": "typed-api-client",
+   "kind": "tool",
+   "name": "Typed API client",
+   "description": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, security, agents",
+   "collection": true
+  },
+  {
+   "id": "untrusted-input-guard",
+   "slug": "untrusted-input-guard",
+   "kind": "tool",
+   "name": "Untrusted input guard",
+   "description": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, agents, prompting",
+   "collection": true
+  },
+  {
+   "id": "aws-sigv4",
+   "slug": "aws-sigv4",
+   "kind": "tool",
+   "name": "AWS sigv4",
+   "description": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, cost",
+   "collection": true
+  },
+  {
+   "id": "bedrock-converse-adapter",
+   "slug": "bedrock-converse-adapter",
+   "kind": "tool",
+   "name": "Bedrock converse adapter",
+   "description": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, cost",
+   "collection": true
+  },
+  {
+   "id": "mcp-gateway-client",
+   "slug": "mcp-gateway-client",
+   "kind": "tool",
+   "name": "Mcp gateway client",
+   "description": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true
+  },
+  {
+   "id": "oidc-pkce-auth",
+   "slug": "oidc-pkce-auth",
+   "kind": "tool",
+   "name": "OIDC pkce auth",
+   "description": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "security, onboarding",
+   "collection": true
+  },
+  {
+   "id": "teams-graph-connector",
+   "slug": "teams-graph-connector",
+   "kind": "tool",
+   "name": "Teams graph connector",
+   "description": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "bolt",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, atlassian",
+   "collection": true
+  },
+  {
+   "id": "cited-llm-engine",
+   "slug": "cited-llm-engine",
+   "kind": "tool",
+   "name": "Cited llm engine",
+   "description": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "pen",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, prompting, evaluation",
+   "collection": true
+  },
+  {
+   "id": "fail-closed-config",
+   "slug": "fail-closed-config",
+   "kind": "tool",
+   "name": "Fail closed config",
+   "description": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, governance",
+   "collection": true
+  },
+  {
+   "id": "prompt-pills-onboarding",
+   "slug": "prompt-pills-onboarding",
+   "kind": "tool",
+   "name": "Prompt pills onboarding",
+   "description": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "pen",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, onboarding",
+   "collection": true
+  },
+  {
+   "id": "handover",
+   "slug": "handover",
+   "kind": "knowledge",
+   "name": "Handover",
+   "description": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, onboarding",
+   "collection": true
+  },
+  {
+   "id": "pixel-parity-screenshots",
+   "slug": "pixel-parity-screenshots",
+   "kind": "knowledge",
+   "name": "Pixel parity screenshots",
+   "description": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "evaluation",
+   "collection": true
+  },
+  {
+   "id": "production-readiness",
+   "slug": "production-readiness",
+   "kind": "knowledge",
+   "name": "Production readiness",
+   "description": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance",
+   "collection": true
+  },
+  {
+   "id": "runbook",
+   "slug": "runbook",
+   "kind": "knowledge",
+   "name": "Runbook",
+   "description": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, governance",
+   "collection": true
+  },
+  {
+   "id": "security-notes",
+   "slug": "security-notes",
+   "kind": "knowledge",
+   "name": "Security notes",
+   "description": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, governance",
+   "collection": true
+  },
+  {
+   "id": "use-case-to-backlog",
+   "slug": "use-case-to-backlog",
+   "kind": "knowledge",
+   "name": "Use case to backlog",
+   "description": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "paved-road, governance",
+   "collection": true
+  },
+  {
+   "id": "walkthrough-video",
+   "slug": "walkthrough-video",
+   "kind": "knowledge",
+   "name": "Walkthrough video",
+   "description": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "video, onboarding",
+   "collection": true
+  }
+ ],
+ "details": {
+  "incident-first-read-agent": {
+   "id": "incident-first-read-agent",
+   "slug": "incident-first-read-agent",
+   "kind": "agent",
+   "name": "Incident first read agent",
+   "description": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · agent",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Agents",
+    "Incident first read agent"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "agent · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §5.1, §5.2, §5.5, §4.8, §4.5",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Template",
+     "value": "1",
+     "note": "TEMPLATE.md · 3 tools by tier, 4 nevers"
+    },
+    {
+     "label": "Tools",
+     "value": "2",
+     "note": "cited-llm-engine, audit-chain"
+    },
+    {
+     "label": "Harness",
+     "value": "1",
+     "note": "governed-action-loop · ladder L2"
+    },
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "5",
+     "note": "governed-action-loop, cited-llm-engine, teams-graph-connector, comm-templates, mcp-tool-server"
+    }
+   ],
+   "does": [
+    "The first thing a responder wants when an alert fires is a first read: what changed, what is failing, the leading hypothesis, with every claim pointing at a source, and at most one proposed action they can confirm or ignore. This is that agent, small enough to read in ten minutes, and the reference for what an agent in the collection is: a template that says what it is and may call, tools it reaches only through the harness, and a harness that enforces tiers, taint, budgets and the record. Copy it to start your own agent; replace the template and the fakes, keep the loop.",
+    "The catalog the harness loads is built and signed from the template's `tools`; a call to anything else fails at the catalog hook.",
+    "A write (W1) parks with a hash of the exact tool and arguments; only the acting person confirms; the confirmation is consumed once.",
+    "A proposal is refused before any model call when the context is tainted, and the harness caps a tainted session at reads.",
+    "The model sees projected, masked, fenced sources only; claims without a citation are dropped; a malformed answer is refused."
+   ],
+   "catalog": {
+    "name": "incident-first-read-agent · TEMPLATE.md",
+    "signed": false,
+    "entries": [
+     {
+      "op": "tickets.get",
+      "tier": "R",
+      "classes": "internal",
+      "note": "the incident ticket: title and body, projected and masked before the model sees them"
+     },
+     {
+      "op": "deploys.recent",
+      "tier": "R",
+      "classes": "internal",
+      "note": "the last deploy of the service and how long before the trigger it finished"
+     },
+     {
+      "op": "tickets.comment",
+      "tier": "W1",
+      "classes": "internal",
+      "note": "posts the first read on the ticket; parked until the acting person confirms the exact call once"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "5",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§5.1, §5.2, §5.5, §4.8, §4.5",
+     "note": "PLT-AC-8, PLT-AC-11, PLT-AC-16, PLT-AC-21, PLT-HAR-11, PLT-MDL-1, PLT-PRM-1, PLT-DATA-3"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/agents/incident-first-read-agent/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/agents/incident-first-read-agent/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/agents/incident-first-read-agent/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/agents/incident-first-read-agent/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/incident-first-read-agent.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same TEMPLATE.md runs unchanged with the platform's harness (AgentCore Runtime with the three hooks, the c…",
+     "href": "components/agents/incident-first-read-agent/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory. Edit `TEMPLATE.md` first: the role sentence, the stages, the tools wit",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder (the first read) on meg/crai (the loop)"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/agents/incident-first-read-agent/README.md"
+  },
+  "governed-action-loop": {
+   "id": "governed-action-loop",
+   "slug": "governed-action-loop",
+   "kind": "tool",
+   "name": "Governed action loop",
+   "description": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · harness",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Governed action loop"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "harness · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "4",
+     "note": "audit-chain, untrusted-input-guard, bedrock-converse-adapter, rs256-jwt-verify"
+    }
+   ],
+   "does": [
+    "You are giving a model tools that write to real systems (tickets, pages, pipelines, money) and you need the controls to be structural rather than a prompt's good intentions. This package is the Meg core: the part of the first responder that decides whether a call happens at all, and proves afterwards what happened. It is standard library only and runs offline against fakes, so a team can adopt the loop before any account exists.",
+    "Three hooks in a fixed order on every call; a consumer cannot add a fourth or reach a handler around them.",
+    "Default deny; a forbid beats any permit; every decision names the policies and a typed deny code.",
+    "A W1 call parks with a hash of tool and arguments; only the acting person confirms; the confirmation is consumed once.",
+    "A W2 or MONEY call needs an approval reference; the bundle decides who may approve (the example: not the requester)."
+   ],
+   "catalog": {
+    "name": "governed-action-loop · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "actionloop/harness.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Harness`: `admit`, `call` (the three private hooks: catalog lookup, argument validation, rule decision before; data gua"
+     },
+     {
+      "op": "actionloop/policy.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The rule bundle: permit or forbid, a principal match, an action match by name or tier, `when` conditions over the call's"
+     },
+     {
+      "op": "actionloop/catalog.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`ToolDecl` and `build` (tier, contract operation, permission, argument schema, reversible, idempotent); the fixtures the"
+     },
+     {
+      "op": "actionloop/gateway.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The connector boundary: evaluates the same bundle a second time, redeems the per-call reference, then runs the handler; "
+     },
+     {
+      "op": "actionloop/identity.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Tenant, human and agent as one principal chain; the fake IdP for tests; outbound *references* bound to audience, run and"
+     },
+     {
+      "op": "actionloop/dataguard.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Projection to the declared result shape, PII masking per audience (model, log, human), the injection score, provenance-t"
+     },
+     {
+      "op": "actionloop/audit.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The hash-chained record (vendored from `audit-chain`)"
+     },
+     {
+      "op": "actionloop/kill.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Kill switches by run, board and consumer, with a quorum, read at admit and before every call"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "10",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§5.1, §5.2, §5.5, §6, §4.12, §4.15, §4.8",
+     "note": "PLT-AC-8, PLT-AC-11, PLT-AC-12, PLT-AC-16, PLT-AC-17, PLT-AC-19, PLT-AC-24, PLT-AC-29, PLT-AC-30, PLT-AUD-12, PLT-POL-3, PLT-CAT-5, PLT-CAT-6, PLT-HAR-11, PLT-HDL-1, PLT-PRM-1, PLT-PRM-3"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/governed-action-loop/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/governed-action-loop/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/governed-action-loop/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/governed-action-loop/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/governed-action-loop.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The consumer restarts unchanged when the in-process gateway is AgentCore Gateway with the same bundle in Agent…",
+     "href": "components/python/governed-action-loop/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the `actionloop/` directory into your service and write your own `example.py`:",
+     "small": "",
+     "state": "on"
+    },
+    {
+     "n": "2",
+     "title": "1. Declare tools with `ToolDecl` (name them `target___tool`), build and sign the catalog. ",
+     "small": "",
+     "state": ""
+    },
+    {
+     "n": "3",
+     "title": "The model never calls `Harness.call` directly. Your think step (see `cited-llm-engine`) pr",
+     "small": "",
+     "state": ""
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/crai"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/governed-action-loop/README.md"
+  },
+  "mcp-tool-server": {
+   "id": "mcp-tool-server",
+   "slug": "mcp-tool-server",
+   "kind": "tool",
+   "name": "Mcp tool server",
+   "description": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · harness",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Mcp tool server"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "harness · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.4, §4.12, §4.1, §5.1",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "governed-action-loop, incident-first-read-agent, mcp-gateway-client"
+    }
+   ],
+   "does": [
+    "The platform's R1 road is \"an MCP server: tools exposed to an AI client that holds the model, with the harness behind the transport\". This is that shape, standard library only: JSON-RPC 2.0 over stdio or Streamable HTTP in front of the same `Harness` the agents use. The protocol is the wire and nothing more. Tiers, taint, budgets, kill switches and the chained record stay in the harness, where a client cannot reach around them: a W1 call parks and is put to the person as an elicitation, a tainted or out-of-scope call is a typed forbidden error the HTTP transport answers with 403 and `WWW-Authenticate: insufficient_scope` naming the scope, and sampling is disabled. Reach for it when a champion's tool set should be callable by Claude Code, the hub's assistant or a partner client the same way, with the same controls.",
+    "Every tools/call runs the harness's three hooks; there is no method that reaches a handler around them.",
+    "tools/list is rendered from the signed catalog; annotations are derived from it and never read from a client.",
+    "A W1 call runs only after the person accepts the elicitation for the exact tool and arguments; a client without the elicitation capability, a decline, a cancel or a timeout means nothing ran.",
+    "A deny for taint, ladder, scope or a kill switch is a typed forbidden error; over HTTP it is 403 with `WWW-Authenticate: Bearer error=\"insufficient_scope\", scope=<permission>`."
+   ],
+   "catalog": {
+    "name": "mcp-tool-server · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "mcpserver/protocol.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "JSON-RPC 2.0 framing, the standard error codes and three of this server's: forbidden, confirmation declined, stopped"
+     },
+     {
+      "op": "mcpserver/server.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`McpToolServer`: initialize (admits with the bearer), tools/list (the catalog as MCP tools; annotations from tier, rever"
+     },
+     {
+      "op": "mcpserver/transports.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`InProcessClient` (tests, examples), `serve_stdio` (newline JSON-RPC; the bearer read from a named environment variable)"
+     },
+     {
+      "op": "example.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`build()` wires a three-tool catalog behind the harness; `HttpClient` is a small client enough for the walk-through"
+     },
+     {
+      "op": "tests/test_server.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The handshake, annotations from the catalog, reads through the hooks, W1 only after accept, declined means nothing ran, "
+     },
+     {
+      "op": "actionloop/",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The harness, vendored verbatim from `governed-action-loop`"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "6",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.4, §4.12, §4.1, §5.1",
+     "note": "PLT-CAT-5, PLT-CAT-6, PLT-HAR-33, PLT-ID-6, PLT-AC-11, PLT-AC-16, PLT-AC-21"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/mcp-tool-server/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/mcp-tool-server/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/mcp-tool-server/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/mcp-tool-server/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/mcp-tool-server.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same catalog and handlers run behind the platform's crai.transport.mcp on AgentCore Runtime with the Redis…",
+     "href": "components/python/mcp-tool-server/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory. Build your harness as `example.build()` does (your catalog, rules, han",
+     "small": "",
+     "state": "on"
+    },
+    {
+     "n": "2",
+     "title": "`admit` is yours: it chooses the board, the ticket and the budget for a session and hands ",
+     "small": "",
+     "state": ""
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/crai (the loop); the transport is new, to the platform specification §7.4"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/mcp-tool-server/README.md"
+  },
+  "audit-chain": {
+   "id": "audit-chain",
+   "slug": "audit-chain",
+   "kind": "tool",
+   "name": "Audit chain",
+   "description": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, observability, security",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Audit chain"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.7",
+     "kind": "accent"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    },
+    {
+     "text": "observability",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "governed-action-loop"
+    }
+   ],
+   "does": [
+    "Anything a model or an agent did on your behalf needs a record that a later edit cannot quietly change: which tool, which decision, on whose authority, with what result summary. A log line can be rewritten; a chained record cannot without the verification failing. In Meg this is the incident record: the timeline in the room is a projection of it and the postmortem is its export.",
+    "Append only; `prev` and `hash` are computed on insert from the canonical body.",
+    "`verify()` refuses any record whose `prev` is not the previous hash or whose hash does not match its body.",
+    "The export is marked unsigned until a signer anchors it."
+   ],
+   "catalog": {
+    "name": "audit-chain · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "audit.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`AuditChain`: `record(**fields)`, `head()`, `verify()`, `query(**where)`, `export(path)`; `GENESIS`; `AuditError`"
+     },
+     {
+      "op": "tests/test_audit.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The head moves, tampering breaks the chain, queries by column and by body field, export"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "3",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.7",
+     "note": "PLT-AC-25, PLT-AC-26, PLT-AUD-1, PLT-AUD-3, PLT-AUD-12"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/audit-chain/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/audit-chain/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/audit-chain/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/audit-chain/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/audit-chain.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same records verify under the platform's audit trail and the export head is anchored by a KMS signature; a…",
+     "href": "components/python/audit-chain/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `audit.py`. Pass any fields: `consumer`, `env`, `event`, `tool`, `tier`, `decision` a",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/crai/audit.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/audit-chain/README.md"
+  },
+  "comm-templates": {
+   "id": "comm-templates",
+   "slug": "comm-templates",
+   "kind": "tool",
+   "name": "Comm templates",
+   "description": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, prompting",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Comm templates"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.12, §4.9",
+     "kind": "accent"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    },
+    {
+     "text": "prompting",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "governed-action-loop"
+    }
+   ],
+   "does": [
+    "Stakeholder and customer messages as owned, versioned templates that a model fills through named fields only. The model cannot edit a template; free text never leaves the system toward a customer; the customer template carries the disclosures Compliance requires. `render` refuses unknown fields and missing required ones and returns HTML for a chat surface and plain text for a pager or a status page."
+   ],
+   "catalog": {
+    "name": "comm-templates · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "templates.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`TEMPLATES` (internal status, leadership brief, shift handover, customer status), `render`, `registry_hash`, `TemplateEr"
+     },
+     {
+      "op": "tests/test_templates.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Fields only and escaped; missing and unknown fields refused; the disclosure; optional defaults"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.12, §4.9",
+     "note": "PLT-CH-15, PLT-CAT-1, PLT-PRM-3"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/comm-templates/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/comm-templates/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/comm-templates/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/comm-templates/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/comm-templates.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: Templates become signed catalog entries with `required_disclosure`; the same renders pass with the registry ha…",
+     "href": "components/python/comm-templates/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `templates.py` and replace the texts with your process's and Compliance's; keep `owne",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/templates.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/comm-templates/README.md"
+  },
+  "ids-only-logging": {
+   "id": "ids-only-logging",
+   "slug": "ids-only-logging",
+   "kind": "tool",
+   "name": "Ids-only logging",
+   "description": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, security",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Ids-only logging"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.13, §4.7",
+     "kind": "accent"
+    },
+    {
+     "text": "observability",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "governed-action-loop"
+    }
+   ],
+   "does": [
+    "A JSON logger that lets only identifiers through. Long strings are withheld, anything that looks like a secret or an email is masked, lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log line ever reaches a log line; the chained record is the record, the logs carry ids."
+   ],
+   "catalog": {
+    "name": "ids-only-logging · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "logs.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`setup(level, stream, name)`, `log(event, level, **ids)`, `redact(value)`"
+     },
+     {
+      "op": "tests/test_logs.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Secrets, emails and long text never appear; short ids do; levels filter"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.13, §4.7",
+     "note": "PLT-AUD-2, PLT-TEL-5"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/ids-only-logging/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/ids-only-logging/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/ids-only-logging/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/ids-only-logging/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/ids-only-logging.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same seeded-text test passes against the platform's telemetry sink; log lines carry ids only there too.",
+     "href": "components/python/ids-only-logging/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `logs.py`, call `setup` once at start, and use `log` everywhere else. Keep the rule i",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/logs.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/ids-only-logging/README.md"
+  },
+  "rs256-jwt-verify": {
+   "id": "rs256-jwt-verify",
+   "slug": "rs256-jwt-verify",
+   "kind": "tool",
+   "name": "RS256 jwt verify",
+   "description": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "RS256 jwt verify"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.1",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "governed-action-loop"
+    }
+   ],
+   "does": [
+    "RS256 JSON Web Token verification with the standard library. RSA PKCS#1 v1.5 verification is integer arithmetic, so no cryptography package is needed to check a token from Entra ID, the Bot Framework, or any OpenID Connect issuer: signature, `exp`, `nbf`, `iss` and `aud` are all checked, keys come from the issuer's JWKS and are cached by `kid`, and the algorithm is pinned to RS256 (no `none`, no HMAC confusion)."
+   ],
+   "catalog": {
+    "name": "rs256-jwt-verify · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "jwt_rs256.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`verify`, `Jwks`, `decode_unverified`, `rsa_verify_pkcs1_sha256`, `rsa_sign_pkcs1_sha256` (tests only), `openid_jwks_url"
+     },
+     {
+      "op": "tests/_rsa.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "A Miller-Rabin key generator for the tests"
+     },
+     {
+      "op": "tests/test_jwt.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "A good token passes; signature, expiry, nbf, issuer, audience, `alg: none`, unknown kid, malformed and HMAC-confused tok"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.1",
+     "note": "PLT-AC-14, PLT-ID-1, PLT-ID-8"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/rs256-jwt-verify/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/rs256-jwt-verify/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/rs256-jwt-verify/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/rs256-jwt-verify/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/rs256-jwt-verify.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: AgentCore's inbound authorizer validates the same issuers and audiences; the verified claims feed the same pri…",
+     "href": "components/python/rs256-jwt-verify/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `jwt_rs256.py`. Give `Jwks` a `fetch` that returns parsed JSON (inject a fake in test",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/jwt.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/rs256-jwt-verify/README.md"
+  },
+  "secrets-by-name": {
+   "id": "secrets-by-name",
+   "slug": "secrets-by-name",
+   "kind": "tool",
+   "name": "Secrets by name",
+   "description": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Secrets by name"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.14, §5.3",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "2",
+     "note": "governed-action-loop, aws-sigv4"
+    }
+   ],
+   "does": [
+    "A handler never holds a credential. It asks a provider for a *named* secret at call time; the provider is AWS Secrets Manager in production, a JSON file in a sandbox, or the environment in tests. Values are cached briefly and never logged. `require_credential` is the other half: a handler refuses to run unless the loop redeemed a reference for its own audience on this call."
+   ],
+   "catalog": {
+    "name": "secrets-by-name · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "secrets.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`EnvSecrets`, `FileSecrets`, `DictSecrets`, `SecretsManager` (over `aws-sigv4`'s `AwsJson`, five-minute cache), `provide"
+     },
+     {
+      "op": "tests/test_secrets.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The three providers, the cache, the selector, the credential check"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.14, §5.3",
+     "note": "PLT-AC-9, PLT-HDL-1, PLT-KEY-1"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/secrets-by-name/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/secrets-by-name/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/secrets-by-name/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/secrets-by-name/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/secrets-by-name.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The token vault serves the same names; a handler still refuses to run without a redeemed reference for its own…",
+     "href": "components/python/secrets-by-name/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `secrets.py`. Configuration carries secret *names* (`app/pagerduty-api`); rotation is",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/secrets.py + clients/__init__.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/secrets-by-name/README.md"
+  },
+  "shelf-mcp-server": {
+   "id": "shelf-mcp-server",
+   "slug": "shelf-mcp-server",
+   "kind": "tool",
+   "name": "Shelf mcp server",
+   "description": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from new · 2026-09-20",
+   "access": "open",
+   "tagline": "agents, paved-road, skill",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Shelf mcp server"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.4, §4.11",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "paved-road",
+     "kind": "line"
+    },
+    {
+     "text": "skill",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-20"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "mcp-tool-server"
+    }
+   ],
+   "does": [
+    "A coding assistant working in a champion's project should be able to ask \"what is on the shelf for this, and how do I use it\" without cloning the collection. This server answers from the manifests: which components exist, by category; a component's version, both sign-offs and stage; a word search; and every README, walkthrough, template and SKILL.md as a resource. It never runs, writes or signs anything: the manifest stays the record, the hub and the shelf tool do the writing.",
+    "Every tool is read-only and idempotent and says so in its annotations; there is no tool that runs, writes or signs, and the tests try three.",
+    "Resources are exactly the component files (`README.md`, `WALKTHROUGH.md`, `TEMPLATE.md`, `SKILL.md`, `component.json`); a URI cannot reach anything else.",
+    "The stage and sign-off state are read from the manifest with the shelf tool's rule; nothing is inferred."
+   ],
+   "catalog": {
+    "name": "shelf-mcp-server · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "server.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Shelf` (reads every `component.json` under `components/`), `ShelfServer` (initialize, tools/list, tools/call, resources"
+     },
+     {
+      "op": "protocol.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "JSON-RPC framing, vendored from `mcp-tool-server`"
+     },
+     {
+      "op": "example.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The walk-through over stdio: list agents, search, get, read a README, try a write tool and be refused"
+     },
+     {
+      "op": "tests/test_shelf.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Complete listing by category, get and search, resources limited to component files (no path escape), no write tools, the"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "3",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.4, §4.11",
+     "note": "PLT-CAT-5, PLT-HAR-33"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/shelf-mcp-server/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/shelf-mcp-server/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/shelf-mcp-server/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/shelf-mcp-server/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/shelf-mcp-server.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The platform's registry exposes the same records over its own MCP endpoint (§4.11: one discoverable record per…",
+     "href": "components/python/shelf-mcp-server/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory anywhere; point `--root` at a checkout of the collection (or at any tre",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "new · written for the collection; the stage rule mirrors tools/shelf.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-20"
+    }
+   ],
+   "changelogHref": "components/python/shelf-mcp-server/README.md"
+  },
+  "stdlib-http-client": {
+   "id": "stdlib-http-client",
+   "slug": "stdlib-http-client",
+   "kind": "tool",
+   "name": "Stdlib http client",
+   "description": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "layers",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, observability",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Stdlib http client"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §5.3, §4.11",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "observability",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "teams-graph-connector, bedrock-converse-adapter, aws-sigv4"
+    }
+   ],
+   "does": [
+    "One HTTP client for every upstream, on `urllib` only: timeouts, bounded retries with exponential backoff on 429 and 5xx, a response-size ceiling, error messages that never carry the query string (tokens travel there), and a `RecordingTransport` that replays canned responses so client code is tested without a network."
+   ],
+   "catalog": {
+    "name": "stdlib-http-client · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "httpclient.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Http.request/json/form`, `HttpError(status, url, body)`, `UrllibTransport`, `RecordingTransport`"
+     },
+     {
+      "op": "tests/test_httpclient.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Retry then succeed, redaction, non-retryable errors, bounded backoff, form posts"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§5.3, §4.11",
+     "note": "PLT-HDL-1, PLT-HDL-2, PLT-CTR-1"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/stdlib-http-client/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/stdlib-http-client/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/stdlib-http-client/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/stdlib-http-client/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/stdlib-http-client.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The generated clients from the contract registry replace the hand-written ones behind the same handler protoco…",
+     "href": "components/python/stdlib-http-client/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `httpclient.py`. Every client in your service takes an `Http` in its constructor and ",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/httpclient.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/stdlib-http-client/README.md"
+  },
+  "typed-api-client": {
+   "id": "typed-api-client",
+   "slug": "typed-api-client",
+   "kind": "tool",
+   "name": "Typed API client",
+   "description": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, security, agents",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Typed API client"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §8.1, §8.6, §4.13",
+     "kind": "accent"
+    },
+    {
+     "text": "observability",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "typescript",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "oidc-pkce-auth"
+    }
+   ],
+   "does": [
+    "The one HTTP client a front end uses. Every request carries the bearer token, an `X-Request-Id`, a W3C `traceparent` and the build SHA; mutations a caller may repeat carry an `Idempotency-Key`, versioned writes an `If-Match`; RFC 9457 `problem+json` failures become typed errors (401 signs out through a hook, 403 with a deny code, 404, 409 conflict, 422 field errors, 5xx); only idempotent requests are retried, once, on a transient failure. `createMockServer` is an in-process API behind the same `Transport`, so the real client runs in development, demos and tests without a server."
+   ],
+   "catalog": {
+    "name": "typed-api-client · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "src/client.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`ApiClient` (`get/post/put/patch/delete/raw`), `Transport`, `TokenProvider`, `ClientHooks`, `fetchTransport`, `newId`"
+     },
+     {
+      "op": "src/errors.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`ApiError` and the typed subclasses, `errorFromResponse`, `isTransient`, `Problem`"
+     },
+     {
+      "op": "src/mockServer.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`createMockServer(resolve, base)`: `route`, `serve`, `reset`; `json`, `problem`"
+     },
+     {
+      "op": "src/*.test.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Headers, idempotency and If-Match, problem mapping, 401 hook, retry policy, 204, the mock server"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && n"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§8.1, §8.6, §4.13",
+     "note": "PLT-UI-1, PLT-UI-2, PLT-TEL-8"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/typescript/typed-api-client/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/typescript/typed-api-client/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: npx tsx example.ts",
+     "href": "components/typescript/typed-api-client/example.ts",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/typescript/typed-api-client/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/typed-api-client.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The Hub API client generated from the contract registry carries the same headers and error mapping; the mock s…",
+     "href": "components/typescript/typed-api-client/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `src/`. Build your typed endpoints as functions over `ApiClient` (the hub's `endpoint",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "crossriver-ai-hub · src/api/client.ts, errors.ts, mock/server.ts"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/typescript/typed-api-client/README.md"
+  },
+  "untrusted-input-guard": {
+   "id": "untrusted-input-guard",
+   "slug": "untrusted-input-guard",
+   "kind": "tool",
+   "name": "Untrusted input guard",
+   "description": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · tool",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, agents, prompting",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Untrusted input guard"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "tool · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.5, §5.5",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "prompting",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "2",
+     "note": "governed-action-loop, cited-llm-engine"
+    }
+   ],
+   "does": [
+    "Every agent that reads text from a system of record and can act afterwards has a prompt-injection path. This is the guard Meg puts between its connectors and its think step, plus the corpus that proves it in CI. Standard library only.",
+    "A suspicious source is never quoted to people; its id stays citable.",
+    "PII is masked before the model (class tokens), in logs (stubs) and for people (last four characters).",
+    "A claim without a resolving citation is dropped, never shown.",
+    "Confidence is the cited share damped by the injection score; it is never asserted by the model."
+   ],
+   "catalog": {
+    "name": "untrusted-input-guard · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "guard.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Source`, `Context` (`add`, `fenced`, `by_kind`, `ids`), `injection_score`, `code_injection_score` (comments and string "
+     },
+     {
+      "op": "corpus.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`CORPUS`: instruction-bearing inputs by class with the outcome they must produce; `BENIGN`: ordinary text that must not "
+     },
+     {
+      "op": "tests/test_guard.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Taint and withholding, citations and confidence, PII per audience, code scoring, the corpus"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "4",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.5, §5.5",
+     "note": "PLT-DATA-1, PLT-DATA-3, PLT-DATA-8, PLT-CAT-7, PLT-AC-21"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/untrusted-input-guard/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/untrusted-input-guard/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/untrusted-input-guard/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/untrusted-input-guard/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/untrusted-input-guard.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The corpus runs at zero unauthorized actions with the platform's data guard scoring the same sources; a provid…",
+     "href": "components/python/untrusted-input-guard/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `guard.py` and `corpus.py`. Build a `Context` per turn from what your tools returned,",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/guard.py + crai/dataguard.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/untrusted-input-guard/README.md"
+  },
+  "aws-sigv4": {
+   "id": "aws-sigv4",
+   "slug": "aws-sigv4",
+   "kind": "tool",
+   "name": "AWS sigv4",
+   "description": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, cost",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "AWS sigv4"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.14, §4.1",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "cost",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "stdlib-http-client, bedrock-converse-adapter, secrets-by-name"
+    }
+   ],
+   "does": [
+    "AWS Signature Version 4 with `hmac` and `hashlib` only. Credentials come from the ECS task role (the container credentials endpoint), the instance role, or the environment, in that order; every request is signed per call. Enough to call Secrets Manager, CloudWatch, ECS and Bedrock without an SDK in the image."
+   ],
+   "catalog": {
+    "name": "aws-sigv4 · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "sigv4.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Credentials`, `load_credentials`, `signing_key`, `sign_request`, `AwsJson.call` (JSON protocol) and `.query` (query pro"
+     },
+     {
+      "op": "tests/test_sigv4.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The AWS documentation's key-derivation vector, the header set, credential resolution order, a signed call"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.14, §4.1",
+     "note": "PLT-AC-9, PLT-KEY-2"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/aws-sigv4/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/aws-sigv4/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/aws-sigv4/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/aws-sigv4/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/aws-sigv4.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: Workload identity and the token vault issue what the task role signs today; no code above the adapter changes.",
+     "href": "components/python/aws-sigv4/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `sigv4.py` next to `stdlib-http-client`'s `httpclient.py` (or any object with `reques",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/sigv4.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/aws-sigv4/README.md"
+  },
+  "bedrock-converse-adapter": {
+   "id": "bedrock-converse-adapter",
+   "slug": "bedrock-converse-adapter",
+   "kind": "tool",
+   "name": "Bedrock converse adapter",
+   "description": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, cost",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Bedrock converse adapter"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.8",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "cost",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "governed-action-loop, aws-sigv4, stdlib-http-client"
+    }
+   ],
+   "does": [
+    "Claude on Amazon Bedrock Converse behind the one signature the model gateway calls: `complete(model_id, system, user, max_tokens) -> (text, input_tokens, output_tokens)`. Signed with SigV4 from the task role, so there is no API key anywhere; an application inference profile ARN travels as the `modelId`; token usage comes back for the session budget; a Bedrock Guardrail can be attached as a second signal."
+   ],
+   "catalog": {
+    "name": "bedrock-converse-adapter · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "bedrock.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`BedrockConverseAdapter(http, region, endpoint, anthropic_version, guardrail_id, guardrail_version, creds_loader)`, `Bed"
+     },
+     {
+      "op": "sigv4.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Vendored from `aws-sigv4`"
+     },
+     {
+      "op": "tests/test_bedrock.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Request shape (URL, headers, body, guardrail), usage parsing, refusal on an unusable response, a custom endpoint"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.8",
+     "note": "PLT-AC-29, PLT-AC-30, PLT-MDL-1, PLT-MDL-2"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/bedrock-converse-adapter/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/bedrock-converse-adapter/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/bedrock-converse-adapter/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/bedrock-converse-adapter/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/bedrock-converse-adapter.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The model gateway service calls Converse with the same inference profile; this adapter is retired when the gat…",
+     "href": "components/python/bedrock-converse-adapter/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory into your project.",
+     "small": "",
+     "state": "on"
+    },
+    {
+     "n": "2",
+     "title": "Run the tests.",
+     "small": "",
+     "state": ""
+    },
+    {
+     "n": "3",
+     "title": "Wire the transport, secrets or connection it names.",
+     "small": "",
+     "state": ""
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/clients/bedrock.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/bedrock-converse-adapter/README.md"
+  },
+  "mcp-gateway-client": {
+   "id": "mcp-gateway-client",
+   "slug": "mcp-gateway-client",
+   "kind": "tool",
+   "name": "Mcp gateway client",
+   "description": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Mcp gateway client"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.12, §5.2, §4.1",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "governed-action-loop, mcp-tool-server, incident-first-read-agent"
+    }
+   ],
+   "does": [
+    "When an agent's tools live on an MCP server someone else runs, the specification treats that server as a system of record: it enters the contract registry with a verified publisher and a key fingerprint, the consumer gets a signed allowlist of the tools it may call, and any change to a tool's description quarantines the server until a person re-verifies (PLT-CAT-7, PLT-CAT-10). This is that gateway, standard library only, behind the same `tools_list` and `tools_call` the harness already calls on its fake gateway. The harness decides; the gateway carries the call over MCP and nothing more.",
+    "Only tools on the signed allowlist are listed to the harness or callable; a tool the server offers but the contract does not is refused at the catalog hook, before any call.",
+    "A changed description, publisher or key fingerprint quarantines the server: every call is a typed stop until a person releases it, and the release is on the gateway's log with their name.",
+    "Tool descriptions are corpus payload locations: one that scores as an injection quarantines even when it was reviewed.",
+    "The harness's hooks run first; a parked W1 never crosses the wire, and a remote forbidden answer is a deny with a typed code."
+   ],
+   "catalog": {
+    "name": "mcp-gateway-client · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "mcpgateway/contract.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Contract`: server, publisher, fingerprint, `allow` (harness name to remote tool and the sha256 of its description as re"
+     },
+     {
+      "op": "mcpgateway/client.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`McpGateway` (`verify`, `tools_list`, `tools_call`, `release`), `HttpTransport` (Streamable HTTP with the bearer looked "
+     },
+     {
+      "op": "mcpgateway/protocol.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "JSON-RPC framing, vendored from `mcp-tool-server`"
+     },
+     {
+      "op": "example.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`build()` wires the harness with the gateway in the fake gateway's place"
+     },
+     {
+      "op": "tests/test_gateway.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The contract rules, the harness through the gateway, remote forbidden and error results, quarantine and release, the cre"
+     },
+     {
+      "op": "actionloop/",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The harness, vendored verbatim from `governed-action-loop`"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . && python3 exampl"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "5",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.12, §5.2, §4.1",
+     "note": "PLT-CAT-7, PLT-CAT-10, PLT-CAT-6, PLT-AC-16, PLT-ID-6"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/mcp-gateway-client/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/mcp-gateway-client/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/mcp-gateway-client/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/mcp-gateway-client/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/mcp-gateway-client.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The same contract record lives in the platform's contract registry and the same allowlist is the Gateway targe…",
+     "href": "components/python/mcp-gateway-client/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory. Review the server's `tools/list` once, with the security engineer, and",
+     "small": "",
+     "state": "on"
+    },
+    {
+     "n": "2",
+     "title": "Store `contract.to_json()` with the consumer and load it with `Contract.from_json`; a new ",
+     "small": "",
+     "state": ""
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/crai/gateway.py (the fake gateway's shape); the contract rules are new, to the platform specification §4.12"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/mcp-gateway-client/README.md"
+  },
+  "oidc-pkce-auth": {
+   "id": "oidc-pkce-auth",
+   "slug": "oidc-pkce-auth",
+   "kind": "tool",
+   "name": "OIDC pkce auth",
+   "description": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "security, onboarding",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "OIDC pkce auth"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "typescript",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.1, §8.6",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "onboarding",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "typescript",
+     "note": "react, react-router-dom, @tanstack/react-query, oidc-client-ts"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "typed-api-client"
+    }
+   ],
+   "does": [
+    "Sign-in for a browser application against the company's identity provider: Authorization Code with PKCE through `oidc-client-ts`, tokens held in memory only (never localStorage), silent renew, a callback route that returns the person where they were. The `Principal` (roles, ladder, teams, entitlements, preferences) comes from `GET /me`, the platform's authority, never from token claims read on the client. `permits()` is a closed set of actions the front end uses to decide what to show and attempt; the platform decides what happens. A persona client stands in for the IdP in development and tests."
+   ],
+   "catalog": {
+    "name": "oidc-pkce-auth · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "src/provider.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`AuthClient`: the contract every identity backend satisfies"
+     },
+     {
+      "op": "src/oidc.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`createOidcClient` (PKCE, in-memory tokens, silent renew, callback)"
+     },
+     {
+      "op": "src/mock.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`createMockClient` and `MOCK_PERSONAS` (`mock.<persona>` bearer tokens)"
+     },
+     {
+      "op": "src/types.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Principal`, `Preferences`, `AuthSnapshot`, `Ladder`, `Role`, `Channel`"
+     },
+     {
+      "op": "src/permits.ts",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The closed action set, `permits`, `primaryRole`, `isTeamLead`"
+     },
+     {
+      "op": "src/AuthProvider.tsx",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Token lifecycle plus the principal from `GET /me`; dependencies injected"
+     },
+     {
+      "op": "src/RequireAuth.tsx",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Route guard: signed-out to `/signin?returnTo=`, a 403 on `/me` to `/403`, an action the person lacks to `/403`"
+     },
+     {
+      "op": "src/*.test.ts(x)",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Permits by entitlement, ceiling and ownership; the provider and guard rendered with the persona client"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && n"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.1, §8.6",
+     "note": "PLT-ID-1, PLT-AC-14, PLT-UI-15"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/typescript/oidc-pkce-auth/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/typescript/oidc-pkce-auth/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: npx tsx example.ts",
+     "href": "components/typescript/oidc-pkce-auth/example.ts",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/typescript/oidc-pkce-auth/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/oidc-pkce-auth.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The principal from GET /me is the control layer's; the front-end permits set stays a courtesy, never the contr…",
+     "href": "components/typescript/oidc-pkce-auth/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `src/`. Rename the actions in `permits.ts` to yours (keep the set closed). Point `fet",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "crossriver-ai-hub · src/auth/"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/typescript/oidc-pkce-auth/README.md"
+  },
+  "teams-graph-connector": {
+   "id": "teams-graph-connector",
+   "slug": "teams-graph-connector",
+   "kind": "tool",
+   "name": "Teams graph connector",
+   "description": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "bolt",
+   "meta": [
+    {
+     "text": "R1 · integration",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, atlassian",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Teams graph connector"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "integration · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §5.3, §4.11, §7.6",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "atlassian",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "2",
+     "note": "stdlib-http-client, secrets-by-name"
+    }
+   ],
+   "does": [
+    "Microsoft Teams as a bot's surface, through Graph and the Bot Framework connector: transitive group membership for gates, war-room channels, proactive posts and Adaptive Cards, pins, change-notification subscriptions, and a 4,000-character chunker that numbers the parts. Every proactive delivery returns an id or raises; nothing fails silently. The in-memory `FakeTeams` has the same method surface for tests and demonstrations."
+   ],
+   "catalog": {
+    "name": "teams-graph-connector · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "teams_graph.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`chunk`, `AppToken` (client credentials, cached until shortly before expiry), `GraphClient` (`check_member_groups`, `cre"
+     },
+     {
+      "op": "tests/test_teams.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Chunking bounds and numbering, the fake's lifecycle and loud failures, the live client against a recording double"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§5.3, §4.11, §7.6",
+     "note": "PLT-HDL-1, PLT-CTR-1"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/teams-graph-connector/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/teams-graph-connector/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/teams-graph-connector/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/teams-graph-connector/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/teams-graph-connector.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The Teams client is a recorded contract behind a Gateway target; the fake stays as the road's local runner.",
+     "href": "components/python/teams-graph-connector/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `teams_graph.py`. Wire it behind a gateway target so every post is a recorded tool ca",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/clients/graph.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/teams-graph-connector/README.md"
+  },
+  "cited-llm-engine": {
+   "id": "cited-llm-engine",
+   "slug": "cited-llm-engine",
+   "kind": "tool",
+   "name": "Cited llm engine",
+   "description": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "pen",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, prompting, evaluation",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Cited llm engine"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "pattern · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §4.8, §4.9, §4.5",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "prompting",
+     "kind": "line"
+    },
+    {
+     "text": "evaluation",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "3",
+     "note": "untrusted-input-guard, governed-action-loop, bedrock-converse-adapter"
+    }
+   ],
+   "does": [
+    "The think step behind one adapter. A model reasons over a fenced context and returns strict, cited JSON; it never acts. `RulesEngine` answers from the context with rules (tests, demonstrations, degraded mode); `ModelEngine` wraps any `complete(system, user) -> text` callable with the guard on both sides: fenced context in, citations checked on the way out, a malformed answer refused, and a stage that proposes an action refused on a tainted context before any model call."
+   ],
+   "catalog": {
+    "name": "cited-llm-engine · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "engine.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Stage` (name, schema, instructions, proposes_action) and the three example stages; `RulesEngine`; `ModelEngine`; `Engin"
+     },
+     {
+      "op": "guard.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Vendored from `untrusted-input-guard`"
+     },
+     {
+      "op": "tests/test_engine.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Rules cite; taint refuses proposals in both engines before any call; the model sees only the fenced context; malformed a"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§4.8, §4.9, §4.5",
+     "note": "PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/cited-llm-engine/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/cited-llm-engine/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/cited-llm-engine/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/cited-llm-engine/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/cited-llm-engine.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: Stage prompts publish to the prompt registry with an evaluation suite (PLT-PRM-2) and load by version; the sam…",
+     "href": "components/python/cited-llm-engine/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy both files. Define your stages (schema and instructions); keep `proposes_action=True`",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/think.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/cited-llm-engine/README.md"
+  },
+  "fail-closed-config": {
+   "id": "fail-closed-config",
+   "slug": "fail-closed-config",
+   "kind": "tool",
+   "name": "Fail closed config",
+   "description": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Fail closed config"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "pattern · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §5.6, §4.16",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "secrets-by-name"
+    }
+   ],
+   "does": [
+    "Configuration that refuses to start a live process with a missing gate. Everything comes from the environment, an empty value means unset, secrets are names in the vault (never values), `validate()` returns every problem at once naming the variable and never its value, and `check-config` is the entrypoint's first command (exit 2 refuses to listen)."
+   ],
+   "catalog": {
+    "name": "fail-closed-config · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "config.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Settings` (`from_env`, `validate`, `require_valid`, `diagnostics`), `check_config`, `ConfigError`"
+     },
+     {
+      "op": "tests/test_config.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Fake refused in production; live needs every gate; a complete live set is valid; the environment loader and the exit cod"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§5.6, §4.16",
+     "note": "PLT-SEC-5, PLT-GATE-1, PLT-ONB-5"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/fail-closed-config/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/fail-closed-config/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/fail-closed-config/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/fail-closed-config/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/fail-closed-config.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The admission gate refuses the same missing settings at the cluster; `check-config` stays as the container's f…",
+     "href": "components/python/fail-closed-config/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy `config.py`, rename the fields, keep the three rules: live needs a durable store, htt",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/config.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/fail-closed-config/README.md"
+  },
+  "prompt-pills-onboarding": {
+   "id": "prompt-pills-onboarding",
+   "slug": "prompt-pills-onboarding",
+   "kind": "tool",
+   "name": "Prompt pills onboarding",
+   "description": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "pen",
+   "meta": [
+    {
+     "text": "R1 · pattern",
+     "kind": ""
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "agents, onboarding",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Tools",
+    "Prompt pills onboarding"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "python",
+     "kind": "mono"
+    },
+    {
+     "text": "pattern · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.11, §8.4",
+     "kind": "accent"
+    },
+    {
+     "text": "agents",
+     "kind": "line"
+    },
+    {
+     "text": "onboarding",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "python",
+     "note": "standard library only"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "teams-graph-connector"
+    }
+   ],
+   "does": [
+    "Explain a bot inside the room it works in. A how-to card posted at the start (and on `help`) with three things to know, clickable starter prompts grouped by category and filtered by the person's roles and the rollout increment, who does what, and what the bot never does; a one-line hint the first time a person speaks to it; a five-step guide page. Nobody has to remember syntax under stress."
+   ],
+   "catalog": {
+    "name": "prompt-pills-onboarding · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "onboarding.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "`Pill`, `Bot` (`visible_pills`, `welcome_card` as an Adaptive Card, `first_time_hint`, `guide_html`), `EXAMPLE`"
+     },
+     {
+      "op": "tests/test_onboarding.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Filtering by increment and role; a valid card whose buttons carry the command and never a placeholder; the hint and the "
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.11, §8.4",
+     "note": "PLT-ONB-12, PLT-UI-15"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/python/prompt-pills-onboarding/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/python/prompt-pills-onboarding/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/python/prompt-pills-onboarding/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/python/prompt-pills-onboarding/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/components/prompt-pills-onboarding.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The how-to card becomes the consumer's enablement module (PLT-ONB-12) rendered by the UI modules; the pill cat…",
+     "href": "components/python/prompt-pills-onboarding/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Build a `Bot` with your pills (tier `R`, `W1` or `W2`, `needs` roles), steps, roles and th",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/responder/onboarding.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/python/prompt-pills-onboarding/README.md"
+  },
+  "handover": {
+   "id": "handover",
+   "slug": "handover",
+   "kind": "knowledge",
+   "name": "Handover",
+   "description": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance, onboarding",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Handover"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §14, §7.11",
+     "kind": "accent"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    },
+    {
+     "text": "onboarding",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "markdown",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "use-case-to-backlog"
+    }
+   ],
+   "does": [
+    "The versioned handover document that lets the next person run, verify and continue a delivery: what it is with the commands and last numbers, what changed, tickets done here versus what remains on the company's account, decisions with their reversal, layout, limits, next steps."
+   ],
+   "catalog": {
+    "name": "handover · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure and the checks"
+     },
+     {
+      "op": "TEMPLATE.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The eight sections and the history table"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "n/a",
+     "note": "a checklist in SKILL.md"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§14, §7.11",
+     "note": "PLT-ONB-6, PLT-ROAD-13"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/handover/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/handover/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: EXAMPLE.md",
+     "href": "components/skills/handover/EXAMPLE.md",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/handover/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/handover/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: Material changes re-enter onboarding step 4 (PLT-ONB-6); the handover names the step per ticket.",
+     "href": "components/skills/handover/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/HANDOVER.md"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/handover/README.md"
+  },
+  "pixel-parity-screenshots": {
+   "id": "pixel-parity-screenshots",
+   "slug": "pixel-parity-screenshots",
+   "kind": "knowledge",
+   "name": "Pixel parity screenshots",
+   "description": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from crossriver-ai-hub · 2026-09-19",
+   "access": "open",
+   "tagline": "evaluation",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Pixel parity screenshots"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §8.7, §8.8",
+     "kind": "accent"
+    },
+    {
+     "text": "evaluation",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "mixed",
+     "note": "pillow (for diff.py)"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "0",
+     "note": "stands alone"
+    }
+   ],
+   "does": [
+    "Prove a front end matches its design artboards: render the artboard and the app route under identical conditions in one browser session, diff the pixels, document intentional exceptions, gate CI on zero."
+   ],
+   "catalog": {
+    "name": "pixel-parity-screenshots · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure"
+     },
+     {
+      "op": "shoot.cjs",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Reference and candidate screenshots from screens.json"
+     },
+     {
+      "op": "diff.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Differing pixels per screen, red-over-faded diff images, results.json, exit 2 on any difference"
+     },
+     {
+      "op": "screens.example.json",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The screens file shape"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "node --check shoot.cjs && python3 -m py_compile diff.py"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§8.7, §8.8",
+     "note": "PLT-DX-3, PLT-UI-1"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/pixel-parity-screenshots/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/pixel-parity-screenshots/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 example.py",
+     "href": "components/skills/pixel-parity-screenshots/example.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/pixel-parity-screenshots/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/pixel-parity-screenshots/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The UI modules' toolchain gate; a module reaches GA only after the usability pass, with this diff as the pixel…",
+     "href": "components/skills/pixel-parity-screenshots/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "crossriver-ai-hub · tools/shoot.cjs + tools/diff.py"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/pixel-parity-screenshots/README.md"
+  },
+  "production-readiness": {
+   "id": "production-readiness",
+   "slug": "production-readiness",
+   "kind": "knowledge",
+   "name": "Production readiness",
+   "description": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Production readiness"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.3, §7.11, §14.2",
+     "kind": "accent"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "markdown",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "0",
+     "note": "stands alone"
+    }
+   ],
+   "does": [
+    "One table that replaces the status meeting: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with its owner."
+   ],
+   "catalog": {
+    "name": "production-readiness · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure and the checks"
+     },
+     {
+      "op": "TEMPLATE.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The table with the rows a service leaving the sandbox needs"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "n/a",
+     "note": "a checklist in SKILL.md"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.3, §7.11, §14.2",
+     "note": "PLT-ONB-5, PLT-ONB-10, PLT-ROAD-13"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/production-readiness/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/production-readiness/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: EXAMPLE.md",
+     "href": "components/skills/production-readiness/EXAMPLE.md",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/production-readiness/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/production-readiness/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The admission checklist signed in the repository is what the gate reads; this page is its human summary.",
+     "href": "components/skills/production-readiness/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/PRODUCTION-READINESS.md"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/production-readiness/README.md"
+  },
+  "runbook": {
+   "id": "runbook",
+   "slug": "runbook",
+   "kind": "knowledge",
+   "name": "Runbook",
+   "description": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "observability, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Runbook"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §12, §7.1",
+     "kind": "accent"
+    },
+    {
+     "text": "observability",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "markdown",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "fail-closed-config"
+    }
+   ],
+   "does": [
+    "The runbook for the engineer on duty for the service itself, at night, without the code: health, gates, kill switches, rotation, degraded modes as a table, raising the increment, evidence."
+   ],
+   "catalog": {
+    "name": "runbook · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure and the checks"
+     },
+     {
+      "op": "TEMPLATE.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The seven sections with the degraded-modes table"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "n/a",
+     "note": "a checklist in SKILL.md"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§12, §7.1",
+     "note": "PLT-OPS-3, PLT-OPS-12, PLT-STOP-3"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/runbook/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/runbook/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: EXAMPLE.md",
+     "href": "components/skills/runbook/EXAMPLE.md",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/runbook/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/runbook/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The road's runbook (degraded modes, kill-switch scopes, on-call, first-week SLO defaults) is this document wit…",
+     "href": "components/skills/runbook/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/RUNBOOK.md"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/runbook/README.md"
+  },
+  "security-notes": {
+   "id": "security-notes",
+   "slug": "security-notes",
+   "kind": "knowledge",
+   "name": "Security notes",
+   "description": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "m",
+   "glyph": "shield",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "security, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Security notes"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "markdown",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §11.1, §7.3",
+     "kind": "accent"
+    },
+    {
+     "text": "security",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "markdown",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "1",
+     "note": "untrusted-input-guard"
+    }
+   ],
+   "does": [
+    "How to write the SECURITY.md a reviewer can verify against the code: a threat-model delta table (threat, control, where), data classes, the injection corpus and known limits."
+   ],
+   "catalog": {
+    "name": "security-notes · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure and the checks"
+     },
+     {
+      "op": "TEMPLATE.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The four sections with the rows every tool-using AI service needs"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "n/a",
+     "note": "a checklist in SKILL.md"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§11.1, §7.3",
+     "note": "PLT-SEC-5, PLT-SEC-7, PLT-CAT-7"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/security-notes/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/security-notes/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: EXAMPLE.md",
+     "href": "components/skills/security-notes/EXAMPLE.md",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/security-notes/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/security-notes/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The threat-model delta is the review record Security signs at step 5 of onboarding; the template stays.",
+     "href": "components/skills/security-notes/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/SECURITY.md"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/security-notes/README.md"
+  },
+  "use-case-to-backlog": {
+   "id": "use-case-to-backlog",
+   "slug": "use-case-to-backlog",
+   "kind": "knowledge",
+   "name": "Use case to backlog",
+   "description": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "paved-road, governance",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Use case to backlog"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.11, §14",
+     "kind": "accent"
+    },
+    {
+     "text": "paved-road",
+     "kind": "line"
+    },
+    {
+     "text": "governance",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "mixed",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "0",
+     "note": "stands alone"
+    }
+   ],
+   "does": [
+    "One plan file becomes a Jira-ready backlog: a Markdown file per epic and ticket, an index with totals and the critical path, and a CSV for Jira's importer. The specification's plan section renders from the same file, so the two never drift."
+   ],
+   "catalog": {
+    "name": "use-case-to-backlog · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure (also published in the knowledge base's skills catalog)"
+     },
+     {
+      "op": "build_backlog.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The builder: epic and ticket pages, README index, critical path, CSV"
+     },
+     {
+      "op": "example_plan.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The plan shape, five tickets"
+     },
+     {
+      "op": "tests/",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Builds the example and checks totals, links, checkboxes, CSV rows, the critical path"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 -m unittest discover -s tests -t . -v && python3 bui"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.11, §14",
+     "note": "PLT-ONB-1, PLT-ONB-2, PLT-ROAD-2"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/use-case-to-backlog/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/use-case-to-backlog/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 build_backlog.py example_plan.py /tmp/backlog-example && cat /tmp/backlog-example/README.md | head -20 && rm -rf /tmp/backlog-example",
+     "href": "components/skills/use-case-to-backlog/example_plan.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/use-case-to-backlog/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/use-case-to-backlog/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The intake step files the brief in the portal and the backlog derives from the same plan; nothing to replace.",
+     "href": "components/skills/use-case-to-backlog/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · usecases/meg/build/meg_plan.py + jira/"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/use-case-to-backlog/README.md"
+  },
+  "walkthrough-video": {
+   "id": "walkthrough-video",
+   "slug": "walkthrough-video",
+   "kind": "knowledge",
+   "name": "Walkthrough video",
+   "description": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
+   "road": "R1",
+   "lifecycle": "preview",
+   "icon": "",
+   "glyph": "book",
+   "meta": [
+    {
+     "text": "R1 · skill",
+     "kind": ""
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "v1.0.0",
+     "kind": "mono"
+    },
+    {
+     "text": "sign-off pending",
+     "kind": "warn"
+    }
+   ],
+   "footNote": "from meg-first-responder · 2026-09-19",
+   "access": "open",
+   "tagline": "video, onboarding",
+   "collection": true,
+   "crumbs": [
+    "Discover",
+    "Knowledge",
+    "Walkthrough video"
+   ],
+   "youActAt": "L1",
+   "ladderMax": "L1",
+   "headerChips": [
+    {
+     "text": "road R1",
+     "kind": "line"
+    },
+    {
+     "text": "mixed",
+     "kind": "mono"
+    },
+    {
+     "text": "skill · ready",
+     "kind": "ok"
+    },
+    {
+     "text": "spec §7.11, §8.8",
+     "kind": "accent"
+    },
+    {
+     "text": "video",
+     "kind": "line"
+    },
+    {
+     "text": "onboarding",
+     "kind": "line"
+    }
+   ],
+   "tiles": [
+    {
+     "label": "Language",
+     "value": "mixed",
+     "note": "no runtime dependency"
+    },
+    {
+     "label": "Status",
+     "value": "ready",
+     "note": "snapshot 2026-09-19"
+    },
+    {
+     "label": "Pairs with",
+     "value": "0",
+     "note": "stands alone"
+    }
+   ],
+   "does": [
+    "A narrated, captioned walkthrough video built from the product's own screenshots, a slide plan, text-to-speech and ffmpeg. Rebuilt from one file when the product changes, never re-recorded."
+   ],
+   "catalog": {
+    "name": "walkthrough-video · component.json",
+    "signed": false,
+    "entries": [
+     {
+      "op": "SKILL.md",
+      "tier": "R",
+      "classes": "internal",
+      "note": "The procedure"
+     },
+     {
+      "op": "deck.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Plan to deck HTML, narration files and slides.json"
+     },
+     {
+      "op": "build_frames.cjs",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Deck to PNG frames with Playwright"
+     },
+     {
+      "op": "build_narration.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "ElevenLabs, Edge speech or silent captions; selective regeneration"
+     },
+     {
+      "op": "build_video.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "Frames and narration to MP4 with burned captions and a WebVTT track"
+     },
+     {
+      "op": "example_slides.py",
+      "tier": "R",
+      "classes": "internal",
+      "note": "A five-slide plan"
+     }
+    ]
+   },
+   "trust": [
+    {
+     "label": "Tests",
+     "value": "green",
+     "note": "python3 deck.py example_slides.py && test -f deck.html && te"
+    },
+    {
+     "label": "Rules it enforces",
+     "value": "0",
+     "note": "listed on the README"
+    },
+    {
+     "label": "Implements",
+     "value": "§7.11, §8.8",
+     "note": "PLT-ONB-12"
+    },
+    {
+     "label": "Owner sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    },
+    {
+     "label": "AI security sign-off",
+     "value": "pending",
+     "note": "signs with tools/shelf.py --sign"
+    }
+   ],
+   "evidence": [
+    {
+     "label": "README",
+     "href": "components/skills/walkthrough-video/README.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Walkthrough, step by step",
+     "href": "components/skills/walkthrough-video/WALKTHROUGH.md",
+     "icon": "doc"
+    },
+    {
+     "label": "Live example: python3 deck.py example_slides.py && head -c 300 deck.html && echo && rm -rf deck.html slides.json narration",
+     "href": "components/skills/walkthrough-video/example_slides.py",
+     "icon": "pulse"
+    },
+    {
+     "label": "Tests",
+     "href": "components/skills/walkthrough-video/",
+     "icon": "shield"
+    },
+    {
+     "label": "Knowledge base page",
+     "href": "/kb/page/skills/walkthrough-video/SKILL.md",
+     "icon": "db"
+    },
+    {
+     "label": "Replacement test: The enablement module per consumer; the pipeline is the same.",
+     "href": "components/skills/walkthrough-video/README.md#known-limits",
+     "icon": "pulse"
+    }
+   ],
+   "cost": [],
+   "getStarted": [
+    {
+     "n": "1",
+     "title": "Copy the directory, or just `SKILL.md` and the template, into your project. Nothing here d",
+     "small": "",
+     "state": "on"
+    }
+   ],
+   "owner": [
+    {
+     "label": "owner",
+     "value": "gil.klainert"
+    },
+    {
+     "label": "source",
+     "value": "meg-first-responder · meg/walkthrough/"
+    },
+    {
+     "label": "support",
+     "value": "the AI champions channel"
+    }
+   ],
+   "versions": [
+    {
+     "version": "1.0.0",
+     "state": "current",
+     "date": "2026-09-19"
+    }
+   ],
+   "changelogHref": "components/skills/walkthrough-video/README.md"
+  }
+ },
+ "shelf": [
+  {
+   "name": "incident-first-read-agent",
+   "title": "Incident first read agent",
+   "version": "1.0.0",
+   "category": "agent",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py && python3 example_mcp.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/agents/incident-first-read-agent",
+   "repoPath": "components/agents/incident-first-read-agent"
+  },
+  {
+   "name": "governed-action-loop",
+   "title": "Governed action loop",
+   "version": "1.0.0",
+   "category": "harness",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "The action loop an agent runs inside: three fixed hooks, W1 confirmed once, W2 under dual control, taint ceiling, kill switches, budgets, a chained record",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/governed-action-loop",
+   "repoPath": "components/python/governed-action-loop"
+  },
+  {
+   "name": "mcp-tool-server",
+   "title": "Mcp tool server",
+   "version": "1.0.0",
+   "category": "harness",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/mcp-tool-server",
+   "repoPath": "components/python/mcp-tool-server"
+  },
+  {
+   "name": "audit-chain",
+   "title": "Audit chain",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "A hash-chained, append-only record in SQLite: every event carries prev and hash; verify() walks it, export() hands reviewers JSON lines with the head",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/audit-chain",
+   "repoPath": "components/python/audit-chain"
+  },
+  {
+   "name": "comm-templates",
+   "title": "Comm templates",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Stakeholder and customer messages as owned, versioned templates the model fills through named fields only; unknown or missing fields refused; a registry hash",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/comm-templates",
+   "repoPath": "components/python/comm-templates"
+  },
+  {
+   "name": "ids-only-logging",
+   "title": "Ids-only logging",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "A JSON logger that lets only identifiers through: long strings withheld, secrets and emails masked, so no upstream text ever lands in a log line",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/ids-only-logging",
+   "repoPath": "components/python/ids-only-logging"
+  },
+  {
+   "name": "rs256-jwt-verify",
+   "title": "RS256 jwt verify",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "RS256 JWT verification with the standard library against a JWKS: signature, exp, nbf, iss, aud checked, algorithm pinned (no none, no HMAC confusion)",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/rs256-jwt-verify",
+   "repoPath": "components/python/rs256-jwt-verify"
+  },
+  {
+   "name": "secrets-by-name",
+   "title": "Secrets by name",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Handlers never hold a credential: a named secret fetched at call time from a vault, a file or the environment, plus the redeemed-reference check",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/secrets-by-name",
+   "repoPath": "components/python/secrets-by-name"
+  },
+  {
+   "name": "shelf-mcp-server",
+   "title": "Shelf mcp server",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and template as resources, for a coding assistant",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/shelf-mcp-server",
+   "repoPath": "components/python/shelf-mcp-server"
+  },
+  {
+   "name": "stdlib-http-client",
+   "title": "Stdlib http client",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/stdlib-http-client",
+   "repoPath": "components/python/stdlib-http-client"
+  },
+  {
+   "name": "typed-api-client",
+   "title": "Typed API client",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "typescript",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
+   "exampleRun": "npx tsx example.ts",
+   "hubPath": "/discover/tools/typed-api-client",
+   "repoPath": "components/typescript/typed-api-client"
+  },
+  {
+   "name": "untrusted-input-guard",
+   "title": "Untrusted input guard",
+   "version": "1.0.0",
+   "category": "tool",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/untrusted-input-guard",
+   "repoPath": "components/python/untrusted-input-guard"
+  },
+  {
+   "name": "aws-sigv4",
+   "title": "AWS sigv4",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/aws-sigv4",
+   "repoPath": "components/python/aws-sigv4"
+  },
+  {
+   "name": "bedrock-converse-adapter",
+   "title": "Bedrock converse adapter",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Claude on Bedrock Converse behind the model gateway's complete() signature: SigV4 from the task role, inference profile as modelId, usage returned",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/bedrock-converse-adapter",
+   "repoPath": "components/python/bedrock-converse-adapter"
+  },
+  {
+   "name": "mcp-gateway-client",
+   "title": "Mcp gateway client",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . && python3 example.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/mcp-gateway-client",
+   "repoPath": "components/python/mcp-gateway-client"
+  },
+  {
+   "name": "oidc-pkce-auth",
+   "title": "OIDC pkce auth",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "typescript",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "npm ci --no-audit --no-fund && npx tsc -p tsconfig.json && npx vitest run",
+   "exampleRun": "npx tsx example.ts",
+   "hubPath": "/discover/tools/oidc-pkce-auth",
+   "repoPath": "components/typescript/oidc-pkce-auth"
+  },
+  {
+   "name": "teams-graph-connector",
+   "title": "Teams graph connector",
+   "version": "1.0.0",
+   "category": "integration",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Microsoft Teams through Graph and the Bot connector: group gates, channels, posts, cards, pins, subscriptions, 4,000-char chunking, and an in-memory fake",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/teams-graph-connector",
+   "repoPath": "components/python/teams-graph-connector"
+  },
+  {
+   "name": "cited-llm-engine",
+   "title": "Cited llm engine",
+   "version": "1.0.0",
+   "category": "pattern",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "The think step behind one adapter: rules offline, a model online; fenced context in, strict cited JSON out, malformed refused, proposals refused on taint",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/cited-llm-engine",
+   "repoPath": "components/python/cited-llm-engine"
+  },
+  {
+   "name": "fail-closed-config",
+   "title": "Fail closed config",
+   "version": "1.0.0",
+   "category": "pattern",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Settings from the environment that refuse to start a live process with a missing gate, a memory store or an http URL; problems named, no value printed",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/fail-closed-config",
+   "repoPath": "components/python/fail-closed-config"
+  },
+  {
+   "name": "prompt-pills-onboarding",
+   "title": "Prompt pills onboarding",
+   "version": "1.0.0",
+   "category": "pattern",
+   "language": "python",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Explain a bot inside the room: a how-to card with clickable starter prompts filtered by role and increment, a first-time hint, a five-step guide page",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/tools/prompt-pills-onboarding",
+   "repoPath": "components/python/prompt-pills-onboarding"
+  },
+  {
+   "name": "handover",
+   "title": "Handover",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "markdown",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "The versioned handover document: what it is, since last time, tickets done here vs what remains on the account, decisions, layout, limits",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": false,
+    "spec": true
+   },
+   "test": "",
+   "exampleRun": "",
+   "hubPath": "/discover/knowledge/handover",
+   "repoPath": "components/skills/handover"
+  },
+  {
+   "name": "pixel-parity-screenshots",
+   "title": "Pixel parity screenshots",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "mixed",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Prove a front end matches its design artboards: render both under identical conditions, diff, document exceptions, gate CI on zero pixels",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
+   "exampleRun": "python3 example.py",
+   "hubPath": "/discover/knowledge/pixel-parity-screenshots",
+   "repoPath": "components/skills/pixel-parity-screenshots"
+  },
+  {
+   "name": "production-readiness",
+   "title": "Production readiness",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "markdown",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "One table for a service leaving the sandbox: area, DONE/WRITTEN/OPEN, evidence with numbers, the open item with an owner",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": false,
+    "spec": true
+   },
+   "test": "",
+   "exampleRun": "",
+   "hubPath": "/discover/knowledge/production-readiness",
+   "repoPath": "components/skills/production-readiness"
+  },
+  {
+   "name": "runbook",
+   "title": "Runbook",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "markdown",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "The runbook for the engineer on duty for the service itself: health, gates, kill switches, rotation, degraded modes, increments, evidence",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": false,
+    "spec": true
+   },
+   "test": "",
+   "exampleRun": "",
+   "hubPath": "/discover/knowledge/runbook",
+   "repoPath": "components/skills/runbook"
+  },
+  {
+   "name": "security-notes",
+   "title": "Security notes",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "markdown",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "Write SECURITY.md for an AI service: threat-model delta (threat, control, where), data classes, the injection corpus, known limits",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": false,
+    "spec": true
+   },
+   "test": "",
+   "exampleRun": "",
+   "hubPath": "/discover/knowledge/security-notes",
+   "repoPath": "components/skills/security-notes"
+  },
+  {
+   "name": "use-case-to-backlog",
+   "title": "Use case to backlog",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "mixed",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "One plan file to a Jira-ready backlog: epics, tickets, phases, critical path, CSV; the specification and the backlog never drift",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 -m unittest discover -s tests -t . -v && python3 build_backlog.py example_plan.py /tmp/backlog-example",
+   "exampleRun": "python3 build_backlog.py example_plan.py /tmp/backlog-example && cat /tmp/backlog-example/README.md | head -20 && rm -rf /tmp/backlog-example",
+   "hubPath": "/discover/knowledge/use-case-to-backlog",
+   "repoPath": "components/skills/use-case-to-backlog"
+  },
+  {
+   "name": "walkthrough-video",
+   "title": "Walkthrough video",
+   "version": "1.0.0",
+   "category": "skill",
+   "language": "mixed",
+   "owner": "gil.klainert",
+   "status": "ready",
+   "summary": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
+   "signoff": {
+    "owner": null,
+    "ai_security": null
+   },
+   "signed": false,
+   "state": "owner pending; AI security pending",
+   "usedIn": [],
+   "stage": {
+    "index": 1,
+    "of": 6,
+    "label": "built",
+    "next": "use it once in a real project and record where (used_in, or the owner's sign-off form)"
+   },
+   "gates": {
+    "readme": true,
+    "walkthrough": true,
+    "example": true,
+    "tests": true,
+    "spec": true
+   },
+   "test": "python3 deck.py example_slides.py && test -f deck.html && test $(ls narration/*.txt | wc -l) -eq 5",
+   "exampleRun": "python3 deck.py example_slides.py && head -c 300 deck.html && echo && rm -rf deck.html slides.json narration",
+   "hubPath": "/discover/knowledge/walkthrough-video",
+   "repoPath": "components/skills/walkthrough-video"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+  "about": "Files the services copy verbatim from components of the collection. `python3 services/vendor.py --check` refuses drift; `--write` copies again after a component changed.",
+  "files": {
+    "services/hub-api/hubapi/vendor/jwt_rs256.py": "components/python/rs256-jwt-verify/jwt_rs256.py",
+    "services/hub-api/hubapi/vendor/guard.py": "components/python/cited-llm-engine/guard.py",
+    "services/hub-api/hubapi/vendor/bedrock.py": "components/python/bedrock-converse-adapter/bedrock.py",
+    "services/hub-api/hubapi/vendor/sigv4.py": "components/python/aws-sigv4/sigv4.py",
+    "services/hub-api/hubapi/vendor/secrets.py": "components/python/secrets-by-name/secrets.py",
+    "services/hub-api/hubapi/vendor/httpclient.py": "components/python/stdlib-http-client/httpclient.py"
+  }
+}

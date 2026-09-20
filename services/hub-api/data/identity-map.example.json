@@ -1,0 +1,75 @@
+{
+ "about": "How the bank's directory groups map to what the hub grants. Group ids are placeholders; the platform team owns this file. `default` applies to every signed-in employee; a group adds to it; the highest ladder wins.",
+ "tenant": "t_bank",
+ "ai_security_group": "GROUP_ID_AI_SECURITY",
+ "default": {
+  "roles": [],
+  "entitlements": [
+   "employee-assistant",
+   "policy-and-procedures"
+  ],
+  "ladder": "L0",
+  "costCentre": ""
+ },
+ "groups": {
+  "GROUP_ID_PAYMENTS_OPS": {
+   "roles": [
+    "ops.investigator"
+   ],
+   "entitlements": [
+    "investigation-triage"
+   ],
+   "ladder": "L1",
+   "team": {
+    "id": "team-payments-ops",
+    "name": "Payments operations",
+    "lead": false
+   },
+   "costCentre": "4410"
+  },
+  "GROUP_ID_PAYMENTS_OPS_LEADS": {
+   "roles": [
+    "ops.lead"
+   ],
+   "entitlements": [
+    "investigation-triage"
+   ],
+   "ladder": "L2",
+   "team": {
+    "id": "team-payments-ops",
+    "name": "Payments operations",
+    "lead": true
+   },
+   "costCentre": "4410"
+  },
+  "GROUP_ID_PLATFORM": {
+   "roles": [
+    "platform.lead"
+   ],
+   "entitlements": [
+    "investigation-triage",
+    "compliance-narration"
+   ],
+   "ladder": "L2",
+   "team": {
+    "id": "platform",
+    "name": "Platform",
+    "lead": true
+   },
+   "costCentre": "1001"
+  },
+  "GROUP_ID_AI_SECURITY": {
+   "roles": [
+    "ai.security"
+   ],
+   "entitlements": [],
+   "ladder": "L1",
+   "team": {
+    "id": "security",
+    "name": "Security",
+    "lead": false
+   },
+   "costCentre": "1002"
+  }
+ }
+}

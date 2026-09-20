@@ -8,3 +8,4 @@ tools/fonts
 src/screens/Hub*.tsx
 pnpm-lock.yaml
 src/api/mock/collection.ts
+public/fonts

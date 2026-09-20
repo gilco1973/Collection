@@ -8,3 +8,11 @@ build/
 frames/
 .DS_Store
 *.db
+
+# services and builds
+hub/dist-http/
+*.db
+*.db-wal
+*.db-shm
+nohup.out
+release/

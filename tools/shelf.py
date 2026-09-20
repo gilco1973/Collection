@@ -26,6 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPONENTS = os.path.join(ROOT, "components")
 SHELF_MD = os.path.join(ROOT, "SHELF.md")
 HUB_TS = os.path.join(ROOT, "hub", "src", "api", "mock", "collection.ts")
+HUB_API_JSON = os.path.join(ROOT, "services", "hub-api", "data", "collection.json")
 KB_EXPORT = os.path.join(ROOT, "exports", "knowledgebase")
 KB_TAXONOMY = os.path.join(ROOT, "tools", "kb-taxonomy.json")
 
@@ -468,9 +469,18 @@ def kb_outputs(ms: list[dict]) -> dict:
     return out
 
 
+def render_hub_api(ms: list[dict]) -> str:
+    """The same listings, details and shelf records as JSON, read by services/hub-api at start."""
+    listings = [hub_listing(m) for m in ms]
+    details = {m["name"]: hub_detail(m, dict(l)) for m, l in zip(ms, listings)}
+    for l in listings: l.pop("_sections", None)
+    return json.dumps({"generated_by": "python3 tools/shelf.py --write; do not edit", "listings": listings, "details": details, "shelf": [shelf_record(m) for m in ms]}, indent=1, ensure_ascii=False) + "\n"
+
+
 def exports(ms: list[dict]) -> dict:
     out = {SHELF_MD: render(ms)}
     if os.path.isdir(os.path.dirname(HUB_TS)): out[HUB_TS] = render_hub(ms)
+    if os.path.isdir(os.path.dirname(HUB_API_JSON)): out[HUB_API_JSON] = render_hub_api(ms)
     out.update(kb_outputs(ms))
     return out
 
@@ -606,7 +616,7 @@ def main(argv=None) -> int:
         for path, content in exports(ms).items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
             open(path, "w", encoding="utf-8").write(content)
-        print(f"wrote SHELF.md, the hub's collection.ts and exports/knowledgebase ({len(ms)} components)")
+        print(f"wrote SHELF.md, the hub's collection.ts, the hub-api's collection.json and exports/knowledgebase ({len(ms)} components)")
     if a.check:
         stale = [rel(p) for p, c in exports(ms).items() if not os.path.exists(p) or open(p, encoding="utf-8").read() != c]
         if stale:

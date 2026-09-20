@@ -227,6 +227,37 @@ paths:
       responses:
         "200": { description: OK, content: { application/json: { schema: { type: object, required: [route], properties: { route: { type: string, enum: [human, callback, secure_message] }, expected_wait_s: { type: integer } } } } } }
 
+  /shelf:
+    get:
+      tags: [shelf]
+      summary: Every component of the collection with its version, sign-offs, stage, and which roles the caller may sign for
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ShelfEntry" } } } } }
+  /shelf/signoffs/export:
+    get:
+      tags: [shelf]
+      summary: Sign-offs recorded here and not yet in a manifest, as the file `tools/shelf.py --apply-signoffs` applies
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: object, required: [generatedAt, apply, signoffs], properties: { generatedAt: { type: string }, apply: { type: string }, signoffs: { type: array, items: { $ref: "#/components/schemas/ShelfSignoffRecord" } } } } } } }
+  /shelf/{name}:
+    get:
+      tags: [shelf]
+      parameters: [{ name: name, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/ShelfEntry" } } } }
+        "404": { $ref: "#/components/responses/Problem" }
+  /shelf/{name}/signoffs:
+    post:
+      tags: [shelf]
+      summary: Record a sign-off; the owner by name (the manifest's owner is their handle), AI security by the ai.security role; every attestation required
+      parameters: [{ name: name, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [role, attest], properties: { role: { type: string, enum: [owner, ai_security] }, attest: { type: object, required: [testsGreen, exampleRun, walkthroughRead, rulesRead], additionalProperties: { type: boolean } }, usedIn: { type: string }, note: { type: string } } } } } }
+      responses:
+        "201": { description: Recorded, content: { application/json: { schema: { $ref: "#/components/schemas/ShelfSignoffRecord" } } } }
+        "403": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -236,6 +267,15 @@ components:
   responses:
     Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   schemas:
+    ShelfSignoffRecord:
+      type: object
+      required: [id, component, role, by, email, date, version, attest, recordedAt]
+      properties: { id: { type: string }, component: { type: string }, role: { type: string, enum: [owner, ai_security] }, by: { type: string }, email: { type: string }, date: { type: string }, version: { type: string }, usedIn: { type: string }, note: { type: string }, attest: { type: object }, recordedAt: { type: string } }
+    ShelfEntry:
+      type: object
+      description: A component as tools/shelf.py exports it (name, version, category, owner, status, signoff, stage, gates) plus what was recorded here and which roles the caller may sign for.
+      required: [name, version, category, owner, status, signoff, signed, state, stage, recorded, youMaySign]
+      properties: { name: { type: string }, title: { type: string }, version: { type: string }, category: { type: string, enum: [agent, harness, tool, integration, pattern, skill] }, owner: { type: string }, status: { type: string }, signoff: { type: object }, signed: { type: boolean }, state: { type: string }, usedIn: { type: array, items: { type: string } }, stage: { type: object }, gates: { type: object }, recorded: { type: object }, youMaySign: { type: array, items: { type: string } } }
     Problem:
       type: object
       properties:
