@@ -41,6 +41,9 @@ names where each part came from and where the standalone products live.
   the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.
 - **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in
   as a persona, and show Discover's Tools tab and the Learn page.
+- **New to the hub:** open the guide (the button at the bottom right, or Alt+G). It asks whether you are here
+  to build, to decide or to use, and keeps to that: where you are, the next step, a tour, and answers from these
+  pages with the page named.
 - **Adding a component:** `python3 tools/new_component.py python my-tool --category tool --summary "..."`, then
   `python3 tools/shelf.py --write`.
 
