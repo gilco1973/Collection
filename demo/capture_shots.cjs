@@ -38,14 +38,14 @@ function terminalHtml(title, cmd, text) {
 
   // The hub
   await page.goto(HUB + "/discover", { waitUntil: "networkidle" }); await ready();
-  await page.getByRole("tab", { name: "Tools and APIs" }).click(); await page.waitForTimeout(300);
+  await page.getByRole("tab", { name: "Agents" }).click(); await page.waitForTimeout(300);
   await page.evaluate(() => document.querySelector('[role="tablist"]')?.scrollIntoView({ block: "start" }));
-  await shot("01-discover-tools.png");
-  await page.goto(HUB + "/discover/tools/governed-action-loop", { waitUntil: "networkidle" }); await ready(); await shot("02-listing.png");
-  await page.goto(HUB + "/discover", { waitUntil: "networkidle" }); await ready();
-  await page.keyboard.press("Control+k"); await page.waitForSelector('[role="dialog"]'); await page.keyboard.type("guard"); await page.waitForTimeout(600); await shot("03-search.png");
-  await page.goto(HUB + "/learn", { waitUntil: "networkidle" }); await ready();
-  await page.evaluate(() => document.getElementById("collection")?.scrollIntoView({ block: "start" })); await shot("04-learn.png");
+  await shot("01-discover-agents.png");
+  await page.goto(HUB + "/discover/agents/incident-first-read-agent", { waitUntil: "networkidle" }); await ready(); await shot("02-listing-agent.png");
+  await page.goto(HUB + "/build/shelf/sign-offs", { waitUntil: "networkidle" }); await ready();
+  const sign = page.getByRole("button", { name: "Sign" }).first(); if (await sign.count()) { await sign.click(); await page.waitForTimeout(300); }
+  await shot("03-signoffs.png");
+  await page.goto(HUB + "/build/shelf/onboarding", { waitUntil: "networkidle" }); await ready(); await shot("04-onboarding.png");
   await page.goto(HUB + "/build/intake", { waitUntil: "networkidle" }); await ready(); await shot("05-intake.png");
 
   // The knowledge-base console
@@ -53,19 +53,28 @@ function terminalHtml(title, cmd, text) {
   await kbShot("/kb/page/components/README.md", "06-kb-components.png");
   await kbShot("/kb/page/best-practices/action-tiers-and-confirmation.md", "07-kb-practice.png");
   await kbShot("/kb/page/onboarding/ai-champions.md", "08-kb-champions.png");
-  await kbShot("/kb/page/skills/README.md", "09-kb-skills.png");
+  await kbShot("/kb/page/onboarding/component-onboarding.md", "09-kb-onboarding.png");
 
   // Terminal renders
-  const term = [["10-term-example.png", "components/python/governed-action-loop", "python3 example.py", "term-example.txt"],
-                ["11-term-tests.png", "Collection", "python3 tools/catalog.py --test --only python", "term-tests.txt"],
-                ["12-term-list.png", "Collection", "python3 tools/catalog.py --list", "term-list.txt"],
-                ["13-term-check.png", "Collection", "python3 tools/catalog.py --write && python3 tools/catalog.py --check", "term-check.txt"]];
+  const term = [["10-term-agent.png", "components/agents/incident-first-read-agent", "python3 example.py", "term-agent.txt"],
+                ["11-term-mcp.png", "components/agents/incident-first-read-agent", "python3 example_mcp.py", "term-mcp.txt"],
+                ["12-term-list.png", "Collection", "python3 tools/shelf.py --list", "term-list.txt"],
+                ["13-term-checkconfig.png", "services/hub-api", "HUB_ENV=production HUB_AUTH=mock HUB_ASSISTANT=fake python3 -m hubapi check-config", "term-checkconfig.txt"],
+                ["14-term-verify.png", "Collection", "scripts/verify.sh python", "term-verify.txt"],
+                ["15-term-bundle.png", "Collection", "scripts/bundle.sh && tar -xzf release/collection-*.tar.gz -C /tmp/clean && cd /tmp/clean/collection-* && scripts/verify.sh python", "term-bundle.txt"]];
   // A fresh page: the console's Content-Security-Policy would otherwise block the inline stylesheet.
   const tpage = await browser.newPage({ viewport: VIEW, deviceScaleFactor: 1 });
   for (const [name, dir, cmd, file] of term) {
     await tpage.setContent(terminalHtml(dir, cmd, fs.readFileSync(path.join(__dirname, "build", file), "utf8")), { waitUntil: "load" });
     await tpage.waitForTimeout(300);
     await tpage.screenshot({ path: path.join(OUT, name) }); console.log("shot", name);
+  }
+  // The diagrams, from the same source as the documents
+  for (const name of ["architecture", "harness", "signoff", "assistant"]) {
+    const svg = fs.readFileSync(path.join(__dirname, "build", name + ".svg"), "utf8");
+    await tpage.setContent(`<html><body style="margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:${VIEW.height}px"><div style="width:1300px">${svg.replace(/<svg /, '<svg style="width:100%;height:auto" ')}</div></body></html>`);
+    await tpage.waitForTimeout(200);
+    await tpage.screenshot({ path: path.join(OUT, `d-${name}.png`) }); console.log("shot", `d-${name}.png`);
   }
   await browser.close();
   if (errors.length) { console.error("PAGE ERRORS:", errors.join(" | ")); process.exit(1); }

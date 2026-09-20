@@ -6,10 +6,10 @@ the components, from real screenshots of the running products. Built with the `w
 
 | File | What it is |
 | --- | --- |
-| `slides.py` | The fifteen slides with their narration (the authoritative script) |
+| `slides.py` | The eighteen slides with their narration (the authoritative script) |
 | `capture_shots.cjs` | Drives the hub (`pnpm preview`) and the knowledge-base console (the product's `deploy/serve.py`, run from its own checkout) with Playwright and screenshots each step; renders the terminal outputs |
 | `build.sh` | The whole pipeline: terminal outputs, shots, deck, frames, narration, video |
-| `out/collection-walkthrough.mp4` | The result (not committed): about five minutes, captions burned in, plus `.en.vtt` and a no-captions copy |
+| `out/collection-walkthrough.mp4` | The result (not committed): about eight minutes, captions burned in, plus `.en.vtt` and a no-captions copy |
 
 ## Rebuild
 
@@ -28,8 +28,15 @@ slides you changed.
 
 ## The steps the video walks through
 
-1. The shape: three parts, one repository, one shelf tool.
-2. The hub: Discover's Tools tab, a listing page built from a README, search, Learn.
-3. The knowledge base: the components section, a practice page, the skills catalog.
-4. The components: a component running in a terminal, the tests, the shelf tool.
-5. The programme: the champions page, the initiative brief, the first hour.
+1. The shape: four parts, one repository, drawn on the architecture diagram.
+2. The shelf: six categories and who each is for; the shelf tool's listing.
+3. The hub: Discover's Agents tab, the agent's listing with its template, tools and harness, and the sign-off card.
+4. Under the hood: one call through the loop (the harness diagram), then the agent's first read in a terminal, and the same agent over MCP.
+5. Governance: how a component earns its sign-offs, the queue and form, the onboarding tracker.
+6. The assistant: how an answer is produced and where it stops.
+7. The knowledge base: the components section and the onboarding pages.
+8. Inside the bank: configuration that fails closed, one verify script for every runner, the offline bundle.
+9. The programme and your first hour.
+
+The diagrams are the same drawings the PDFs use (`docs/pdf/diagrams.py`), rendered to SVG and screenshotted, so a
+change to a diagram reaches both.

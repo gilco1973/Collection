@@ -315,7 +315,14 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 return self._static(path)
             length = int(self.headers.get("Content-Length") or 0)
             if length > api.s.max_body_bytes:
-                return self._send(413, {"Content-Type": "application/problem+json"}, json.dumps({"status": 413, "title": "Body too large", "detail": f"at most {api.s.max_body_bytes} bytes"}).encode())
+                # Drain what the client is sending (bounded) so the refusal reaches it instead of a broken pipe, then close.
+                remaining = min(length, 8 * api.s.max_body_bytes)
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk: break
+                    remaining -= len(chunk)
+                self.close_connection = True
+                return self._send(413, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 413, "title": "Body too large", "detail": f"at most {api.s.max_body_bytes} bytes"}).encode())
             body = self.rfile.read(length) if length else b""
             res = api.handle(self.command, path[len(api_prefix):] or "/", self.headers, body)
             if isinstance(res, Stream):

@@ -52,7 +52,13 @@ def make_handler(w, resource: str):
         def _body(self):
             length = int(self.headers.get("Content-Length") or 0)
             if length > w.settings.max_body_bytes:
-                self._json(413, {"title": "Body too large", "detail": f"at most {w.settings.max_body_bytes} bytes"}); return None
+                remaining = min(length, 8 * w.settings.max_body_bytes)
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk: break
+                    remaining -= len(chunk)
+                self.close_connection = True
+                self._json(413, {"title": "Body too large", "detail": f"at most {w.settings.max_body_bytes} bytes"}, {"Connection": "close"}); return None
             try:
                 return json.loads(self.rfile.read(length) or b"{}")
             except ValueError:
