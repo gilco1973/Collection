@@ -43,5 +43,6 @@ Against the bank: the `AGENT_` block of `config/collection.env.example`; `CONFIG
 ## Adding another agent
 
 A second agent of the collection is a second vendored template and client behind the same wiring; `KNOWN_AGENTS`
-and `TEMPLATE_TARGETS` in `settings.py` name what the runtime knows how to serve, and a target the template names
-that has no connector is a build failure, not a fake in production.
+and `CONNECTORS` in `settings.py` name what the runtime knows how to serve, `template_targets()` reads what the
+agent's template names from the vendored `TEMPLATE.md`, and a target the template names that has no connector is
+a build failure, not a fake in production.

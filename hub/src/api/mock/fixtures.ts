@@ -424,7 +424,7 @@ export const INVESTIGATION_TRIAGE: ConsumerDetail = {
     { version: "1.3", state: "supported", date: "2 Aug" },
     { version: "1.2", state: "retired", date: "1 Jul" },
   ],
-  changelogHref: "https://catalog.crai.internal/consumers/investigation-triage/changelog",
+  changelogHref: "https://catalog.bank.example/consumers/investigation-triage/changelog",
 };
 
 export const DETAILS: Record<string, ConsumerDetail> = { "investigation-triage": INVESTIGATION_TRIAGE, ...COLLECTION_DETAILS };
@@ -591,7 +591,7 @@ export function workspaceFor(p: Principal, briefs: Brief[]): Workspace {
       playgroundPct: 24,
     },
     playground: {
-      gateway: "sandbox.gw.crai.internal",
+      gateway: "sandbox.gw.bank.example",
       keyMasked: "crai_pg_…8f2a",
       fixtures: "COS payments · case notes · synthetic",
       example: "Run the 15-minute R2 example",

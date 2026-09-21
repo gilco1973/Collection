@@ -7,14 +7,17 @@ name in the secrets provider; nothing is patched in code. Placeholders are in ca
 
 ## What you have
 
-| In the zip | What it is |
+The zip unpacks to one directory, `collection-<sha>/`, which is the repository itself with the deliverables beside it.
+
+| In `collection-<sha>/` | What it is |
 | --- | --- |
-| `collection-<sha>/` | The repository: components, tools, the two services, the hub's source **and its built `hub/dist`**, deploy files, documentation. `MANIFEST.sha256` lists every file |
+| `components/`, `tools/`, `services/`, `hub/`, `deploy/`, `scripts/`, the `*.md` pages | The repository: components, tools, the two services, the hub's source **and its built `hub/dist`**, deploy files, documentation |
+| `MANIFEST.sha256` | Every file in the zip with its sha256, the deliverables included |
 | `deliverables/user-manual.pdf`, `technical-guide.pdf`, `leadership-brief.pdf` | The three documents, current for this build |
 | `deliverables/collection-walkthrough.mp4` (+ `.en.vtt`) | The walkthrough video, nine minutes, captions burned in |
 | `deliverables/teaching-the-collection.html` | The teaching guide: every screen, every on-screen sentence, every flow and process in plain words, with a 45-minute first lesson. Opens in any browser |
 | `deliverables/screenshots/` | The hub and the guide as they render in this build |
-| `INSTALL.md` (this page), `HANDOVER.md` | How to install it; how the parts fit and who owns what |
+| `INSTALL.md` (this page), `HANDOVER.md`, `DELIVERY.txt` | How to install it; how the parts fit and who owns what; the build's sha and date |
 
 Nothing in the zip fetches anything: no package is downloaded on the bank's side, the hub is prebuilt, and the
 Python gates run without Node or network.
@@ -24,12 +27,14 @@ Python gates run without Node or network.
 ```
 sha256sum -c collection-<sha>.zip.sha256          # the zip is what was sent
 unzip collection-<sha>.zip && cd collection-<sha>
-sha256sum -c --quiet MANIFEST.sha256              # every file is what was packaged
+sha256sum -c --quiet MANIFEST.sha256              # every file is what was packaged, the deliverables included
 scripts/verify.sh python                          # every Python gate, offline: components, services, container trees
 ```
 
-The last command ends with `ok: every gate passed (python)`. If it does not, stop and send the output back;
-nothing below will work on a delivery that fails here.
+The manifest at the top covers the whole zip (`scripts/package.sh` writes it over everything, so the release
+bundle's own manifest, which covered the repository tree alone, is replaced by it). The last command ends with
+`ok: every gate passed (python)`. If it does not, stop and send the output back; nothing below will work on a
+delivery that fails here.
 
 **Prerequisites.** Python 3.11 or later; a container runtime (Docker or the bank's equivalent) to build the
 images; a place to run two containers with a persistent volume each (ECS with EFS is what the task definitions
@@ -42,6 +47,9 @@ which the bank does not need to do (see §2, the hub is configured at runtime).
 docker compose -f deploy/compose.yaml up --build
 ```
 
+This builds from the public `python:3.11-slim`; to build from the bank's approved image instead, set the build
+argument: `BASE=<registry>/python:3.11-slim@sha256:<digest> docker compose -f deploy/compose.yaml up --build`.
+
 The hub is at `http://localhost:8080` (sign in as a persona), the agent at `http://localhost:8081`. This is the
 sandbox: mock identity, the fake assistant, the rules engine, fake ticket and deploy systems. Walk through the
 user manual's screens here before touching a real system; everything the bank will see is already visible.
@@ -53,10 +61,10 @@ what and which variables it lands in; `CONFIGURATION.md` explains each system in
 
 | From | What to ask for | Variables |
 | --- | --- | --- |
-| Identity (IdP team) | Two app registrations (hub, agent) with `aud` set to each client id; the `groups` claim on tokens; the OIDC issuer URL; the group ids for each role | `HUB_IDP_ISSUER`, `HUB_IDP_AUDIENCE`, `HUB_WEB_OIDC_AUTHORITY`, `HUB_WEB_OIDC_CLIENT_ID`, `HUB_AI_SECURITY_GROUP`, `AGENT_IDP_*`, `AGENT_OPERATOR_GROUP_ID`, `AGENT_APPROVER_GROUP_ID`; the group ids in `identity-map.json` |
-| Platform team | The record volumes; the secrets prefixes (`hub/`, `agents/`) and the task roles allowed to read them; an asymmetric KMS key the agent's role may `Sign` with; a bucket the agent's role may `PutObject` to | `HUB_DB`, `AGENT_DB`, `*_SECRETS=aws`, `AGENT_KMS_KEY_ID`, `AGENT_AUDIT_EXPORT` |
+| Identity (IdP team) | Two app registrations (hub, agent) with `aud` set to each client id; the `groups` claim on tokens; the OIDC issuer URL; the group ids for each role | `HUB_IDP_ISSUER`, `HUB_IDP_AUDIENCE`, `HUB_WEB_OIDC_AUTHORITY`, `HUB_WEB_OIDC_CLIENT_ID`, `HUB_AI_SECURITY_GROUP`, `AGENT_IDENTITY=oidc`, `AGENT_IDP_*`, `AGENT_OPERATOR_GROUP_ID`, `AGENT_APPROVER_GROUP_ID`; the group ids in `identity-map.json` |
+| Platform team | The record volumes; the secrets (`hub/assistant-token`, `agents/jira-token`, `agents/ado-pat`, under the prefixes `hub/` and `agents/`) and the task roles allowed to read them; an asymmetric KMS key the agent's role may `Sign` with; a bucket the agent's role may `PutObject` to | `HUB_DB`, `AGENT_DB`, `*_SECRETS=aws`, `AGENT_KMS_KEY_ID`, `AGENT_AUDIT_EXPORT` |
 | Model risk | An approved inference profile and the VPC endpoint for Bedrock; the roles allowed `InvokeModel` on it | `*_BEDROCK_REGION`, `*_BEDROCK_ENDPOINT`, `*_BEDROCK_INFERENCE_PROFILE_ARN` (or `_MODEL_ID`) |
-| Integrations | A Jira service account with read on the incident projects and comment on them; an Azure DevOps PAT with read on pipelines; the pipeline id per service | `AGENT_JIRA_URL`, `AGENT_JIRA_USER`, secret `agents/jira-token`; `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PIPELINES`, secret `agents/ado-pat` |
+| Integrations | A Jira service account with read on the incident projects and comment on them; an Azure DevOps PAT with read on pipelines; the pipeline id per service | `AGENT_JIRA_URL`, `AGENT_JIRA_USER`, `AGENT_JIRA_AUTH`, secret `agents/jira-token`; `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PIPELINES`, secret `agents/ado-pat` |
 | Knowledge base owners | The console URL and, if the assistant is answered here, a search endpoint | `HUB_KB_URL`, `HUB_KB_SEARCH_URL` |
 | The hub's owners | The bank's own listings (assistants, agents, knowledge services) in the shape of `services/hub-api/data/consumers.example.json`; the group-to-role map in the shape of `identity-map.example.json` | `HUB_CONSUMERS_FILE`, `HUB_IDENTITY_MAP` (mounted files) |
 | Security / records | The retention for a person's conversations; the per-person limits if the defaults do not suit | `HUB_CONVERSATION_RETENTION_DAYS`, `HUB_RATE_PER_MINUTE`, `AGENT_RUNS_PER_MINUTE` |
@@ -68,25 +76,40 @@ Two rules save most of the friction:
 - **The hub is configured at runtime.** hub-api serves `/config.js` from the `HUB_WEB_*` variables and the page
   reads it first, so the prebuilt `hub/dist` is the production hub. Do not rebuild it to change the identity provider.
 
-Check the file before building anything:
+Check the file before building anything. The path variables (`HUB_IDENTITY_MAP`, `HUB_CONSUMERS_FILE`,
+`HUB_COLLECTION_FILE`, `HUB_GUIDE_FILE`, `HUB_STATIC_DIR`) are container paths, so a check on the host overrides
+them with the files in the repository; the agent has no such paths:
 
 ```
 set -a; . config/collection.env; set +a
-(cd services/hub-api && python3 -m hubapi check-config)
+(cd services/hub-api && HUB_IDENTITY_MAP=data/identity-map.example.json HUB_CONSUMERS_FILE=data/consumers.example.json \
+  HUB_COLLECTION_FILE=data/collection.json HUB_GUIDE_FILE=data/guide-corpus.json HUB_STATIC_DIR=../../hub/dist python3 -m hubapi check-config)
 (cd services/agent-runtime && python3 -m agentrt check-config)
 ```
 
-Both exit 0 when the configuration is complete, or list every problem by variable name and exit 2. In staging and
-production they refuse mock identity, the fake assistant, the rules engine, fake targets, local signing, an
-in-memory record, an environment secrets provider and an http public URL, by design.
+Or check inside the built images (§3), where the container paths are right as they are. After sourcing the file
+as above, `env | grep '^HUB_\|^AWS_' > hub.env`, then, with the directory that holds `identity-map.json` and
+`consumers.json` mounted where the task definition mounts it:
+
+```
+docker run --rm --env-file hub.env -v "$PWD/config:/app/config:ro" --entrypoint python3 ai-hub:<sha>   -m hubapi  check-config
+docker run --rm --env-file agent.env                              --entrypoint python3 ai-agent:<sha> -m agentrt check-config
+```
+
+(`agent.env` from `env | grep '^AGENT_\|^AWS_'`; `--entrypoint` because the image's entrypoint would otherwise go
+on to serve.) Both exit 0 when the configuration is complete, or list every problem by variable name and exit 2.
+In staging and production they refuse mock identity, the fake assistant, the rules engine, fake targets, local
+signing, an in-memory record, an environment secrets provider and an http public URL, by design.
 
 ## 3. Build the images
 
-From the repository root, with the base image digest pinned to the bank's approved image:
+From the repository root. The base image is the build argument `BASE`; pass the bank's approved image by digest
+(without it, the Dockerfiles default to the public `python:3.11-slim`):
 
 ```
-docker build -f services/hub-api/deploy/Dockerfile       -t ai-hub:<sha>   .
-docker build -f services/agent-runtime/deploy/Dockerfile -t ai-agent:<sha> .
+BASE=<registry>/python:3.11-slim@sha256:<digest>
+docker build --build-arg BASE=$BASE -f services/hub-api/deploy/Dockerfile       -t ai-hub:<sha>   .
+docker build --build-arg BASE=$BASE -f services/agent-runtime/deploy/Dockerfile -t ai-agent:<sha> .
 ```
 
 Push them to the bank's registry. The same image runs in every environment; only the environment changes.
@@ -94,7 +117,8 @@ Push them to the bank's registry. The same image runs in every environment; only
 ## 4. Staging
 
 1. **Task definitions and roles**: `services/*/deploy/ecs-task-definition.json` and `iam-task-role-policy.json`,
-   with the placeholders replaced. The record volumes are EFS access points owned by uid 10001.
+   with the placeholders replaced. The record volumes are EFS access points owned by uid 10001 (hub) and 10002 (agent), the
+   users the Dockerfiles create.
 2. **Mounted files**: `identity-map.json` and `consumers.json` on hub-api's read-only config volume.
 3. **Health checks**: the load balancer and the task health check point at `/api/ready` (hub) and `/ready`
    (agent). A task that answers 503 there is taken out of rotation, and the answer names the failing check.

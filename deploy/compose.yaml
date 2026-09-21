@@ -3,7 +3,10 @@
 # hub at http://localhost:8080 (sign in as a persona), the agent at http://localhost:8081 (/health, /ready, /mcp, /runs).
 services:
   hub:
-    build: { context: .., dockerfile: services/hub-api/deploy/Dockerfile }
+    build:
+      context: ..
+      dockerfile: services/hub-api/deploy/Dockerfile
+      args: { BASE: "${BASE:-python:3.11-slim}" }   # the bank: BASE=<registry>/python:3.11-slim@sha256:<digest>
     environment:
       HUB_ENV: sandbox
       HUB_AUTH: mock
@@ -18,7 +21,10 @@ services:
       - ../services/hub-api/data:/app/data:ro
     ports: ["8080:8080"]
   agent:
-    build: { context: .., dockerfile: services/agent-runtime/deploy/Dockerfile }
+    build:
+      context: ..
+      dockerfile: services/agent-runtime/deploy/Dockerfile
+      args: { BASE: "${BASE:-python:3.11-slim}" }
     environment:
       AGENT_ENV: sandbox
       AGENT_IDENTITY: fake

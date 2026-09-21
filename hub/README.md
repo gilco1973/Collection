@@ -155,7 +155,7 @@ and the `VITE_OIDC_*` values; the server must implement `api/openapi.yaml`.
   key rotation, the ⌘K palette, streaming with stop, feedback, handoff, assistant
   switching, preferences and the dark theme, and role-based visibility for the
   employee persona.
-- **Pixel guard** as above. CI (`.github/workflows/crossriver-ai-hub.yml`) runs all of it.
+- **Pixel guard** as above. CI (`.github/workflows/ci.yml`, through `scripts/verify.sh hub`) runs all of it.
 
 ## Known limits, stated plainly
 

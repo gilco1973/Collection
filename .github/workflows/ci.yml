@@ -20,12 +20,15 @@ jobs:
       - run: scripts/verify.sh typescript
   hub:
     runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.ms-playwright   # scripts/verify.sh runs the OIDC browser proof when this directory exists
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
         with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
+      - run: cd hub && pnpm install --frozen-lockfile && pnpm exec playwright-core install --with-deps chromium   # the Chromium for scripts/smoke-oidc.sh (playwright-core's own installer, the version hub/pnpm-lock.yaml pins)
       - run: scripts/verify.sh hub
   bundle:
     runs-on: ubuntu-latest

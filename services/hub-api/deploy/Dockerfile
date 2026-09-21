@@ -1,6 +1,9 @@
 # hub-api and the hub, one image. Standard library only: no pip, no network at build time beyond the base image.
 # Build context: the repository root (the hub's dist/ is built beforehand with its production env; see deploy/README.md).
-FROM python:3.11-slim@sha256:PIN_ME_TO_THE_BANK_BASE_IMAGE
+# The base image is a build argument so the same Dockerfile builds locally and in the bank: the bank passes its approved,
+# digest-pinned image with --build-arg BASE=<registry>/python:3.11-slim@sha256:<digest> (deploy/compose.yaml reads $BASE).
+ARG BASE=python:3.11-slim
+FROM ${BASE}
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HUB_ENV=production HUB_AUTH=oidc HUB_DB=/var/hub/hub.db HUB_STATIC_DIR=/app/hub-dist HUB_SECRETS=aws HUB_LISTEN_HOST=0.0.0.0
 RUN useradd --system --uid 10001 --create-home hub && mkdir -p /var/hub /app/config && chown hub:hub /var/hub
 WORKDIR /app

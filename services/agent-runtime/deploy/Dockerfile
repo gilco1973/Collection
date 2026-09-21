@@ -1,5 +1,8 @@
 # The agent runtime: one agent of the collection over MCP and a run API. Standard library only.
-FROM python:3.11-slim@sha256:PIN_ME_TO_THE_BANK_BASE_IMAGE
+# The base image is a build argument so the same Dockerfile builds locally and in the bank: the bank passes its approved,
+# digest-pinned image with --build-arg BASE=<registry>/python:3.11-slim@sha256:<digest> (deploy/compose.yaml reads $BASE).
+ARG BASE=python:3.11-slim
+FROM ${BASE}
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 AGENT_ENV=production AGENT_IDENTITY=oidc AGENT_SIGNING=kms AGENT_ENGINE=bedrock AGENT_DB=/var/agent/record.db AGENT_SECRETS=aws AGENT_LISTEN_HOST=0.0.0.0
 RUN useradd --system --uid 10002 --create-home agent && mkdir -p /var/agent && chown agent:agent /var/agent
 WORKDIR /app

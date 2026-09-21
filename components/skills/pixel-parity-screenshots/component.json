@@ -22,7 +22,7 @@
     "pillow (for diff.py)"
   ],
   "pairs_with": [],
-  "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
+  "test": "if command -v node >/dev/null; then node --check shoot.cjs; else echo \"node absent: shoot.cjs not checked\"; fi && python3 -m py_compile diff.py",
   "walkthrough": "WALKTHROUGH.md",
   "example": {
     "path": "example.py",

@@ -19,11 +19,15 @@ stages:
             inputs: { versionSpec: "22.x" }
           - script: scripts/verify.sh typescript
       - job: hub
+        variables:
+          PLAYWRIGHT_BROWSERS_PATH: $(Build.SourcesDirectory)/.ms-playwright   # scripts/verify.sh runs the OIDC browser proof when this directory exists
         steps:
           - task: NodeTool@0
             inputs: { versionSpec: "22.x" }
           - script: corepack enable && corepack prepare pnpm@10 --activate
             displayName: pnpm 10
+          - script: cd hub && pnpm install --frozen-lockfile && pnpm exec playwright-core install --with-deps chromium
+            displayName: the Chromium for scripts/smoke-oidc.sh (playwright-core's own installer, the version hub/pnpm-lock.yaml pins)
           - script: scripts/verify.sh hub
   - stage: release
     dependsOn: verify

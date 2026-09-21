@@ -531,7 +531,7 @@
      "date": "1 Jul"
     }
    ],
-   "changelogHref": "https://catalog.crai.internal/consumers/investigation-triage/changelog"
+   "changelogHref": "https://catalog.bank.example/consumers/investigation-triage/changelog"
   }
  },
  "registrySystems": [

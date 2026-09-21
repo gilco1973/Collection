@@ -27,7 +27,8 @@ if [ "$what" = all ] || [ "$what" = typescript ]; then
 fi
 if [ "$what" = all ] || [ "$what" = hub ]; then
   gate "hub: typecheck, lint, tests, build";                    (cd hub && pnpm install --frozen-lockfile --prefer-offline >/dev/null && pnpm verify)
-  if [ -n "${CHROMIUM_PATH:-}" ] || [ -d "${PLAYWRIGHT_BROWSERS_PATH:-/nonexistent}" ]; then
+  # The browser proof runs wherever a Chromium is: CHROMIUM_PATH, a PLAYWRIGHT_BROWSERS_PATH directory, or Playwright's default cache (CI installs one there).
+  if [ -n "${CHROMIUM_PATH:-}" ] || [ -d "${PLAYWRIGHT_BROWSERS_PATH:-/nonexistent}" ] || [ -d "${HOME:-/nonexistent}/.cache/ms-playwright" ]; then
     gate "hub + hub-api: real sign-in end to end (OIDC, PKCE, JWKS, silent renew, refusals)"; scripts/smoke-oidc.sh >/dev/null
   fi
 fi

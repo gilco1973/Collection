@@ -49,7 +49,7 @@ const ready = (p) => p.waitForSelector(".hub:not([data-loading])", { timeout: 15
   check((await page.title()).startsWith("Investigation triage"), "document title is the listing name", await page.title());
   check(await page.locator(".btn", { hasText: "Ladder L2 requested" }).count() === 1, "pending ladder request is reflected on the listing");
   check(await page.locator("table.t tbody tr").count() === 5, "five catalog operations");
-  check(await page.locator("a[href^='https://catalog.crai.internal']").count() === 1, "changelog links to the catalog record");
+  check(await page.locator("a[href^='https://catalog.bank.example']").count() === 1, "changelog links to the catalog record");
 
   // Workspace: new request present (in-app navigation keeps the mock state), rotate key.
   await page.locator(".hnav .links a", { hasText: "My workspace" }).click(); await ready(page);
