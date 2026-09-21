@@ -43,11 +43,32 @@ interface Stored {
 }
 const EMPTY: Stored = { visited: [], ticked: [], dismissed: [], asked: 0, toursDone: [] };
 const key = (id: string) => `hub.guide.${id}`;
+const PERSONA_KEYS: readonly Persona[] = ["build", "decide", "use"];
+
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+
+/**
+ * What localStorage holds is the person's own record, written by an earlier build or by hand: every field is
+ * coerced to its shape, so a wrong type there (`{"visited": null}`, `{"dismissed": 5}`, a bare string) can never
+ * take the page down. Anything unusable falls back to the empty record.
+ */
+export function coerceStored(raw: unknown): Stored {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return EMPTY;
+  const r = raw as Record<string, unknown>;
+  return {
+    persona: PERSONA_KEYS.includes(r.persona as Persona) ? (r.persona as Persona) : undefined,
+    visited: strings(r.visited),
+    ticked: strings(r.ticked),
+    dismissed: strings(r.dismissed),
+    asked: typeof r.asked === "number" && Number.isFinite(r.asked) && r.asked >= 0 ? Math.floor(r.asked) : 0,
+    toursDone: strings(r.toursDone),
+  };
+}
 
 function load(id: string): Stored {
   try {
     const raw = localStorage.getItem(key(id));
-    return raw ? { ...EMPTY, ...(JSON.parse(raw) as Partial<Stored>) } : EMPTY;
+    return raw ? coerceStored(JSON.parse(raw)) : EMPTY;
   } catch {
     return EMPTY;
   }

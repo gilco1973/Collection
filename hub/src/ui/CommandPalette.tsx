@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useFocusTrap } from "./useFocusTrap";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import type { ConsumerSummary } from "../api/types";
@@ -53,6 +54,8 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
 type Item = { id: string; title: string; small?: string; glyph?: ConsumerSummary["glyph"]; run: () => void };
 
 function Palette({ onClose }: { onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, onClose);
   const navigate = useNavigate();
   const { snapshot, signOut } = useAuth();
   const [q, setQ] = useState("");

@@ -330,6 +330,8 @@ export interface Conversation {
   assistantId: string;
   assistant: { name: string; sub: string; chips: Chip[] };
   turns: Turn[];
+  /** The feedback already recorded for this conversation, by view sequence: asked once, whatever the tab. */
+  feedback?: Array<{ seq: number; answered: boolean }>;
 }
 
 /* ---------- The guide: grounded answers and the next step ---------- */

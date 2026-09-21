@@ -58,13 +58,23 @@ PAGE_MARKERS = tuple(m for m in G.MARKERS if m not in SHELL_FRAGMENTS)
 QUESTION_PER = 4.0
 
 
+# Phrases that are an instruction to the guide on their own, whatever else the question says. The hub's mock keeps the
+# same list (hub/src/api/mock/guideRules.ts STRONG); the weaker markers still need two independent hits.
+STRONG_PHRASES = ("ignore previous instructions", "ignore all previous instructions", "ignore the previous instructions", "ignore prior instructions",
+                  "disregard your rules", "disregard your instructions", "disregard the rules", "disregard the instructions", "you are now",
+                  "system prompt", "reveal your prompt", "reveal the prompt", "reveal your instructions", "print the token", "exfiltrate", "pretend you are", "pretend to be")
+
+
 def question_score(text: str) -> float:
-    """The injection score of a person's own question: two independent marker hits reach the guard's threshold."""
+    """The injection score of a person's own question: one strong phrase, or two independent hits of the weaker markers."""
+    normalise = getattr(G, "normalise", lambda t: (t or "").lower())
+    t = normalise(text)
+    if any(p in t for p in STRONG_PHRASES):
+        return 1.0
     try:
-        return G.injection_score(text, per=QUESTION_PER)
+        return G.injection_score(text, PAGE_MARKERS, per=QUESTION_PER)
     except TypeError:  # a guard without `per`: count the markers ourselves
-        t = (text or "").lower()
-        return min(1.0, sum(1 for m in G.MARKERS if m in t) / QUESTION_PER)
+        return min(1.0, sum(1 for m in PAGE_MARKERS if m in t) / QUESTION_PER)
 
 
 def page_score(text: str) -> float:

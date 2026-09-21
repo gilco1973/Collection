@@ -62,8 +62,13 @@ export function tokens(text: string): string[] {
 }
 
 /** What reads as an instruction rather than a question. The service scores with the harness's guard; this is the same idea, smaller. */
-const INSTRUCTION =
-  /ignore (all |any |the )?(previous|prior|above|earlier) (instructions?|prompts?)|system prompt|you are now|disregard (your|the) (rules|instructions)|reveal (your|the) (prompt|instructions)|pretend (you|to be)/i;
+// The same strong phrases hub-api's guide refuses on one hit (services/hub-api/hubapi/guide.py STRONG_PHRASES).
+export const STRONG = [
+  "ignore previous instructions", "ignore all previous instructions", "ignore the previous instructions", "ignore prior instructions",
+  "disregard your rules", "disregard your instructions", "disregard the rules", "disregard the instructions", "you are now",
+  "system prompt", "reveal your prompt", "reveal the prompt", "reveal your instructions", "print the token", "exfiltrate", "pretend you are", "pretend to be",
+];
+const INSTRUCTION = new RegExp(STRONG.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "i");
 
 class Corpus {
   private tf: Map<string, number>[] = [];

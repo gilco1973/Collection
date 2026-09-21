@@ -171,7 +171,7 @@ class HubApi:
         r("POST", "/briefs/:id/road", lambda c: B.road(self.catalog.c.get("roadR2Read", {}), c["body"] or {}), max_body=ROUTE_BODY_LIMIT)
         r("POST", "/briefs/:id/file", self.file_brief, max_body=ROUTE_BODY_LIMIT)
         r("GET", "/conversations", self.list_conversations)
-        r("GET", "/conversations/:id", lambda c: self.load_conversation(c))
+        r("GET", "/conversations/:id", lambda c: {**self.load_conversation(c), "feedback": self.store.feedback_for(c["params"]["id"])})
         r("POST", "/conversations", self.create_conversation)
         r("POST", "/conversations/:id/turns", self.turn, max_body=ROUTE_BODY_LIMIT)
         r("POST", "/conversations/:id/feedback", self.feedback)
@@ -235,8 +235,13 @@ class HubApi:
             if b.get("ladder") not in ladders: raise Problem(422, "Not valid", "ladder must be L0, L1, L2 or L3.", "validation", {"ladder": ["unknown ladder"]})
             if ladders.index(b["ladder"]) > ladders.index(p.ladder):
                 raise Problem(403, "Above your ceiling", f"Your own ladder is {p.ladder}; ask your lead to raise it first.", "ladder.above")
+        if kind == "access" and cid in p.entitlements:
+            raise Problem(409, "Already yours", f"You already have access to {listing['name']}; open it from Discover.", "request.already_granted")
+        for r in self.store.list("request", p.id):
+            if r.get("status") == "pending" and r.get("kind") == kind and r.get("consumerId") == cid and r.get("ladder") == b.get("ladder"):
+                raise Problem(409, "Already asked", f"Your request for {listing['name']} is with your lead; there is nothing to send again.", "request.duplicate")
         name = listing["name"]
-        req = {"id": "req_" + uuid.uuid4().hex[:8], "kind": kind, "consumerId": b.get("consumerId"), "status": "pending", "createdAt": now_iso(),
+        req = {"id": "req_" + uuid.uuid4().hex[:8], "kind": kind, "consumerId": b.get("consumerId"), "ladder": b.get("ladder") if kind == "ladder" else None, "status": "pending", "createdAt": now_iso(),
                "title": f"Ladder {b.get('ladder')} on {name}" if kind == "ladder" else f"{name} · {'reviewer role' if kind == 'role' else 'access'}", "note": "with your lead"}
         self.store.put("request", req["id"], req, p.id)
         return 201, req

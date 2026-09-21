@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 import { api } from "../../api";
 import { newId } from "../../api/client";
 import { ApiError, ForbiddenError } from "../../api/errors";
@@ -17,8 +18,17 @@ export type CreateRequestBody = { kind: AccessRequest["kind"]; consumerId?: stri
 export function useCreateRequest() {
   const qc = useQueryClient();
   const toast = useToast();
+  // One ask in flight per (kind, consumer, ladder): a second click while it runs joins the first, with the same key.
+  const inflight = useRef(new Map<string, Promise<AccessRequest>>());
   return useMutation({
-    mutationFn: (body: CreateRequestBody) => api.requests.create(body, newId()),
+    mutationFn: (body: CreateRequestBody) => {
+      const k = JSON.stringify([body.kind, body.consumerId ?? "", body.ladder ?? ""]);
+      const running = inflight.current.get(k);
+      if (running) return running;
+      const p = api.requests.create(body, newId()).finally(() => inflight.current.delete(k));
+      inflight.current.set(k, p);
+      return p;
+    },
     onSuccess: (r, body) => {
       track("request.created", { kind: body.kind, consumerId: body.consumerId ?? "" });
       qc.invalidateQueries({ queryKey: ["workspace"] });
@@ -29,7 +39,8 @@ export function useCreateRequest() {
     },
     onError: (e: unknown) => {
       if (e instanceof ForbiddenError) toast.notify("crit", e.problem?.title ?? "Not allowed.", e.problem?.detail);
-      else toast.notify("crit", "The request could not be sent.", e instanceof ApiError ? e.supportLine : (e as Error).message);
+      else if (e instanceof ApiError && e.status === 409) toast.notify("warn", e.problem?.title ?? "Already asked.", e.problem?.detail);
+      else toast.notify("crit", "The request could not be sent.", e instanceof ApiError ? (e.problem?.detail ?? e.supportLine) : (e as Error).message);
     },
   });
 }

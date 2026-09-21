@@ -271,6 +271,7 @@ export default function Assistant() {
               {conv.error && (
                 <div className="banner crit" role="alert">
                   <div>{conv.error}</div>
+                  {conv.errorDetail && <span className="mono muted">{conv.errorDetail}</span>}
                 </div>
               )}
             </div>

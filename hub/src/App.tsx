@@ -57,13 +57,14 @@ export default function App() {
           <AuthProvider>
             <ThemeProvider>
               <PaletteProvider>
-                <GuideProvider>
-                  <DocumentTitle />
-                  <FocusOnNavigate />
-                  <a className="skip-link" href="#main">
-                    Skip to content
-                  </a>
-                  <ErrorBoundary>
+                <DocumentTitle />
+                <FocusOnNavigate />
+                <a className="skip-link" href="#main">
+                  Skip to content
+                </a>
+                {/* The guide sits inside the boundary: a fault in its own state must never take the page down with it. */}
+                <ErrorBoundary>
+                  <GuideProvider>
                     <div id="main" tabIndex={-1} style={{ display: "contents" }}>
                       <HubShell>
                         <Routes>
@@ -86,8 +87,8 @@ export default function App() {
                         </Routes>
                       </HubShell>
                     </div>
-                  </ErrorBoundary>
-                </GuideProvider>
+                  </GuideProvider>
+                </ErrorBoundary>
               </PaletteProvider>
             </ThemeProvider>
           </AuthProvider>

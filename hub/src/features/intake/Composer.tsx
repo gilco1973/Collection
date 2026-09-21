@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useFocusTrap } from "../../ui/useFocusTrap";
 import { api } from "../../api";
 import type { BriefContent } from "../../api/schemas";
 import type { DataClass, RegistrySystem, RegistryTool, Tier } from "../../api/types";
@@ -46,12 +47,8 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
 
   useEffect(() => {
     dialogRef.current?.querySelector<HTMLElement>("input")?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
+  useFocusTrap(dialogRef, onClose);
 
   const reuses = reusesOf(v).filter((r) => !r.required);
   const baseline = baselineFor(content);
@@ -148,7 +145,8 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
   // The consequences of what is composed so far.
   const highest = v.tools.reduce<Tier>((m, t) => (TIER_RANK[t.tier] > TIER_RANK[m] ? t.tier : m), "R");
   const ceilingShort = TIER_RANK[highest] > TIER_RANK[v.tierCeiling];
-  const classesNeeded = [...new Set(v.tools.flatMap((t) => t.classes))].filter((c) => !v.dataClasses.includes(c));
+  const classesNeeded = [...new Set(v.tools.flatMap((t) => t.classes))].filter((c) => !v.dataClasses.includes(c) && c !== "restricted");
+  const restrictedTools = v.tools.filter((t) => t.classes.includes("restricted"));
   const overLimit = v.tools.length > SESSION_CEILING;
   const signedReuses = reuses.filter((r) => items.find((i) => i.id === r.id)?.signed).length;
 
@@ -424,6 +422,14 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
                     <>Data classes ticked cover every tool.</>
                   )}
                 </li>
+                {restrictedTools.length > 0 && (
+                  <li>
+                    <b className="crit">
+                      {restrictedTools.map((t) => t.name).join(" · ")} {restrictedTools.length === 1 ? "reads" : "read"} restricted data, which a first consumer cannot use
+                    </b>
+                    ; remove {restrictedTools.length === 1 ? "it" : "them"} or take the use case to the platform team for a data-class exception.
+                  </li>
+                )}
                 <li>
                   {overLimit ? (
                     <b className="crit">Over the 15-tool session ceiling: remove tools or split the consumer.</b>

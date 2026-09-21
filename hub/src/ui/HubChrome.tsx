@@ -76,7 +76,25 @@ export function HubNav({ active, onSearch }: { active: Area; onSearch?: () => vo
           {principal?.initials ?? "··"}
         </button>
         {menu && (
-          <div role="menu" className="card" style={{ position: "absolute", right: 0, top: 36, width: 240, zIndex: 20, boxShadow: "var(--shadow-2)" }}>
+          <div
+            role="menu"
+            tabIndex={-1}
+            className="card"
+            ref={(el) => el?.querySelector<HTMLElement>("[role=menuitem]")?.focus()}
+            onKeyDown={(e) => {
+              const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>("[role=menuitem]"));
+              const i = items.indexOf(document.activeElement as HTMLElement);
+              if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                items[(i + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length]?.focus();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setMenu(false);
+                menuRef.current?.querySelector<HTMLElement>("button")?.focus();
+              }
+            }}
+            style={{ position: "absolute", right: 0, top: 36, width: 240, zIndex: 20, boxShadow: "var(--shadow-2)" }}
+          >
             <div className="cb" style={{ gap: 2 }}>
               <b style={{ fontSize: 13 }}>{principal?.name}</b>
               <span className="muted" style={{ fontSize: 12 }}>

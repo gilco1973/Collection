@@ -144,6 +144,12 @@ route("POST", "/me/requests", ({ principal, body }) => {
       code: "ladder.above",
     });
   }
+  if (b.kind === "access" && b.consumerId && principal.entitlements.includes(b.consumerId)) {
+    return problem(409, { title: "Already yours", detail: `You already have access to ${listing?.name ?? b.consumerId}; open it from Discover.`, code: "request.already_granted" });
+  }
+  if (state.requests.some((r) => r.status === "pending" && r.kind === b.kind && r.consumerId === b.consumerId && (b.kind !== "ladder" || r.title.includes(`Ladder ${b.ladder} `)))) {
+    return problem(409, { title: "Already asked", detail: `Your request for ${listing?.name ?? b.consumerId} is with your lead; there is nothing to send again.`, code: "request.duplicate" });
+  }
   const r: AccessRequest = {
     id: `req_new_${state.requests.length + 1}`,
     kind: b.kind,
@@ -404,9 +410,12 @@ route("GET", "/conversations", ({ principal }) =>
   ),
 );
 
+const feedbackGiven = new Map<string, Map<number, boolean>>();
 route("GET", "/conversations/:id", ({ params }) => {
   const c = state.conversations.get(params.id);
-  return c ? json(c) : problem(404, { title: "Not found" });
+  if (!c) return problem(404, { title: "Not found" });
+  const given = feedbackGiven.get(params.id);
+  return json({ ...c, feedback: given ? [...given.entries()].map(([seq, answered]) => ({ seq, answered })) : [] });
 });
 
 route("POST", "/conversations", ({ body, principal }) => {
@@ -467,7 +476,13 @@ route("POST", "/conversations/:id/turns", ({ params, body, req }) => {
   return new Response(stream, { status: 200, headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
 });
 
-route("POST", "/conversations/:id/feedback", () => new Response(null, { status: 204 }));
+route("POST", "/conversations/:id/feedback", ({ params, body }) => {
+  const { seq, answered } = body as { seq: number; answered: boolean };
+  const m = feedbackGiven.get(params.id) ?? new Map<number, boolean>();
+  m.set(seq, answered);
+  feedbackGiven.set(params.id, m);
+  return new Response(null, { status: 204 });
+});
 route("POST", "/conversations/:id/handoff", () => json({ route: "human", expected_wait_s: 240 }));
 
 /* ---------- the transport ---------- */

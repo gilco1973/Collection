@@ -35,6 +35,8 @@ export function useBrief(id: string | undefined) {
   const [step, setStepState] = useState<BriefStepKey>("useCase");
   const [completed, setCompleted] = useState<BriefStepKey[]>([]);
   const [saveState, setSaveState] = useState<SaveState>("saved");
+  const [saveDetail, setSaveDetail] = useState<string | undefined>();   // why the last save failed, when the reason changes what to do
+  const filed = useRef(false);                                           // once filing starts, the autosave stays out of the way
   const [errors, setErrors] = useState<FieldErrors>({});
   const [fileError, setFileError] = useState<string | undefined>();
   const etag = useRef<string>("");
@@ -74,6 +76,7 @@ export function useBrief(id: string | undefined) {
         .then(() => setSaveState("saved"))
         .catch((e: unknown) => {
           setSaveState(e instanceof ConflictError ? "conflict" : "error");
+          setSaveDetail(e instanceof ApiError && e.status === 413 ? "This section is too long; shorten it (a draft saves at most 64 KB at a time)." : undefined);
           throw e;
         })
         .finally(() => {
@@ -87,7 +90,7 @@ export function useBrief(id: string | undefined) {
 
   // Debounced autosave: reschedule on every edit while dirty.
   useEffect(() => {
-    if (saveState !== "dirty") return;
+    if (saveState !== "dirty" || filed.current) return;
     timer.current = window.setTimeout(() => {
       void save().catch(() => undefined);
     }, AUTOSAVE_MS);
@@ -143,6 +146,7 @@ export function useBrief(id: string | undefined) {
   const file = useMutation({
     mutationFn: async () => {
       if (!id || !content) throw new Error("no brief");
+      window.clearTimeout(timer.current); filed.current = true;  // a pending autosave would PATCH the filed brief and read as a conflict
       const parsed = briefContentSchema.safeParse(content);
       if (!parsed.success) {
         const errs = issuesToFieldErrors(parsed.error.issues);
@@ -175,7 +179,7 @@ export function useBrief(id: string | undefined) {
       track("brief.filed", { road: b.road ?? "" });
     },
     onError: (e: unknown) => {
-      fileKey.current = newId();
+      fileKey.current = newId(); filed.current = false;
       if (e instanceof ValidationError) {
         setErrors((cur) => ({ ...cur, ...e.fieldErrors }));
         setFileError(e.problem?.detail ?? e.message);
@@ -211,6 +215,7 @@ export function useBrief(id: string | undefined) {
       stepIndex,
       completed,
       saveState,
+      saveDetail,
       errors,
       fileError,
       update,
@@ -234,6 +239,7 @@ export function useBrief(id: string | undefined) {
       stepIndex,
       completed,
       saveState,
+      saveDetail,
       errors,
       fileError,
       update,

@@ -61,6 +61,7 @@ export function ownerHandle(principal: Principal): string {
 
 export function permits(principal: Principal | undefined, action: Action, resource: Resource = {}): boolean {
   if (!principal) return false;
+  if (action === "brief.create" && principal.teams.length === 0) return false; // a brief names the team that owns it; nobody without one can file
   const roles = new Set<string>(["employee", ...principal.roles]);
   const granted = [...roles].some((r) => GRANTS[r]?.includes(action));
 

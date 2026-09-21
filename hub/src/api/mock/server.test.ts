@@ -116,7 +116,9 @@ describe("mock API contract", () => {
     await expect(clientAs("investigator").requests.create({ kind: "ladder", consumerId: "investigation-triage", ladder: "L2" }, "k5")).rejects.toBeInstanceOf(
       ForbiddenError,
     );
-    const ok = await clientAs("gk").requests.create({ kind: "ladder", consumerId: "investigation-triage", ladder: "L2" }, "k6");
+    // gk already has a pending L2 ask on this listing in the fixtures: asking again is 409, a different ladder is a new ask.
+    await expect(clientAs("gk").requests.create({ kind: "ladder", consumerId: "investigation-triage", ladder: "L2" }, "k6")).rejects.toBeInstanceOf(ConflictError);
+    const ok = await clientAs("gk").requests.create({ kind: "ladder", consumerId: "investigation-triage", ladder: "L1" }, "k7");
     expect(ok.status).toBe("pending");
   });
 

@@ -62,7 +62,12 @@ export function UseCaseStep({ s, content, errors }: StepProps) {
       <Field label="Channel" error={errors["useCase.channel"]} help="who talks to the consumer; customer and partner channels open on road R3 in Phase 5">
         <Seg label="Channel" value={v.channel} options={CHANNELS} onChange={(channel) => s.update("useCase", { channel })} />
       </Field>
-      <Field label="Team" id="uc-team" error={errors["useCase.teamId"]} help="the team that owns the consumer and its cost centre">
+      <Field
+        label="Team"
+        id="uc-team"
+        error={p.teams.length === 0 ? ["You are in no team yet. Ask your lead to add you; a brief needs the team that owns it."] : errors["useCase.teamId"]}
+        help="the team that owns the consumer and its cost centre"
+      >
         <div className="inp">
           <select id="uc-team" className="ctl" value={v.teamId} onChange={(e) => s.update("useCase", { teamId: e.target.value })}>
             <option value="">Choose a team…</option>

@@ -106,13 +106,30 @@ export default function Discover() {
               onChange={setView}
             />
           </div>
-          <div className="tabs" role="tablist" data-guide="discover-tabs">
+          <div
+            className="tabs"
+            role="tablist"
+            tabIndex={-1}
+            data-guide="discover-tabs"
+            onKeyDown={(e) => {
+              // Roving focus: the arrows, Home and End move between tabs; the focused tab is the selected one.
+              const i = TABS.findIndex((t) => t.key === tab);
+              const next = e.key === "ArrowRight" ? (i + 1) % TABS.length : e.key === "ArrowLeft" ? (i - 1 + TABS.length) % TABS.length : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : -1;
+              if (next < 0) return;
+              e.preventDefault();
+              setTab(TABS[next].key);
+              (e.currentTarget.querySelector<HTMLElement>(`#discover-tab-${TABS[next].key}`) ?? undefined)?.focus();
+            }}
+          >
             {TABS.map((t) => (
               <button
                 key={t.key}
                 type="button"
                 role="tab"
+                id={`discover-tab-${t.key}`}
                 aria-selected={tab === t.key}
+                aria-controls="discover-panel"
+                tabIndex={tab === t.key ? 0 : -1}
                 className={`tab${tab === t.key ? " on" : ""}`}
                 onClick={() => setTab(t.key)}
               >
@@ -127,7 +144,7 @@ export default function Discover() {
             ))}
           </div>
           {view === "cards" ? (
-            <div className="cards">
+            <div className="cards" id="discover-panel" role="tabpanel" aria-labelledby={`discover-tab-${tab}`}>
               {shown.map((c) => (
                 <ListingCard key={c.id} c={c} requested={pendingFor.has(c.id)} />
               ))}
@@ -159,7 +176,7 @@ export default function Discover() {
               )}
             </div>
           ) : (
-            <table className="t ">
+            <table className="t " id="discover-panel" role="tabpanel" aria-labelledby={`discover-tab-${tab}`}>
               <thead>
                 <tr>
                   <th>Listing</th>

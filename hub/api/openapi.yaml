@@ -68,7 +68,6 @@ paths:
         "200": { description: The principal with the new preferences, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
         "413": { description: The body is over the 64 KB ceiling for this call, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "422": { description: "A key that is not a preference, or a value of the wrong type; `errors` names the key", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
-        "422": { $ref: "#/components/responses/Problem" }
   /me/requests:
     get:
       tags: [requests]
@@ -407,7 +406,7 @@ components:
             trust: { type: array, items: { $ref: "#/components/schemas/Tile" } }
             evidence: { type: array, items: { type: object, properties: { label: { type: string }, href: { type: string }, icon: { type: string, enum: [doc, db, shield, pulse] } } } }
             cost: { type: array, items: { type: object, properties: { label: { type: string }, value: { type: string }, note: { type: string } } } }
-            getStarted: { type: array, items: { type: object, properties: { n: { type: string }, title: { type: string }, small: { type: string }, state: { type: string, enum: [done, on, ""] } } } }
+            getStarted: { type: array, items: { type: object, properties: { n: { type: string }, title: { type: string }, small: { type: string }, state: { type: string, enum: [done, "on", ""] } } } }
             owner: { type: array, items: { type: object, properties: { label: { type: string }, value: { type: string } } } }
             versions: { type: array, items: { type: object, properties: { version: { type: string }, state: { type: string, enum: [current, supported, retired] }, date: { type: string } } } }
             changelogHref: { type: string }
@@ -470,7 +469,7 @@ components:
       properties:
         header: { type: object, properties: { name: { type: string }, role: { type: string }, team: { type: string }, costCentre: { type: string } } }
         assistants: { type: array, items: { type: object, properties: { consumerId: { type: string }, name: { type: string }, sub: { type: string }, lifecycle: { type: string }, ai: { type: boolean } } } }
-        teamConsumers: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, status: { $ref: "#/components/schemas/Chip" }, step: { type: integer, minimum: 1, maximum: 7 }, stepNote: { type: string }, pipe: { type: array, items: { type: string, enum: [done, on, ""] } }, note: { type: string }, briefId: { type: string } } } }
+        teamConsumers: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string }, status: { $ref: "#/components/schemas/Chip" }, step: { type: integer, minimum: 1, maximum: 7 }, stepNote: { type: string }, pipe: { type: array, items: { type: string, enum: [done, "on", ""] } }, note: { type: string }, briefId: { type: string } } } }
         requests: { type: array, items: { $ref: "#/components/schemas/AccessRequest" } }
         usage: { type: object, properties: { sandboxMonth: { type: string }, sandboxNote: { type: string }, productionNote: { type: string }, playgroundToday: { type: string }, playgroundBudget: { type: string }, playgroundPct: { type: number } } }
         playground: { type: object, properties: { gateway: { type: string }, keyMasked: { type: string }, fixtures: { type: string }, example: { type: string } } }

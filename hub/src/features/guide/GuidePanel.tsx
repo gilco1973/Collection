@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "../../ui/useFocusTrap";
 import { ArrowRight, Check, Close, Play, Send } from "../../ui/icons";
 import { useGuide, type Exchange } from "./GuideProvider";
 import { pageNote, PERSONAS, STARTERS, TOURS, type Persona, type Step, type StepState } from "./model";
@@ -17,14 +18,9 @@ export function GuidePanel({ steps }: { steps: Array<Step & { state: StepState }
     const el = panelRef.current;
     if (!el) return;
     (el.querySelector<HTMLElement>("[data-autofocus]") ?? el).focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") g.close();
-    };
-    el.addEventListener("keydown", onKey);
-    return () => el.removeEventListener("keydown", onKey);
     // Focus once on open.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useFocusTrap(panelRef, g.close);
 
   return (
     <aside id="hub-guide" ref={panelRef} className="guide-panel" aria-label="Guide" tabIndex={-1}>

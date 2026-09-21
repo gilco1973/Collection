@@ -53,3 +53,12 @@ describe("front-end permits", () => {
     expect(isTeamLead(investigator)).toBe(false);
   });
 });
+
+describe("a brief needs a team", () => {
+  it("is not offered to a person in no team", async () => {
+    const { permits } = await import("./permits");
+    const base = { id: "u_x", name: "X", email: "x@bank.example", initials: "X", tenant: "t", roles: [], ladder: "L0", channel: "operator", teams: [], costCentre: "", entitlements: [], preferences: {} } as never;
+    expect(permits(base, "brief.create")).toBe(false);
+    expect(permits({ ...(base as object), teams: [{ id: "t1", name: "T", lead: false }] } as never, "brief.create")).toBe(true);
+  });
+});

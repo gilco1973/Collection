@@ -90,18 +90,9 @@ async function session(browser, persona) {
   const e = await session(browser, "employee");
   await e.page.goto(BASE + "/build/intake", { waitUntil: "load" });
   await e.page.waitForSelector(".hub");
-  await e.page.getByRole("button", { name: "Start a brief" }).click();
-  await e.page.waitForSelector(".hub:not([data-loading])");
-  await e.page.locator(".steps button.step", { hasText: "Review and file" }).click({ force: true }).catch(() => {});
-  check((await e.page.locator(".steps button.step.on .t").textContent())?.startsWith("Use case"), "employee cannot jump past incomplete steps");
-  // Fill step 1 minimally and move to 3 to set W1, then check the review banner.
-  await e.page.fill("#uc-name", "Returns letter drafting");
-  await e.page.fill("#uc-problem", "The desk writes each returns letter by hand from the case notes, about ten minutes each.");
-  const teamOpts = await e.page.locator("#uc-team option").count();
-  check(teamOpts === 1, "employee with no team sees no team to choose (validation will ask for one)");
-  await e.page.getByRole("button", { name: "Continue to People" }).click();
-  await e.page.waitForTimeout(200);
-  check(/Choose the team/.test(await e.page.locator(".field.invalid .err").first().textContent().catch(() => "") || ""), "team is required");
+  // A brief names the team that owns it: a person in no team is told so instead of being handed a draft that can never be filed.
+  check((await e.page.getByRole("button", { name: "Start a brief" }).count()) === 0, "a person in no team is not offered a brief to start");
+  check(/no team yet/.test(await e.page.locator("[data-testid=no-team]").textContent().catch(() => "") || ""), "the intake page says why and who to ask");
   check(e.errors.length === 0, "no page errors (employee)", e.errors.join(" | "));
   await e.page.close();
 

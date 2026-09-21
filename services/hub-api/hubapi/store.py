@@ -147,6 +147,14 @@ class Store:
             cur = self.conn.execute("DELETE FROM idempotency WHERE created < ?", ((now or time.time()) - self.ttl,))
             return cur.rowcount
 
+    def feedback_for(self, conversation: str) -> list[dict]:
+        """What was answered on this conversation, by view sequence (the last answer per view)."""
+        with self.lock:
+            rows = self.conn.execute("SELECT seq, answered FROM feedback WHERE conversation = ? ORDER BY at", (conversation,)).fetchall()
+        latest: dict[int, bool] = {}
+        for seq, answered in rows: latest[int(seq)] = bool(answered)
+        return [{"seq": s, "answered": a} for s, a in sorted(latest.items())]
+
     def feedback(self, conversation: str, seq: int, answered: bool, principal: str) -> None:
         with self.lock:
             self.conn.execute("INSERT INTO feedback (conversation, seq, answered, principal, at) VALUES (?, ?, ?, ?, ?)", (conversation, seq, int(answered), principal, time.time()))

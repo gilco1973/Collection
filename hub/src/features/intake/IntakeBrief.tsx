@@ -50,6 +50,7 @@ export default function IntakeBrief() {
 function StartBrief() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { can } = useAuth();
   const key = useRef(newId());
   const create = useMutation({
     mutationFn: () => api.briefs.create(key.current),
@@ -95,10 +96,16 @@ function StartBrief() {
             <Clock className="i muted" />
             <span>about 15 minutes · saved as you go</span>
             <span className="sp"></span>
-            <button type="button" className="btn p" onClick={() => create.mutate()} disabled={create.isPending}>
-              Start a brief
-              <ArrowRight size={14} />
-            </button>
+            {can("brief.create") ? (
+              <button type="button" className="btn p" onClick={() => create.mutate()} disabled={create.isPending}>
+                Start a brief
+                <ArrowRight size={14} />
+              </button>
+            ) : (
+              <span className="muted" data-testid="no-team">
+                A brief names the team that owns it. You are in no team yet; ask your lead to add you, then start here.
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -159,7 +166,7 @@ function BriefEditor({ id }: { id: string }) {
 
   useEffect(() => {
     if (s.saveState === "conflict") toast.notify("crit", "This draft changed in another tab.", "Reload to see the latest version before editing further.");
-    if (s.saveState === "error") toast.notify("warn", "The draft could not be saved.", "Your changes are kept here; saving will be retried when you continue.");
+    if (s.saveState === "error") toast.notify("warn", "The draft could not be saved.", s.saveDetail ?? "Your changes are kept here; saving will be retried when you continue.");
     // Toast only on transitions into these states.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.saveState]);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api";
 import { newId } from "../../api/client";
 import { ApiError } from "../../api/errors";
@@ -21,8 +21,20 @@ export function useConversation(id: string | undefined, assistantId: string) {
   const [live, setLive] = useState<{ user: Turn; assistant: Turn } | null>(null);
   const [state, setState] = useState<StreamState>("idle");
   const [error, setError] = useState<string | undefined>();
+  const [errorDetail, setErrorDetail] = useState<string | undefined>();
   const abort = useRef<AbortController | null>(null);
-  const [answered, setAnswered] = useState<Record<string, boolean>>({});
+  const [answeredHere, setAnswered] = useState<Record<string, boolean>>({});
+  // What the record says was answered (survives a reload), plus what was answered in this session.
+  const answered = useMemo<Record<string, boolean>>(
+    () => ({ ...Object.fromEntries((query.data?.feedback ?? []).map((f) => [String(f.seq), f.answered])), ...answeredHere }),
+    [query.data?.feedback, answeredHere],
+  );
+  const streaming = useRef<string | undefined>(undefined);  // the conversation the live turn belongs to
+  const selected = useRef(id);
+  useEffect(() => {
+    selected.current = id;
+    if (streaming.current !== id) setLive(null);  // a turn streaming for another conversation never shows under this one
+  }, [id]);
 
   // A new conversation is created on the first send, never on open (no empty records).
   const create = useMutation({ mutationFn: (aid: string) => api.conversations.create(aid, newId()) });
@@ -33,7 +45,7 @@ export function useConversation(id: string | undefined, assistantId: string) {
     async (text: string, onCreated?: (c: Conversation) => void) => {
       const t = text.trim();
       if (!t || state === "streaming" || state === "sending") return;
-      setError(undefined);
+      setError(undefined); setErrorDetail(undefined);
       setState("sending");
       let cid = id;
       try {
@@ -45,14 +57,15 @@ export function useConversation(id: string | undefined, assistantId: string) {
         }
         const user: Turn = { id: `local_${newId()}`, role: "user", at: hhmm(), views: [{ kind: "text", text: t, provenance: "system" }] };
         const assistant: Turn = { id: `local_${newId()}`, role: "assistant", at: hhmm(), views: [] };
-        setLive({ user, assistant });
+        streaming.current = cid;
+        if (selected.current === cid) setLive({ user, assistant });
         const ctrl = new AbortController();
         abort.current = ctrl;
         track("assistant.turn_sent", { assistantId, chars: t.length });
         setState("streaming");
         for await (const ev of api.conversations.send(cid, t, newId(), ctrl.signal)) {
           assistant.views = [...assistant.views, ev.view];
-          setLive({ user, assistant: { ...assistant } });
+          if (selected.current === cid) setLive({ user, assistant: { ...assistant } });
         }
         setState("idle");
       } catch (e) {
@@ -66,7 +79,9 @@ export function useConversation(id: string | undefined, assistantId: string) {
           track("assistant.stopped", { assistantId });
           setState("idle");
         } else {
-          setError(e instanceof ApiError ? e.supportLine : "The connection dropped before the answer finished. Send again.");
+          // The platform's sentence first (the ceiling, a lost entitlement, a body too large); the support line beside it.
+          setError(e instanceof ApiError ? (e.problem?.detail ?? e.message) : "The connection dropped before the answer finished. Send again.");
+          setErrorDetail(e instanceof ApiError ? e.supportLine : undefined);
           setState("error");
         }
       } finally {
@@ -133,6 +148,7 @@ export function useConversation(id: string | undefined, assistantId: string) {
     turns,
     state,
     error,
+    errorDetail,
     send,
     stop,
     feedback,
