@@ -1,6 +1,6 @@
 {
   "name": "aws-sigv4",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "integration",
   "language": "python",
   "summary": "AWS SigV4 with hmac and hashlib only: task-role credentials, signed JSON-protocol calls to Secrets Manager, CloudWatch, ECS and Bedrock",

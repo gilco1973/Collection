@@ -13,7 +13,7 @@ configuration, with fakes for the sandbox that production refuses.
 | Signing | `AGENT_SIGNING=kms`: the catalog and rule bundle signed and verified on an asymmetric KMS key from the task role; `local` in the sandbox |
 | The think step | `AGENT_ENGINE=bedrock`: the cited engine behind Bedrock Converse through the VPC endpoint, the template's role as the system prompt; `rules` in the sandbox |
 | Targets | `AGENT_TARGETS` names which of the template's targets are real: `tickets` is the Jira connector, `deploys` the Azure DevOps connector, each with a credential by name; the rest are the fakes, refused in staging and production |
-| The record | SQLite on a persistent volume; `verify-record` walks the chain at every start; `export-audit` puts the chain and a `latest.json` pointer to S3 with SigV4 |
+| The record | SQLite on a persistent volume; `verify-record` walks the chain at every start; `export-audit` puts the chain and a `latest.json` pointer to S3 with SigV4; the pointer only moves forward (a chain shorter than the last export, or one the last head is not on, is refused) |
 | Health, logs | `/health` names the wiring (never a value); logs carry ids only |
 
 ## Run it

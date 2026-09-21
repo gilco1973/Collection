@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # aws-sigv4
 
-> A component of the collection: `components/python/aws-sigv4/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.14, §4.1 (PLT-AC-9, PLT-KEY-2); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/aws-sigv4/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.14, §4.1 (PLT-AC-9, PLT-KEY-2); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 AWS Signature Version 4 with `hmac` and `hashlib` only. Credentials come from the ECS task role (the container

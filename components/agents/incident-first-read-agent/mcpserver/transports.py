@@ -51,9 +51,35 @@ class InProcessClient:
 
 # ---------------- stdio ----------------
 
+MAX_LINE_BYTES = 1_000_000
+
+
+def _line_source(inp):
+    """Bytes when the stream has them (`sys.stdin.buffer`): decoding is ours, so one byte that is not UTF-8 is
+    replaced, never fatal. A text stream (a StringIO in a test) is read as it is."""
+    raw = getattr(inp, "buffer", None)
+    return raw if raw is not None else inp
+
+
+def read_line(src, limit: int = MAX_LINE_BYTES):
+    """One line as text: "" at the end of the stream; None for a line over `limit` bytes, which is discarded to its
+    newline so the next line is read whole."""
+    line = src.readline(limit + 1)
+    if not line:
+        return ""
+    nl = b"\n" if isinstance(line, bytes) else "\n"
+    if len(line) > limit and not line.endswith(nl):
+        while True:
+            more = src.readline(65536)
+            if not more or more.endswith(nl):
+                break
+        return None
+    return line.decode("utf-8", "replace") if isinstance(line, bytes) else line
+
+
 class _StdioConnection:
     def __init__(self, token_env: str, inp, out):
-        self.token_env, self.inp, self.out, self.session = token_env, inp, out, ClientSession(id="stdio")
+        self.token_env, self.inp, self.out, self.session = token_env, _line_source(inp), out, ClientSession(id="stdio")
         self.backlog: list[dict] = []
         self.n = 0
 
@@ -69,9 +95,11 @@ class _StdioConnection:
         self.n += 1; rid = f"srv_{self.n}"
         self.write(P.request(rid, method, params))
         while True:
-            line = self.inp.readline()
-            if not line:
+            line = read_line(self.inp)
+            if line == "":
                 raise P.RpcError(P.CONFIRMATION_DECLINED, "the client went away before answering")
+            if line is None or not line.strip():
+                continue
             try:
                 msg = P.parse(line)
             except P.RpcError:
@@ -91,9 +119,11 @@ def serve_stdio(server: McpToolServer, token_env: str = "MCP_BEARER_TOKEN", inp=
         if conn.backlog:
             msg = conn.backlog.pop(0)
         else:
-            line = inp.readline()
-            if not line:
+            line = read_line(conn.inp)
+            if line == "":
                 return
+            if line is None:
+                conn.write(P.error(None, P.RpcError(P.PARSE_ERROR, f"parse error: line over {MAX_LINE_BYTES} bytes"))); continue
             if not line.strip():
                 continue
             try:
@@ -147,10 +177,12 @@ class _HttpConnection:
 
 def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: str = "https://mcp.example.internal/mcp",
                       authorization_servers: list[str] | None = None, elicitation_timeout_s: float = 120.0,
-                      max_body_bytes: int = 1_000_000, session_idle_s: float = 3600.0):
+                      max_body_bytes: int = 1_000_000, session_idle_s: float = 3600.0, socket_timeout_s: float = 30.0):
     """A session is created at `initialize` only once admission succeeded, belongs to the person admitted (every
     later request, and the DELETE, must carry a bearer that resolves to the same person), and expires after
-    `session_idle_s` without a request. A body above `max_body_bytes` is refused with 413."""
+    `session_idle_s` without a request. A body above `max_body_bytes` is refused with 413. A connection that sends
+    nothing for `socket_timeout_s` (a request line, a header or the body that never comes) is closed without an
+    answer, so a client that opens connections and walks away holds no thread."""
     sessions: dict[str, ClientSession] = {}
     pending: dict[str, dict] = {}
     lock = threading.Lock()
@@ -179,9 +211,26 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
 
     class Handler(BaseHTTPRequestHandler):
         server_version = f"{server.name}/{server.version}"
+        timeout = socket_timeout_s  # the socket's: every blocking read and write on the connection
 
         def log_message(self, *a):  # ids only; the chain is the record
             pass
+
+        def handle_one_request(self):
+            try:
+                super().handle_one_request()
+            except (TimeoutError, OSError):  # the client stopped sending or went away mid-request: nothing to answer, the connection is closed
+                self.close_connection = True
+
+        def _read_body(self, length: int):
+            """The body, or None when the client stopped sending before it was complete (the connection closes, no answer)."""
+            try:
+                raw = self.rfile.read(length)
+            except (TimeoutError, OSError):
+                self.close_connection = True; return None
+            if len(raw) < length:
+                self.close_connection = True; return None
+            return raw
 
         def _json(self, status: int, body: dict, headers: dict | None = None) -> None:
             raw = json.dumps(body).encode("utf-8")
@@ -235,9 +284,11 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
                     remaining -= len(chunk)
                 self.close_connection = True
                 return self._json(413, {"error": f"body too large; at most {max_body_bytes} bytes"}, {"Connection": "close"})
-            raw = self.rfile.read(length).decode("utf-8", "replace")
+            raw = self._read_body(length)
+            if raw is None:
+                return
             try:
-                msg = P.parse(raw)
+                msg = P.parse(raw.decode("utf-8", "replace"))
             except P.RpcError as e:
                 return self._json(400, P.error(None, e))
             if P.is_response(msg):  # the client answering an elicitation: only the person the question went to may answer it

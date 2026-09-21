@@ -6,6 +6,9 @@
     {"Sid": "ThinkStep", "Effect": "Allow", "Action": ["bedrock:InvokeModel"], "Resource": ["arn:aws:bedrock:us-east-1:ACCOUNT:application-inference-profile/incident-first-read"]},
     {"Sid": "AuditExport", "Effect": "Allow", "Action": ["s3:PutObject"], "Resource": ["arn:aws:s3:::BUCKET/agents/*"],
      "Condition": {"StringEquals": {"s3:x-amz-server-side-encryption": "aws:kms"}}},
+    {"Sid": "AuditExportPointer", "Effect": "Allow", "Action": ["s3:GetObject"], "Resource": ["arn:aws:s3:::BUCKET/agents/*/latest.json"]},
+    {"Sid": "AuditExportPointerMissing", "Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": ["arn:aws:s3:::BUCKET"],
+     "Condition": {"StringLike": {"s3:prefix": ["agents/*/latest.json"]}}},
     {"Sid": "RecordVolume", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
      "Resource": ["arn:aws:elasticfilesystem:us-east-1:ACCOUNT:file-system/fs-AGENTRECORD"],
      "Condition": {"StringEquals": {"elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:us-east-1:ACCOUNT:access-point/fsap-AGENTRECORD"}}}

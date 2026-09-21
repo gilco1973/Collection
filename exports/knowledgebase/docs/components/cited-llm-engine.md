@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # cited-llm-engine
 
-> A component of the collection: `components/python/cited-llm-engine/` in the repository (category pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8, §4.9, §4.5 (PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/cited-llm-engine/` in the repository (category pattern, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.8, §4.9, §4.5 (PLT-MDL-1, PLT-PRM-1, PLT-PRM-2, PLT-PRM-3, PLT-DATA-3); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 The think step behind one adapter. A model reasons over a fenced context and returns strict, cited JSON; it never
@@ -23,7 +23,7 @@ model call.
 from guard import Context
 from engine import RulesEngine, ModelEngine
 ctx = Context(); ctx.add("alert", "PD-1", "High error rate on payments-api", "pagerduty")
-ctx.add("deploy", "4822", "deploy #4822 finished 7 minutes before the trigger (recent)", "ado")
+ctx.add("deploy", "4822", "RECENT DEPLOY: deploy #4822 finished 7 minutes before the trigger", "ado")  # the marker and a run id as ref: what the rules key on
 print(RulesEngine().answer("first-read", ctx)["hypothesis"])
 engine = ModelEngine(lambda system, user: my_gateway(system, user))   # any model behind one function
 print(engine.answer("ask", ctx, {"question": "which deploy?"})["claims"])

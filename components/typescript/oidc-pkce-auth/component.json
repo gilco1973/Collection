@@ -1,6 +1,6 @@
 {
   "name": "oidc-pkce-auth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "category": "integration",
   "language": "typescript",
   "summary": "Authorization Code + PKCE in the browser with tokens in memory, a persona client for dev, the principal from GET /me as the authority, a closed permits set",

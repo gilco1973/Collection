@@ -8,7 +8,7 @@ outside them: `before_call`, `after_call` and `record` are private to this modul
 parity test in the conformance suite.
 """
 from __future__ import annotations
-import json, sqlite3, time, uuid
+import json, re, sqlite3, time, uuid
 from dataclasses import dataclass, field
 from . import catalog as C, policy as P, dataguard as DG, signing
 from .audit import AuditChain
@@ -119,6 +119,23 @@ class SessionStore:
         self.conn.commit()
         return cur.rowcount == 1
 
+    REF_KINDS = {"confirmation": "confirmations", "approval": "approvals"}
+    REF_SHAPE = re.compile(r"(?:conf|appr)_[0-9a-f]{12}")
+
+    def consume_ref(self, sid: str, kind: str, ref: str, expected_hash: str) -> bool:
+        """Removes a W1 confirmation or W2 approval from the record, only if it is still there and bound to that
+        hash: two workers holding the same session dispatch on one reference here, and exactly one wins. The
+        reference is one the harness minted (`conf_<hex>` / `appr_<hex>`): anything else is refused before it
+        reaches a JSON path."""
+        if kind not in self.REF_KINDS or not self.REF_SHAPE.fullmatch(ref or ""):
+            return False
+        field_ = self.REF_KINDS[kind]
+        bound = "'$." + field_ + ".' || ?" + (" || '.hash'" if kind == "approval" else "")
+        cur = self.conn.execute(f"UPDATE session SET body = json_remove(body, '$.{field_}.' || ?), updated = ? WHERE id = ? AND json_extract(body, {bound}) = ?",
+                                (ref, time.time(), sid, ref, expected_hash))
+        self.conn.commit()
+        return cur.rowcount == 1
+
 
 @dataclass(frozen=True)
 class CallContext:
@@ -170,6 +187,17 @@ class Harness:
         traceparent = f"00-{s.trace_id}-{uuid.uuid4().hex[:16]}-01"
         verified = self._verified_refs(s, name, args, refs or {})
         ctx, verdict, decision = self._before_call(s, name, args, verified, traceparent)
+        if verdict == Allow and ctx.tier != "R":
+            # one reference, one dispatch, across workers: the record is consumed first; a reference another worker
+            # already spent is unverified here, and the call parks (or is refused) as if it had never been given
+            h = signing.sha256({"tool": name, "args": args})
+            spent = [k for k in ("confirmation", "approval") if k in verified and not self.sessions.consume_ref(s.id, k, verified[k], h)]
+            if spent:
+                for k in spent:
+                    (s.confirmations if k == "confirmation" else s.approvals).pop(verified[k], None)
+                    verified.pop(k, None)
+                    if k == "approval": verified.pop("approver", None)
+                ctx, verdict, decision = self._before_call(s, name, args, verified, traceparent)
         if verdict == Deny:
             self._record(ctx, "decision", decision, None)
             if decision.deny_code and decision.deny_code.startswith("kill."):

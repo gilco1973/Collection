@@ -1,6 +1,6 @@
 {
   "name": "jira-connector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "integration",
   "language": "python",
   "summary": "Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name; handlers refuse to run without a redeemed reference",

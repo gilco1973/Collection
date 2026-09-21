@@ -1,6 +1,6 @@
 {
   "name": "mcp-tool-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "harness",
   "language": "python",
   "summary": "An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403",

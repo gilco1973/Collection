@@ -79,3 +79,29 @@ class NoFinishedDeploy(unittest.TestCase):
         s = w.harness.admit(w.token("u_dana"), board="checkout", ticket_key="INC-7", budget=X.budget_from(w.template))
         r = w.agent.run(s, "INC-7", "checkout")
         self.assertTrue(r["first_read"]); self.assertIn("no finished deploy", " ".join(str(x) for x in r["first_read"].values()).lower() + " ")
+
+
+class Recency(unittest.TestCase):
+    """The deploy source carries the run id as its ref and the engine's marker only when the deploy is recent: a
+    service named recent-* or a note that says "minutes" never makes a rollback."""
+
+    def run_with(self, service, deploy):
+        w = X.build()
+        w.harness.gateway.register_target("deploys", {"recent": lambda args, credential: deploy})
+        s = w.harness.admit(w.token("u_dana"), board="checkout", ticket_key="INC-7", budget=X.budget_from(w.template))
+        return w.agent.run(s, "INC-7", service)
+
+    def test_an_old_deploy_a_missing_run_and_a_recent_named_service_are_not_rolled_back(self):
+        for service, deploy in (("checkout", {"run_id": 4000, "service": "checkout", "minutes_before_trigger": 43200, "notes": "a month ago"}),
+                                ("recent-orders", {"run_id": None, "service": "recent-orders", "minutes_before_trigger": None, "notes": "no finished run"}),
+                                ("checkout", {"run_id": None, "service": "checkout", "minutes_before_trigger": None, "notes": "last run cancelled 5 minutes ago"})):
+            r = self.run_with(service, deploy)
+            self.assertEqual(r["proposal"]["kind"], "none", (service, deploy)); self.assertIn("inconclusive", r["first_read"]["hypothesis"])
+
+    def test_a_recent_deploy_is_marked_by_structure_and_proposed(self):
+        from engine import RECENT_DEPLOY_MARKER
+        r = self.run_with("checkout", {"run_id": 4822, "service": "checkout", "minutes_before_trigger": 7, "notes": "config change"})
+        self.assertEqual((r["proposal"]["kind"], r["proposal"]["args"]), ("rollback", {"run_id": "4822"}))
+        self.assertTrue(any(c["text"].startswith(f"deploy 4822: {RECENT_DEPLOY_MARKER}") for c in r["first_read"]["claims"]))
+        r = self.run_with("checkout", {"run_id": 4821, "service": "checkout", "minutes_before_trigger": 31, "notes": "recent"})
+        self.assertEqual(r["proposal"]["kind"], "none"); self.assertFalse(any(RECENT_DEPLOY_MARKER in c["text"] for c in r["first_read"]["claims"]))

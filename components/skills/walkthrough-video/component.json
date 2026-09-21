@@ -1,6 +1,6 @@
 {
   "name": "walkthrough-video",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "skill",
   "language": "mixed",
   "summary": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",

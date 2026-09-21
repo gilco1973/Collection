@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # mcp-gateway-client
 
-> A component of the collection: `components/python/mcp-gateway-client/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.12, §5.2, §4.1 (PLT-CAT-7, PLT-CAT-10, PLT-CAT-6, PLT-AC-16, PLT-ID-6); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/mcp-gateway-client/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.12, §5.2, §4.1 (PLT-CAT-7, PLT-CAT-10, PLT-CAT-6, PLT-AC-16, PLT-ID-6); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake.

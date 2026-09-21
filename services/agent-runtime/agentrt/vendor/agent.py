@@ -8,10 +8,11 @@ from __future__ import annotations
 import json, os, re
 from actionloop import catalog as C
 from actionloop.harness import Budget, Harness, Session, Stop
-from engine import RulesEngine
+from engine import NO_DEPLOY_REF, RECENT_DEPLOY_MARKER, RulesEngine
 from guard import Context
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+RECENT_MINUTES = 30  # a deploy that finished this close before the trigger may be named as the cause
 TEMPLATE_KEYS = ("name", "role", "ladder", "stages", "tools", "never", "budget")
 
 
@@ -56,11 +57,12 @@ class FirstReadAgent:
         deploy = self.harness.call(s, "deploys___recent", {"service": service})["data"]
         m = deploy.get("minutes_before_trigger")
         minutes = int(m) if m is not None else None
-        if minutes is None:
-            ctx.add("deploy", "none", f"no finished deploy of {deploy.get('service')} is on record. {deploy.get('notes', '')}", "deploys")
+        # the engine keys "recent" on this structure (the ref and the marker), never on the service name or the notes
+        if minutes is None or deploy.get("run_id") is None:
+            ctx.add("deploy", NO_DEPLOY_REF, f"no finished deploy of {deploy.get('service')} is on record. {deploy.get('notes', '')}", "deploys")
         else:
-            ctx.add("deploy", str(deploy.get("run_id")), f"deploy #{deploy.get('run_id')} of {deploy.get('service')} finished {minutes} minutes before the trigger"
-                    + (" (recent)" if minutes <= 30 else "") + f". {deploy.get('notes', '')}", "deploys")
+            marker = f"{RECENT_DEPLOY_MARKER} " if minutes <= RECENT_MINUTES else ""
+            ctx.add("deploy", str(deploy.get("run_id")), f"{marker}deploy #{deploy.get('run_id')} of {deploy.get('service')} finished {minutes} minutes before the trigger. {deploy.get('notes', '')}", "deploys")
         first = self.engine.answer("first-read", ctx)
         proposal = self.engine.answer("propose", ctx) if "propose" in self.template["stages"] else None
         body = self.render(first, proposal)

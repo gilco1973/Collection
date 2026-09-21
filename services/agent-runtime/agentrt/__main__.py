@@ -67,7 +67,7 @@ def main(argv=None) -> int:
         if len(argv) < 3 or "--by" not in argv or argv.index("--by") + 1 >= len(argv):
             print(f"usage: {cmd} <run|board|consumer> <target> --by <person>"); return 2
         who = Human(argv[argv.index("--by") + 1], argv[argv.index("--by") + 1], ("operator",))
-        target = w.template["name"] if argv[1] == "consumer" and argv[2] in ("-", "self") else argv[2]
+        target = w.harness.consumer if argv[1] == "consumer" and argv[2] in ("-", "self") else argv[2]  # the harness checks "agent:<name>", not the template name
         try:
             active = w.kills.stop(argv[1], target, who) if cmd == "stop" else w.kills.clear(argv[1], target, who)
         except Exception as e:  # noqa: BLE001 - an unknown scope

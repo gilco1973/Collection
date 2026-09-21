@@ -14,6 +14,31 @@ class CatalogError(Exception):
     pass
 
 
+# The one type table: what a declaration may say an argument is, what `validate_args` accepts for it (a bool is
+# never an int or a float) and how the MCP server advertises it. A declaration with a type outside it is refused.
+ARG_TYPES: dict[str, tuple] = {"str": (str,), "int": (int,), "float": (int, float), "bool": (bool,), "list": (list,), "dict": (dict,)}
+JSON_TYPES = {"str": "string", "int": "integer", "float": "number", "bool": "boolean", "list": "array", "dict": "object"}
+
+
+def is_of_type(value, type_name: str) -> bool:
+    if type_name not in ARG_TYPES:
+        return False
+    if isinstance(value, bool):
+        return type_name == "bool"
+    return isinstance(value, ARG_TYPES[type_name])
+
+
+def _has_surrogate(v) -> bool:
+    """A lone surrogate is valid JSON text that cannot be encoded: it never reaches a handler or a hash."""
+    if isinstance(v, str):
+        return any("\ud800" <= ch <= "\udfff" for ch in v)
+    if isinstance(v, dict):
+        return any(_has_surrogate(k) or _has_surrogate(x) for k, x in v.items())
+    if isinstance(v, (list, tuple)):
+        return any(_has_surrogate(x) for x in v)
+    return False
+
+
 @dataclass
 class ToolDecl:
     target: str                 # the gateway target (jira, ado, kb, ...)
@@ -21,7 +46,7 @@ class ToolDecl:
     tier: str                   # R | W1 | W2 | MONEY
     contract_op: str            # the recorded contract operation it binds to
     permission: str             # the permission the policy maps it to
-    args: dict                  # arg name -> {"type": "str"|"int"|"list", "required": bool, "restricted": bool}
+    args: dict                  # arg name -> {"type": one of ARG_TYPES, "required": bool, "restricted": bool}
     reversible: bool = True
     idempotent: bool = True
     egress_class: str = "internal"
@@ -47,6 +72,9 @@ def build(consumer: str, tools: list[ToolDecl], contract_ops: set[str], max_tool
             raise CatalogError(f"{t.name}: unbacked claim, contract operation {t.contract_op} is not recorded (fixture: unbacked-claim)")
         if t.tier == "W1" and not t.reversible:
             raise CatalogError(f"{t.name}: an irreversible W1 is refused")
+        for arg, spec in (t.args or {}).items():
+            if not isinstance(spec, dict) or spec.get("type", "str") not in ARG_TYPES:
+                raise CatalogError(f"{t.name}: argument {arg} has an unknown type {spec.get('type') if isinstance(spec, dict) else spec!r}; one of {sorted(ARG_TYPES)}")
         entries.append({"name": t.name, "target": t.target, "tool": t.tool, "tier": t.tier, "contract_op": t.contract_op,
                         "permission": t.permission, "args": t.args, "reversible": t.reversible, "idempotent": t.idempotent,
                         "egress_class": t.egress_class, "result_size": t.result_size, "action_id": action_id(t.target, t.tool)})
@@ -73,9 +101,10 @@ def validate_args(entry: dict, args: dict) -> dict:
         if name in args:
             v = args[name]
             t = spec.get("type", "str")
-            ok = (t == "str" and isinstance(v, str)) or (t == "int" and isinstance(v, int) and not isinstance(v, bool)) or (t == "list" and isinstance(v, list))
-            if not ok:
+            if not is_of_type(v, t):
                 raise CatalogError(f"{entry['name']}: argument {name} is not {t}")
+            if _has_surrogate(v):
+                raise CatalogError(f"{entry['name']}: argument {name} is not valid text (lone surrogate)")
             if spec.get("restricted"):
                 raise CatalogError(f"{entry['name']}: argument {name} is restricted and may not be supplied (fixture: restricted-arg)")
             out[name] = v

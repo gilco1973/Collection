@@ -1,6 +1,6 @@
 {
   "name": "mcp-gateway-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "integration",
   "language": "python",
   "summary": "The harness's gateway for an external MCP server: a recorded contract, an allowlist pinned to descriptions, quarantine on drift, credentials by name; a fake",

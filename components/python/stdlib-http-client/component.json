@@ -1,6 +1,6 @@
 {
   "name": "stdlib-http-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "tool",
   "language": "python",
   "summary": "One urllib HTTP client for every upstream: timeouts, bounded retries with backoff, a size ceiling, credential-free errors, a recording transport",

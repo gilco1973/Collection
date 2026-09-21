@@ -63,25 +63,53 @@ def tag_brief(ticket: dict, assignee_id: str, groomer_ids: set[str] | None = Non
     return Provenance(segs, bool(sources), sources)
 
 
-KEEP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?|\b\d{8}\.\d+\b")  # ISO dates and yyyymmdd.r run names: evidence, not PII
+# ISO dates (never glued to a letter, a digit or an @: "birthday1990-05-20@…" is an address, not a date) and
+# yyyymmdd.r pipeline run names (the eight digits are a date; "12345678.1" is an account): evidence, not PII.
+KEEP = re.compile(r"(?<![A-Za-z0-9@])\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![A-Za-z0-9@])"
+                  r"|(?<![\d.])(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\.\d{1,3}(?![\d.])")
+_BLANK = "#"  # in no PII class: a span one class matched is invisible to the next (a social security number is not also a phone number)
+
+
+def _pii_spans(text: str) -> list:
+    """Every PII match as (start, end, class) on the original text, class by class in `PII_PATTERNS` order, each
+    class matched with the earlier classes' spans blanked out."""
+    spans, work = [], text
+    for cls, pat in PII_PATTERNS.items():
+        hits = [(m.start(), m.end()) for m in pat.finditer(work)]
+        spans += [(a, b, cls) for a, b in hits]
+        for a, b in hits:
+            work = work[:a] + _BLANK * (b - a) + work[b:]
+    return spans
+
+
+def _kept_spans(text: str, pii: list) -> list:
+    """KEEP matches that stand on their own: one that is part of a larger PII match (a date inside an address) is
+    not kept; one that merely contains a PII-shaped run (the eight digits of a run name) is."""
+    out = []
+    for m in KEEP.finditer(text):
+        ka, kb = m.span()
+        if all(b <= ka or a >= kb or (ka <= a and b <= kb) for a, b, _ in pii):
+            out.append((ka, kb))
+    return out
 
 
 def mask(text: str, audience: str) -> tuple[str, list]:
     """Mask PII for the audience. model: replace with class tokens; log: hash-like stubs; human: keep last 4.
-    Timestamps and pipeline run names are kept: a first read is about when things happened."""
-    found = []
-    kept: list[str] = []
-    out = KEEP.sub(lambda m: (kept.append(m.group(0)), f"\x00{len(kept) - 1}\x00")[1], text)
-    for cls, pat in PII_PATTERNS.items():
-        def rep(m):
-            found.append(cls)
-            v = m.group(0)
-            if audience == "model": return f"[{cls.upper()}]"
-            if audience == "log": return f"[{cls}:***]"
-            return f"[{cls}:…{v[-4:]}]"
-        out = pat.sub(rep, out)
-    out = re.sub(r"\x00(\d+)\x00", lambda m: kept[int(m.group(1))], out)
-    return out, found
+    Timestamps and pipeline run names are kept: a first read is about when things happened. Spans are computed
+    on the original text and the output is assembled from it, so no placeholder is ever substituted into the
+    text (a NUL byte in upstream text is just a character)."""
+    pii = _pii_spans(text)
+    kept = _kept_spans(text, pii)
+    masked = [(a, b, cls) for a, b, cls in pii if not any(ka <= a and b <= kb for ka, kb in kept)]
+    found = [cls for c in PII_PATTERNS for a, b, cls in masked if cls == c]
+    out, pos = [], 0
+    for a, b, cls in sorted(masked):
+        v = text[a:b]
+        out.append(text[pos:a])
+        out.append(f"[{cls.upper()}]" if audience == "model" else f"[{cls}:***]" if audience == "log" else f"[{cls}:…{v[-4:]}]")
+        pos = b
+    out.append(text[pos:])
+    return "".join(out), found
 
 
 def injection_score(text: str) -> float:

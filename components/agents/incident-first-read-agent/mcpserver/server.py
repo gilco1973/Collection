@@ -10,10 +10,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from actionloop.harness import Harness, HarnessError, Stop
-from actionloop.catalog import CatalogError
+from actionloop.catalog import JSON_TYPES, CatalogError
 from . import protocol as P
 
-TYPE_MAP = {"str": "string", "int": "integer", "float": "number", "bool": "boolean", "list": "array", "dict": "object"}
+TYPE_MAP = JSON_TYPES  # the catalog's one type table: what tools/list advertises is what validate_args accepts
 FORBIDDEN_STOPS = ("taint.forbids_tier", "ladder.violation")
 
 

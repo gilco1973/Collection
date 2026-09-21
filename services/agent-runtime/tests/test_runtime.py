@@ -97,7 +97,8 @@ class ProductionWiring(unittest.TestCase):
         put = S3Put(Http(), "us-east-1", creds_loader=lambda: __import__("sigv4").Credentials("AKIAEXAMPLE", "secret", None))
         out = export_chain(w.audit, "incident-first-read", "s3://bucket/agents/", put, now=0)
         self.assertEqual(out["records"], w.audit.verify()); self.assertTrue(out["object"].startswith("s3://bucket/agents/incident-first-read/1970-01-01/"))
-        self.assertEqual([p[2] for p in puts], ["AWS4-HMA", "AWS4-HMA"]); self.assertTrue(puts[1][1].endswith("/agents/incident-first-read/latest.json"))
+        self.assertEqual([p[2] for p in puts], ["AWS4-HMA"] * 3, "the pointer is read, the chain put, the pointer put; every request signed")
+        self.assertEqual([p[0] for p in puts], ["GET", "PUT", "PUT"]); self.assertTrue(puts[2][1].endswith("/agents/incident-first-read/latest.json"))
 
 
 class Refusals(unittest.TestCase):

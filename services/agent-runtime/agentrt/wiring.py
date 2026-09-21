@@ -180,9 +180,15 @@ def build(s, *, aws=None, fetch=None, http=None, model_complete=None) -> Wired:
         fake = ADO.FakeAdo(); fake.seed(42, [{"id": 4822, "name": "checkout 2.14.0, config change to the payment retry", "state": "completed", "result": "succeeded", "created": "",
                                                 "finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - 7 * 60)), "url": None}])
         targets["deploys"] = fake
-    gateway.register_target("tickets", JIRA.handlers(targets["tickets"], "tickets"))
-    gateway.register_target("deploys", ADO.handlers(targets["deploys"], "deploys", pipelines))
-    C.check(signed.payload, {n: True for n in gateway.tools_list() if n in {e["name"] for e in signed.payload["tools"]}})
+    listed = {e["name"] for e in signed.payload["tools"]}
+
+    def only_listed(target: str, handlers: dict) -> dict:
+        """The gateway holds exactly what the template names: a connector's other operations are never registered."""
+        return {op: h for op, h in handlers.items() if f"{target}___{op}" in listed}
+
+    gateway.register_target("tickets", only_listed("tickets", JIRA.handlers(targets["tickets"], "tickets")))
+    gateway.register_target("deploys", only_listed("deploys", ADO.handlers(targets["deploys"], "deploys", pipelines)))
+    C.check(signed.payload, {n: True for n in gateway.tools_list()})  # unfiltered: no entry without a handler, no handler without an entry
 
     harness = Harness(consumer=f"agent:{tpl['name']}", signed_catalog=signed, bundle=P.Bundle(RULES), key=key, gateway=gateway, identity=identity, audit=audit,
                       kills=kills, sessions=SessionStore(conn), telemetry=Telemetry(conn), env=s.env, result_shapes=shapes)

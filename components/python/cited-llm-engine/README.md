@@ -12,7 +12,7 @@ model call.
 from guard import Context
 from engine import RulesEngine, ModelEngine
 ctx = Context(); ctx.add("alert", "PD-1", "High error rate on payments-api", "pagerduty")
-ctx.add("deploy", "4822", "deploy #4822 finished 7 minutes before the trigger (recent)", "ado")
+ctx.add("deploy", "4822", "RECENT DEPLOY: deploy #4822 finished 7 minutes before the trigger", "ado")  # the marker and a run id as ref: what the rules key on
 print(RulesEngine().answer("first-read", ctx)["hypothesis"])
 engine = ModelEngine(lambda system, user: my_gateway(system, user))   # any model behind one function
 print(engine.answer("ask", ctx, {"question": "which deploy?"})["claims"])

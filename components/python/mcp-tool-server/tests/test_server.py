@@ -203,3 +203,50 @@ class HostileMessages(unittest.TestCase):
         self.assertEqual(self.post(json.dumps(answer).encode(), dana, sid)[0], 202)
         rest = r.read().decode()
         self.assertIn('"id": "c1"', rest.replace('"id":"c1"', '"id": "c1"')); self.assertEqual(len(self.w.tickets.comments), 1)
+
+
+class ThirdReview(unittest.TestCase):
+    """A stdio client that sends a byte that is not UTF-8 or a line without end, an HTTP client that never sends
+    its body, and a catalog type the list advertised but the call refused."""
+
+    def test_stdio_survives_a_bad_byte_and_a_huge_line(self):
+        import io
+        from mcpserver import serve_stdio, transports as T
+        w = X.build()
+        ping = lambda i: ('{"jsonrpc":"2.0","id":%d,"method":"ping"}\n' % i).encode()
+        inp = io.TextIOWrapper(io.BytesIO(ping(1) + b"\xff\n" + ping(2) + b"x" * (T.MAX_LINE_BYTES + 5) + b"\n" + ping(3)), encoding="utf-8")
+        out = io.StringIO()
+        serve_stdio(w.server, inp=inp, out=out)
+        lines = [json.loads(l) for l in out.getvalue().splitlines()]
+        self.assertEqual([l.get("id") for l in lines], [1, None, 2, None, 3])
+        self.assertEqual([l["error"]["code"] for l in lines if "error" in l], [P.PARSE_ERROR, P.PARSE_ERROR])
+        self.assertIn("over", lines[3]["error"]["message"])
+        out = io.StringIO(); serve_stdio(w.server, inp=io.StringIO('{"jsonrpc":"2.0","id":9,"method":"ping"}\n'), out=out)
+        self.assertEqual(json.loads(out.getvalue())["id"], 9, "a text stream without a buffer still serves")
+
+    def test_a_client_that_never_sends_the_body_is_dropped_without_an_answer(self):
+        import socket, threading, time
+        w = X.build(); httpd = serve_http(w.server, socket_timeout_s=0.5)
+        try:
+            self.assertEqual(httpd.RequestHandlerClass.timeout, 0.5)
+            before = threading.active_count()
+            socks = []
+            for _ in range(5):
+                c = socket.create_connection(("127.0.0.1", httpd.server_address[1]))
+                c.sendall(b"POST /mcp HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer y\r\nContent-Length: 10\r\n\r\n"); socks.append(c)
+            idle = socket.create_connection(("127.0.0.1", httpd.server_address[1])); socks.append(idle)
+            time.sleep(1.2)
+            self.assertEqual(threading.active_count(), before, "every handler thread is gone")
+            for c in socks:
+                c.settimeout(1.0); self.assertEqual(c.recv(100), b"", "closed, nothing answered"); c.close()
+        finally:
+            httpd.shutdown()
+
+    def test_the_input_schema_is_the_catalog_type_table(self):
+        from actionloop import catalog as C
+        from mcpserver.server import McpToolServer, TYPE_MAP
+        self.assertIs(TYPE_MAP, C.JSON_TYPES)
+        entry = {"name": "t___x", "target": "t", "tool": "x", "tier": "R", "contract_op": "c", "permission": "p", "reversible": True, "idempotent": True, "egress_class": "internal",
+                 "args": {"dry": {"type": "bool", "required": True}, "ratio": {"type": "float"}, "meta": {"type": "dict"}}}
+        self.assertEqual(McpToolServer.tool_of(entry)["inputSchema"]["properties"], {"dry": {"type": "boolean"}, "ratio": {"type": "number"}, "meta": {"type": "object"}})
+        self.assertEqual(C.validate_args(entry, {"dry": True, "ratio": 0.5, "meta": {}}), {"dry": True, "ratio": 0.5, "meta": {}}, "what is advertised is accepted")

@@ -10,7 +10,9 @@ from dataclasses import dataclass, field
 
 
 def canonical(obj) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    """The bytes a hash and a signature are over. A lone surrogate (valid JSON text that UTF-8 refuses) is passed
+    through rather than raised on, so hashing is total; `catalog.validate_args` is where such text is refused."""
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8", "surrogatepass")
 
 
 def sha256(obj) -> str:

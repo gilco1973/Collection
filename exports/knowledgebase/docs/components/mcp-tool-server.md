@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # mcp-tool-server
 
-> A component of the collection: `components/python/mcp-tool-server/` in the repository (category harness, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §7.4, §4.12, §4.1, §5.1 (PLT-CAT-5, PLT-CAT-6, PLT-HAR-33, PLT-ID-6, PLT-AC-11, PLT-AC-16, PLT-AC-21); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/mcp-tool-server/` in the repository (category harness, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §7.4, §4.12, §4.1, §5.1 (PLT-CAT-5, PLT-CAT-6, PLT-HAR-33, PLT-ID-6, PLT-AC-11, PLT-AC-16, PLT-AC-21); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 An MCP server in front of the action loop: tools/list from the signed catalog with annotations, every call through the hooks, W1 as elicitation, taint as 403.
@@ -70,6 +70,8 @@ names are the harness's (`target___op`), so the catalog, the policy bundle and t
 - A deny for taint, ladder, scope or a kill switch is a typed forbidden error; over HTTP it is 403 with `WWW-Authenticate: Bearer error="insufficient_scope", scope=<permission>`.
 - A request without a bearer is 401 with the protected-resource metadata location; sampling is never offered and `sampling/*` is method-not-found.
 - Every call, decision, confirmation and stop is on the chain, whatever the transport.
+- Over HTTP a connection that sends nothing for `socket_timeout_s` (30 s by default: a request line, a header or a body that never comes) is closed without an answer and holds no thread; over stdio a byte that is not UTF-8 is replaced and a line over 1 MB is a parse error, and the loop keeps serving.
+- The argument types `tools/list` advertises are the catalog's one type table (`str`, `int`, `float`, `bool`, `list`, `dict`); what is advertised is what `validate_args` accepts.
 
 ## Where it came from
 

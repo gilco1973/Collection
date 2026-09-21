@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # jira-connector
 
-> A component of the collection: `components/python/jira-connector/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.12, §4.1, §5.2 (PLT-CAT-6, PLT-ID-6, PLT-AC-16); the replacement test is under Known limits. Version 1.0.0; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/jira-connector/` in the repository (category integration, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §4.12, §4.1, §5.2 (PLT-CAT-6, PLT-ID-6, PLT-AC-16); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 Jira as a harness target: read, search, comment, create; a fake behind the same methods; the token a name;

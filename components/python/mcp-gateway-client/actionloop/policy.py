@@ -42,13 +42,21 @@ def _rhs(env: dict, v):
     return _get(env, v[1:]) if isinstance(v, str) and v.startswith("$") else v
 
 
+def _members(v):
+    """The collection an `in`/`contains` operand must be: a list, tuple or set. A string is not one (no substring
+    test), a missing value is the empty collection, anything else is None and the condition is false."""
+    if v is None:
+        return ()
+    return v if isinstance(v, (list, tuple, set, frozenset)) else None
+
+
 def _cond(env: dict, c: list) -> bool:
     lhs, op, rhs = c[0], c[1], (c[2] if len(c) > 2 else None)
     a, b = _get(env, lhs), _rhs(env, rhs)
     if op == "eq": return a == b
     if op == "ne": return a != b
-    if op == "in": return a in (b or [])
-    if op == "not_in": return a not in (b or [])
+    if op == "in": return _members(b) is not None and a in _members(b)
+    if op == "not_in": return _members(b) is not None and a not in _members(b)
     if op == "lte": return a is not None and b is not None and a <= b
     if op == "gte": return a is not None and b is not None and a >= b
     if op == "exists": return a is not None
@@ -56,8 +64,8 @@ def _cond(env: dict, c: list) -> bool:
     if op == "startswith": return isinstance(a, str) and isinstance(b, str) and a.startswith(b)
     if op == "is_true": return a is True
     if op == "is_false": return a is False
-    if op == "contains": return isinstance(a, (list, tuple, set, str)) and b is not None and b in a
-    if op == "not_contains": return not (isinstance(a, (list, tuple, set, str)) and b is not None and b in a)
+    if op == "contains": return isinstance(a, (list, tuple, set, frozenset)) and b is not None and b in a
+    if op == "not_contains": return isinstance(a, (list, tuple, set, frozenset)) and b is not None and b not in a
     raise PolicyError(f"unknown op {op}")
 
 
@@ -96,7 +104,11 @@ class Bundle:
     def decide(self, env: dict) -> Decision:
         permits, forbids = [], []
         for r in self.rules:
-            if self._matches(r, env):
+            try:
+                matched = self._matches(r, env)
+            except Exception:  # noqa: BLE001 - a condition that cannot be evaluated (a type mismatch, an unknown op) is a deny that names the rule, never a raise into the loop
+                return Decision(False, (r.get("id"),), "condition_error", env.get("tier"))
+            if matched:
                 (permits if r["effect"] == "permit" else forbids).append(r["id"])
         if forbids:
             return Decision(False, tuple(forbids), "forbidden", env["tier"])

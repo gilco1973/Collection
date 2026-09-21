@@ -1,6 +1,6 @@
 {
   "name": "untrusted-input-guard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "tool",
   "language": "python",
   "summary": "Text a model reads is evidence, not instruction: tagged sources, injection score, taint, PII masking, fenced context, cite-or-drop claims, a corpus",
