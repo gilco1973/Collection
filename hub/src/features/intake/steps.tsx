@@ -8,6 +8,7 @@ import { CheckRow, Field, NumberInput, RadioCard, Seg, TextInput } from "../../u
 import { Check, Close, Grid } from "../../ui/icons";
 import type { BriefState } from "./useBrief";
 import { Composer, reusesOf } from "./Composer";
+import { baselineFor } from "../../api/baseline";
 
 /** Titles and the one-line summaries the steps rail and the section headers show (§7.11). */
 export const STEP_META: Record<BriefStepKey, { title: string; small: string; sub: string }> = {
@@ -267,25 +268,27 @@ export function DataAndToolsStep({ s, content, errors }: StepProps) {
           {pick === "tool" && <Composer s={s} content={content} onClose={() => setPick(null)} />}
         </div>
       </Field>
-      {reusesOf(v).length > 0 && (
+      {reusesOf(v).some((r) => !r.required) && (
         <Field
           label="Reused from what exists"
           help="components of the collection and services of the bank the consumer builds on; a signed one is review time saved"
         >
           <div className="row" style={{ flexWrap: "wrap" }}>
-            {reusesOf(v).map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                className="chip line"
-                title="Remove"
-                aria-label={`${r.name} · remove`}
-                onClick={() => s.update("dataAndTools", { reuses: reusesOf(v).filter((x) => x.id !== r.id) })}
-              >
-                {r.name}
-                <Close size={10} />
-              </button>
-            ))}
+            {reusesOf(v)
+              .filter((r) => !r.required)
+              .map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className="chip line"
+                  title="Remove"
+                  aria-label={`${r.name} · remove`}
+                  onClick={() => s.update("dataAndTools", { reuses: reusesOf(v).filter((x) => x.id !== r.id) })}
+                >
+                  {r.name}
+                  <Close size={10} />
+                </button>
+              ))}
           </div>
         </Field>
       )}
@@ -499,11 +502,22 @@ export function ReviewStep({ s, content, errors, needsLead, canFile }: StepProps
       {sec("3 · Data and tools", "dataAndTools", [
         ["systems", c.dataAndTools.systems.map((x) => x.name).join(" · ") || "—"],
         ["tools", c.dataAndTools.tools.map((t) => `${t.name} (${t.tier})`).join(", ") || "—"],
-        ...(reusesOf(c.dataAndTools).length
+        ...(baselineFor(c).length
+          ? [
+              [
+                "harness",
+                `${baselineFor(c)
+                  .map((b) => b.name)
+                  .join(" · ")} · required with any tool`,
+              ] as [string, string],
+            ]
+          : []),
+        ...(reusesOf(c.dataAndTools).some((r) => !r.required)
           ? [
               [
                 "reuses",
                 reusesOf(c.dataAndTools)
+                  .filter((r) => !r.required)
                   .map((r) => r.name)
                   .join(" · "),
               ] as [string, string],

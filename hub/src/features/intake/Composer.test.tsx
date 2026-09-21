@@ -149,3 +149,27 @@ describe("the intake composer", () => {
     expect(reusesOf({ systems: [], tools: [], dataClasses: [], tierCeiling: "R" })).toEqual([]);
   });
 });
+
+describe("the harness baseline in the composer", () => {
+  it("shows the harness set locked with any tool, marks it required in the palette, and never lets it be removed", async () => {
+    mount({ tools: [{ name: "cos_get_case", tier: "R", classes: ["confidential"] }], systems: [{ id: "cos-case-notes", name: "COS · case notes" }] });
+    const dialog = await screen.findByRole("dialog");
+    const baseline = await screen.findByTestId("baseline");
+    expect(baseline).toHaveTextContent("Governed action loop");
+    expect(baseline).toHaveTextContent("Audit chain");
+    expect(baseline.querySelectorAll('[aria-label="required, cannot be removed"]')).toHaveLength(5);
+    expect(screen.queryByRole("button", { name: "Governed action loop · remove" })).toBeNull();
+    expect(dialog).toHaveTextContent("Every tool runs inside the governed action loop");
+    // In the palette the component reads as required, not as a thing to add.
+    const item = await screen.findByTestId("item-component-governed-action-loop");
+    expect(item).toHaveTextContent("required");
+    expect(screen.queryByRole("button", { name: "Add Governed action loop" })).toBeNull();
+  });
+
+  it("shows no baseline until a tool is in the brief", async () => {
+    mount();
+    await screen.findByRole("dialog");
+    expect(screen.queryByTestId("baseline")).toBeNull();
+    expect(await screen.findByRole("button", { name: "Add Governed action loop" })).toBeInTheDocument();
+  });
+});

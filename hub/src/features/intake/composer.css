@@ -196,6 +196,13 @@
   border: 1px solid var(--rule);
   background: var(--surface);
 }
+.composer-row.locked {
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+.composer-lock {
+  font-size: 12px;
+}
 .composer-consequences {
   margin-top: 12px;
   padding: 10px 12px;

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { api } from "../../api";
 import type { BriefContent } from "../../api/schemas";
 import type { DataClass, RegistrySystem, RegistryTool, Tier } from "../../api/types";
+import { BASELINE_WHY, baselineFor } from "../../api/baseline";
 import { track } from "../../telemetry";
 import { Check, Close, Grid, Plus, Search } from "../../ui/icons";
 import { TIER_CHIP } from "./steps";
@@ -20,7 +21,7 @@ import "./composer.css";
  * Nothing here is a second data model: it edits `content.dataAndTools`.
  */
 
-export type Reuse = { id: string; name: string; kind: string };
+export type Reuse = { id: string; name: string; kind: string; required?: boolean };
 type ItemKind = "system" | "tool" | "component" | "service";
 type Item = { kind: ItemKind; id: string; name: string; small: string; tier?: Tier; classes?: DataClass[]; disabled?: string; signed?: boolean };
 const MIME = "application/x-hub-item";
@@ -52,9 +53,15 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const reuses = reusesOf(v);
+  const reuses = reusesOf(v).filter((r) => !r.required);
+  const baseline = baselineFor(content);
+  const isBaseline = (id: string) => baseline.some((b) => b.id === id);
   const has = (kind: ItemKind, id: string) =>
-    kind === "system" ? v.systems.some((x) => x.id === id) : kind === "tool" ? v.tools.some((x) => x.name === id) : reuses.some((x) => x.id === id);
+    kind === "system"
+      ? v.systems.some((x) => x.id === id)
+      : kind === "tool"
+        ? v.tools.some((x) => x.name === id)
+        : reuses.some((x) => x.id === id) || isBaseline(id);
 
   const items = useMemo<Item[]>(() => {
     const sys = (systems.data ?? []).map<Item>((x) => ({
@@ -241,7 +248,11 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
                                 {it.disabled ? ` · ${it.disabled}` : ""}
                               </small>
                             </div>
-                            {inBrief ? (
+                            {inBrief && isBaseline(it.id) ? (
+                              <span className="chip accent" title={BASELINE_WHY}>
+                                <Check size={11} /> required
+                              </span>
+                            ) : inBrief ? (
                               <span className="chip ok">
                                 <Check size={11} /> in the brief
                               </span>
@@ -333,6 +344,28 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
               )}
             </div>
 
+            {baseline.length > 0 && (
+              <>
+                <h4>
+                  Required with any tool <span className="muted">the harness</span>
+                </h4>
+                <div className="composer-rows" data-testid="baseline">
+                  {baseline.map((b) => (
+                    <div key={b.id} className="composer-row locked" title={b.why}>
+                      <span className="chip accent">required</span>
+                      <div className="col" style={{ gap: 0, flex: 1, minWidth: 0 }}>
+                        <span>{b.name}</span>
+                        <small className="muted">{b.why}</small>
+                      </div>
+                      <span className="composer-lock" role="img" aria-label="required, cannot be removed">
+                        🔒
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
             <h4>Reused from what exists</h4>
             <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
               {reuses.map((r) => (
@@ -398,6 +431,7 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
                     <>{`${SESSION_CEILING - v.tools.length} tools left under the session ceiling.`}</>
                   )}
                 </li>
+                {baseline.length > 0 && <li>{BASELINE_WHY} They are written into the brief when it is filed and cannot be removed.</li>}
                 <li>
                   {highest === "R"
                     ? "Reads only: a read profile registers itself; the lead confirms only the road."

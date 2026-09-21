@@ -230,6 +230,7 @@ class HubApi:
         write = b["content"]["dataAndTools"]["tierCeiling"] != "R"
         if write and not any(r in ("ops.lead", "platform.lead") for r in p.roles):
             raise Problem(403, "Lead confirmation needed", "A write profile is filed by your team lead. Save the draft and ask them to file it.", "brief.lead_required")
+        b["content"] = B.with_baseline(b["content"])  # the harness baseline is the record's, not the form's
         b.update({"status": "filed", "road": "R2", "etag": B.bump(b["etag"]), "updatedAt": now_iso()})
         return self.store.put("brief", b["id"], b, b["createdBy"])
 

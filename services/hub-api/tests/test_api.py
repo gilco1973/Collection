@@ -138,3 +138,27 @@ class OverHttp(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError) as e:
             urllib.request.urlopen(big)
         self.assertEqual(e.exception.code, 413)
+
+
+class HarnessBaseline(unittest.TestCase):
+    def test_filing_writes_the_harness_set_as_required_reuses(self):
+        from hubapi import briefs as B
+        content = {"useCase": {"name": "Returns triage", "problem": "Returns are matched by hand every morning for two hours.", "channel": "operator", "teamId": "team-x"},
+                   "people": {"businessOwner": "a", "productOwner": "b", "domainExpert": "c", "labellingHoursPerWeek": 2},
+                   "dataAndTools": {"systems": [{"id": "cos", "name": "COS"}], "tools": [{"name": "cos.get", "tier": "R", "classes": ["internal"]}], "dataClasses": ["internal"], "tierCeiling": "R",
+                                    "reuses": [{"id": "employee-assistant", "name": "Employee assistant", "kind": "service"}]},
+                   "model": {"need": "workhorse", "classificationCeiling": "internal", "substitute": False},
+                   "outcome": {"metric": "m", "unit": "u", "baseline": 1, "target": 2, "measuredOn": "2026-09-01"}, "review": {"acknowledged": True}}
+        self.assertEqual(B.baseline_for({"dataAndTools": {"tools": []}}), [])
+        merged = B.with_baseline(content)
+        ids = [r["id"] for r in merged["dataAndTools"]["reuses"]]
+        self.assertEqual(ids[:5], ["governed-action-loop", "untrusted-input-guard", "cited-llm-engine", "audit-chain", "ids-only-logging"])
+        self.assertTrue(all(r.get("required") for r in merged["dataAndTools"]["reuses"][:5])); self.assertEqual(ids[5], "employee-assistant")
+        self.assertEqual(len(B.with_baseline(merged)["dataAndTools"]["reuses"]), 6)  # idempotent
+        # Over the API: a filed brief carries the baseline even though the form never sent it.
+        api = make_api(); c = Client(api, "mock.gk")
+        s, b = c.call("POST", "/briefs", {}); self.assertEqual(s, 201)
+        s, saved = c.call("PATCH", f"/briefs/{b['id']}", {"content": content}, {"If-Match": b["etag"]}); self.assertEqual(s, 200)
+        s, filed = c.call("POST", f"/briefs/{b['id']}/file", None, {"If-Match": saved["etag"]})
+        self.assertEqual((s, filed["status"]), (200, "filed"))
+        self.assertEqual([r["id"] for r in filed["content"]["dataAndTools"]["reuses"] if r.get("required")][0], "governed-action-loop")

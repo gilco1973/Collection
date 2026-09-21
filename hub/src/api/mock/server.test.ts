@@ -53,7 +53,13 @@ describe("mock API contract", () => {
     );
     await expect(clientAs("gk").shelf.sign(name, { role: "owner", attest }, "k4")).rejects.toBeInstanceOf(ValidationError);
     const rec = await clientAs("gk").shelf.sign(name, { role: "owner", attest, usedIn: "payments-ops-runbook", note: "ran it against the fake" }, "k5");
-    expect(rec).toMatchObject({ component: name, role: "owner", version: first.version, usedIn: "payments-ops-runbook", email: "gil.klainert@crossriver.example" });
+    expect(rec).toMatchObject({
+      component: name,
+      role: "owner",
+      version: first.version,
+      usedIn: "payments-ops-runbook",
+      email: "gil.klainert@crossriver.example",
+    });
     // Recorded, awaiting commit: visible to everyone, and not signable again at this version.
     const after = await clientAs("security").shelf.get(name);
     expect(after.recorded.owner?.id).toBe(rec.id);
@@ -164,5 +170,45 @@ describe("the guide over the mock API", () => {
     const gap = await clientAs("gk").guide.ask({ question: "zzqx quokka lantern", audience: "leadership" });
     expect(gap.sources).toEqual([]);
     expect(gap.answer).toContain("couldn't find");
+  });
+});
+
+describe("filing writes the harness baseline", () => {
+  beforeEach(() => resetMockState());
+
+  it("adds the required harness set to a brief with tools and keeps the person's reuses", async () => {
+    const api = clientAs("gk");
+    let b = await api.briefs.create("kb1");
+    b = await api.briefs.save(b.id, b.etag, {
+      content: {
+        useCase: {
+          name: "Returns triage",
+          problem: "Returns are matched by hand every morning for two hours.",
+          channel: "operator",
+          teamId: "team-payments-ops",
+        },
+        people: { businessOwner: "D. Ruiz", productOwner: "G. K.", domainExpert: "S. Okafor", labellingHoursPerWeek: 2 },
+        dataAndTools: {
+          systems: [{ id: "cos-case-notes", name: "COS · case notes" }],
+          tools: [{ name: "cos_get_case", tier: "R", classes: ["confidential"] }],
+          dataClasses: ["internal", "confidential"],
+          tierCeiling: "R",
+          reuses: [{ id: "employee-assistant", name: "Employee assistant", kind: "service" }],
+        },
+        model: { need: "workhorse", classificationCeiling: "confidential", substitute: true },
+        outcome: { metric: "minutes per case", unit: "minutes", baseline: 22, target: 8, measuredOn: "2026-09-01" },
+        review: { acknowledged: true },
+      },
+    });
+    const filed = await api.briefs.file(b.id, b.etag, "kb2");
+    const reuses = (filed.content.dataAndTools as { reuses: Array<{ id: string; required?: boolean }> }).reuses;
+    expect(reuses.filter((r) => r.required).map((r) => r.id)).toEqual([
+      "governed-action-loop",
+      "untrusted-input-guard",
+      "cited-llm-engine",
+      "audit-chain",
+      "ids-only-logging",
+    ]);
+    expect(reuses.some((r) => r.id === "employee-assistant" && !r.required)).toBe(true);
   });
 });

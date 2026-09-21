@@ -21,6 +21,7 @@ import {
   REGISTRY_TOOLS,
 } from "./fixtures";
 import { ask as guideAsk } from "./guideRules";
+import { withBaseline } from "../baseline";
 import type { GuideAudience } from "../types";
 
 /**
@@ -364,6 +365,7 @@ route("POST", "/briefs/:id/file", ({ params, principal, req }) => {
       detail: "Some sections need attention before it can be filed.",
       errors: issuesToFieldErrors(parsed.error.issues),
     });
+  b.content = withBaseline(b.content); // the harness baseline is the record's, not the form's
   const write = b.content.dataAndTools.tierCeiling !== "R";
   if (write && !principal.roles.some((r) => r === "ops.lead" || r === "platform.lead")) {
     return problem(403, {

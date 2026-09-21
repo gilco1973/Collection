@@ -47,8 +47,8 @@ export const dataAndToolsSchema = z
     tierCeiling: ceilingSchema,
     /** Components of the collection and services of the bank the consumer reuses; named in the brief, reviewed as reuse. */
     reuses: z
-      .array(z.object({ id: z.string().min(1), name: z.string().min(1), kind: z.string().min(1) }))
-      .max(20)
+      .array(z.object({ id: z.string().min(1), name: z.string().min(1), kind: z.string().min(1), required: z.boolean().optional() }))
+      .max(26)
       .optional(),
   })
   .superRefine((v, ctx) => {

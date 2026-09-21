@@ -71,7 +71,10 @@ zone. Drag or Add writes straight into the brief; a tool brings its system with 
 consequences live (the ceiling the tools need, the data classes they read, the session limit, whether a lead
 files) with one button per fix. A system without a recorded contract is shown but cannot be dropped; a money
 tool is refused for a first consumer. What is reused is kept in the brief's optional `reuses` list and shown on
-the review page. The default render of the step is unchanged, so the pixel guard still passes at 0 px.
+the review page. The harness baseline (`src/api/baseline.ts`: governed-action-loop, untrusted-input-guard,
+cited-llm-engine, audit-chain, ids-only-logging) is required with any tool: the composer shows it locked, filing
+merges it into `reuses` as required entries, and hub-api applies the same rule when it files, so the API cannot
+record a solution that calls a tool without its harness. The default render of the step is unchanged, so the pixel guard still passes at 0 px.
 
 ## The guide
 

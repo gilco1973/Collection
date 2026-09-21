@@ -71,6 +71,32 @@ def validate_step(step: str, v) -> dict:
     return e
 
 
+# The harness baseline: every solution that calls a tool runs inside the governed action loop and carries the pieces
+# it relies on. Filing writes them into the brief as required reuses; the hub shows the same list (hub/src/api/baseline.ts).
+BASELINE = [
+    {"id": "governed-action-loop", "name": "Governed action loop", "kind": "component", "required": True},
+    {"id": "untrusted-input-guard", "name": "Untrusted input guard", "kind": "component", "required": True},
+    {"id": "cited-llm-engine", "name": "Cited LLM engine", "kind": "component", "required": True},
+    {"id": "audit-chain", "name": "Audit chain", "kind": "component", "required": True},
+    {"id": "ids-only-logging", "name": "Ids-only logging", "kind": "component", "required": True},
+]
+
+
+def baseline_for(content: dict) -> list:
+    d = (content or {}).get("dataAndTools") or {}
+    return list(BASELINE) if d.get("tools") else []
+
+
+def with_baseline(content: dict) -> dict:
+    """The brief with the harness baseline merged into its reuses, marked required; the person's own choices are kept."""
+    needed = baseline_for(content)
+    if not needed: return content
+    d = dict(content["dataAndTools"]); ids = {b["id"] for b in needed}
+    own = [r for r in (d.get("reuses") or []) if isinstance(r, dict) and r.get("id") not in ids]
+    d["reuses"] = [dict(b) for b in needed] + own
+    return {**content, "dataAndTools": d}
+
+
 def validate(content: dict) -> dict:
     out: dict[str, list] = {}
     for step in STEPS:

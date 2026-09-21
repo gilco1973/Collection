@@ -17,7 +17,7 @@ under Build: the sign-off queue and the onboarding tracker.
 An AI component is one of six categories. The category says who it is for and what it must contain.
 
 - **Agent**: an AI agent, for operators. It needs a template (role, stages, tools by tier, what it never does), the tools it may call and the harness it runs inside; the agent's catalog is built from its template, so it can call exactly what the template lists.
-- **Harness**: the loop an agent runs inside, for engineers building one: fixed hooks, [action tiers](../best-practices/action-tiers-and-confirmation.md), budgets, kill switches, a chained record.
+- **Harness**: the loop an agent runs inside, for engineers building one: fixed hooks, [action tiers](../best-practices/action-tiers-and-confirmation.md), budgets, kill switches, a chained record. Any brief that names a tool carries the harness set automatically (the loop, the input guard, the cited engine, the audit chain, ids-only logging); the hub writes it in when the brief is filed and it cannot be removed.
 - **Tool**: code with one clear surface and a test; an agent calls one through its harness.
 - **Integration**: a client for an external system with an in-memory fake behind the same methods.
 - **Pattern**: a small reference implementation of one practice, with the practice page it belongs to.

@@ -143,7 +143,7 @@
         <dt>Brief</dt><dd>The one-page form that starts any new use of AI. Six sections, about fifteen minutes.</dd>
         <dt>Assistant</dt><dd>Something you talk to that reads pages and answers with the page named. It has no tools, so it cannot change anything.</dd>
         <dt>Agent</dt><dd>Something that can read real systems and propose an action. A write waits for you; money is refused.</dd>
-        <dt>Harness</dt><dd>The loop an agent runs inside. It checks every call the same way; the model cannot skip it.</dd>
+        <dt>Harness</dt><dd>The loop an agent runs inside. It checks every call the same way; the model cannot skip it. Any brief that names a tool carries it automatically, with the guard, the engine, the chain and ids-only logging.</dd>
         <dt>Knowledge base</dt><dd>The separate site of practice pages. Every component has a page there too.</dd>
         <dt>Champion</dt><dd>One engineer per team who carries one initiative and brings the result back to the collection.</dd>
         <dt>The guide</dt><dd>The spark button at the bottom right of every page. It walks you through the hub and answers from our own pages.</dd>
@@ -317,6 +317,7 @@
         <tr><td><span class="t">Drop anything here</span> / <span class="t">Drop to add it to the brief</span></td><td>The whole right side is the drop zone; it lights up while you drag.</td></tr>
         <tr><td><span class="t">Tools 4 of 15</span> · <span class="t">Reused from what exists</span></td><td>Your tools against the 15-tool session ceiling, and the components and services you are building on. The × on any chip or row removes it.</td></tr>
         <tr><td><span class="t">WHAT THIS MEANS</span>: <span class="t">Highest tier so far: W1 · the ceiling is Read, which does not cover it.</span> <span class="t">Set the ceiling to Write with confirmation</span></td><td>The consequences, live. One button per fix: raise the ceiling, tick the data classes the tools read. It also says whether a lead will have to file, how many tools you have left, and that a money tool is refused for a first consumer.</td></tr>
+        <tr><td><span class="t">Required with any tool · the harness</span>: five locked rows, <span class="chip accent">required</span> and a 🔒: Governed action loop, Untrusted input guard, Cited LLM engine, Audit chain, Ids-only logging · <span class="t">Every tool runs inside the governed action loop; the guard, the engine, the chain and ids-only logging come with it.</span></td><td>The harness baseline. It appears as soon as the brief names a tool and cannot be removed. Filing writes it into the brief, on the hub and again on the platform, so no solution that calls a tool is ever recorded without its harness. In the palette these components read as <span class="t">required</span> rather than offering Add. The review page lists them under <span class="t">harness</span>.</td></tr>
         <tr><td><span class="t">cos_get_case brought COS · case notes with it</span></td><td>Dropping a tool adds its system of record too, when that system has a contract.</td></tr>
         <tr><td><span class="t">Done</span></td><td>Closes the composer. Everything is already in the brief and saving itself.</td></tr>
       </table></div>

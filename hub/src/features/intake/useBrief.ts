@@ -6,6 +6,7 @@ import { ApiError, ConflictError, ForbiddenError, ValidationError } from "../../
 import { BRIEF_STEPS, briefContentSchema, issuesToFieldErrors, validateStep, type BriefContent, type BriefStepKey, type FieldErrors } from "../../api/schemas";
 import type { Brief } from "../../api/types";
 import { track } from "../../telemetry";
+import { withBaseline } from "../../api/baseline";
 
 /**
  * State for one intake brief: the server's copy (react-query), the person's
@@ -156,7 +157,12 @@ export function useBrief(id: string | undefined) {
           errors: errs,
         });
       }
-      await save().catch(() => undefined);
+      // The harness baseline comes with any tool: written into the brief here, and again by the server, so the record names it.
+      const merged = withBaseline(content);
+      if (merged !== content) {
+        setContent(merged);
+        await patch.mutateAsync({ content: merged, currentStep: step, completed });
+      } else await save().catch(() => undefined);
       return api.briefs.file(id, etag.current, fileKey.current);
     },
     onSuccess: (b) => {
