@@ -41,6 +41,7 @@ names where each part came from and where the standalone products live.
   bank's values, build the images, staging, production, operations.
 - **A champion's first hour:** read `content/knowledgebase/docs/onboarding/ai-champions.md` (or the same page in
   the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.
+- **Teaching it:** `docs/teaching/teaching-the-collection.html` explains every screen, sentence, flow and process of the hub in plain words and ends with a 45-minute first lesson.
 - **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in
   as a persona, and show Discover's Tools tab and the Learn page.
 - **New to the hub:** open the guide (the button at the bottom right, or Alt+G). It asks whether you are here

@@ -15,7 +15,7 @@ scripts/bundle.sh "$work/bundle" >/dev/null
 mkdir -p "$work/zip/$name" "$work/zip/$name/deliverables/screenshots"
 tar -C "$work/zip/$name" -xzf "$work/bundle/$name.tar.gz"
 cp INSTALL.md HANDOVER.md "$work/zip/$name/"
-cp docs/pdf/user-manual.pdf docs/pdf/technical-guide.pdf docs/pdf/leadership-brief.pdf "$work/zip/$name/deliverables/"
+cp docs/pdf/user-manual.pdf docs/pdf/technical-guide.pdf docs/pdf/leadership-brief.pdf docs/teaching/teaching-the-collection.html "$work/zip/$name/deliverables/"
 for f in demo/out/collection-walkthrough.mp4 demo/out/collection-walkthrough.en.vtt; do
   [ -f "$f" ] && cp "$f" "$work/zip/$name/deliverables/" || echo "note: $f is not built; the zip ships without it (demo/README.md says how to build it)"
 done

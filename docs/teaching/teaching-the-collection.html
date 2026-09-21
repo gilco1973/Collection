@@ -1,0 +1,516 @@
+<title>Teaching the Collection</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f5f7fa; --surface: #ffffff; --surface-2: #f0f3f7; --ink: #0f172a; --ink-2: #334155; --muted: #64748b; --rule: #dde3ea;
+    --accent: #2757a8; --accent-soft: #e6eef9; --accent-ink: #1e3f7a; --ok: #1f8a4c; --ok-soft: #e3f3e8; --warn: #b7791f; --warn-soft: #fbf1dc;
+    --crit: #b93a34; --crit-soft: #fbe6e4; --money: #6b4fbb; --money-soft: #ece7f8; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.18);
+    --sans: "Instrument Sans", "Segoe UI", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1419; --surface: #171c22; --surface-2: #1d232b; --ink: #e7ecf2; --ink-2: #c3ccd7; --muted: #8e9bab; --rule: #2a333e;
+      --accent: #6f9ae6; --accent-soft: #1d2b44; --accent-ink: #b7cdf5; --ok: #63c58c; --ok-soft: #14301f; --warn: #e4a44a; --warn-soft: #3a2a12;
+      --crit: #f0776c; --crit-soft: #3d1d1a; --money: #b39cf0; --money-soft: #2a2140; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1419; --surface: #171c22; --surface-2: #1d232b; --ink: #e7ecf2; --ink-2: #c3ccd7; --muted: #8e9bab; --rule: #2a333e;
+    --accent: #6f9ae6; --accent-soft: #1d2b44; --accent-ink: #b7cdf5; --ok: #63c58c; --ok-soft: #14301f; --warn: #e4a44a; --warn-soft: #3a2a12;
+    --crit: #f0776c; --crit-soft: #3d1d1a; --money: #b39cf0; --money-soft: #2a2140; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 24px 80px; display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 40px; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 20px; padding-inline: 16px; } .toc { position: static !important; max-height: none !important; } }
+  header.top { grid-column: 1 / -1; display: grid; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+  .eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(30px, 4.6vw, 44px); line-height: 1.05; letter-spacing: -.025em; margin: 0; font-weight: 700; text-wrap: balance; max-width: 22ch; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 66ch; margin: 0; }
+  .howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 6px; }
+  .howto div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); }
+  .howto b { display: block; color: var(--ink); margin-bottom: 2px; }
+  .toc { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; max-height: calc(100vh - 24px); overflow: auto; font-size: 13px; padding-top: 8px; }
+  .toc .eyebrow { margin-bottom: 8px; }
+  .toc a { display: block; color: var(--ink-2); text-decoration: none; padding: 4px 8px; border-left: 2px solid transparent; border-radius: 0 6px 6px 0; }
+  .toc a:hover, .toc a:focus-visible { color: var(--accent); background: var(--accent-soft); outline: none; }
+  .toc a.sub { padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+  main { min-width: 0; display: grid; gap: 44px; }
+  section { display: grid; gap: 14px; scroll-margin-top: 16px; }
+  section > h2 { font-size: 26px; letter-spacing: -.02em; margin: 0; line-height: 1.15; text-wrap: balance; }
+  section > h2 small { display: block; font-size: 13.5px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 4px; }
+  h3 { font-size: 17px; margin: 8px 0 0; letter-spacing: -.01em; }
+  p { margin: 0; max-width: 68ch; color: var(--ink-2); }
+  p strong, li strong { color: var(--ink); }
+  ul, ol { margin: 0; padding-left: 20px; color: var(--ink-2); max-width: 70ch; }
+  li { margin: 4px 0; }
+  /* On-screen text and what it means */
+  table.ui { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .scroll { overflow-x: auto; }
+  table.ui th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 9px 12px; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  table.ui td { padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); }
+  table.ui tr:last-child td { border-bottom: 0; }
+  table.ui td:first-child { width: 36%; color: var(--ink); }
+  .t { font-family: var(--mono); font-size: 12.5px; background: var(--accent-soft); color: var(--accent-ink); padding: 1px 6px; border-radius: 5px; white-space: normal; }
+  .chip { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface-2); color: var(--ink-2); font-family: var(--mono); }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .chip.crit { background: var(--crit-soft); color: var(--crit); border-color: transparent; }
+  .chip.money { background: var(--money-soft); color: var(--money); border-color: transparent; }
+  .chip.accent { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }
+  /* Steps */
+  ol.steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 8px; max-width: none; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; margin: 0; }
+  ol.steps li::before { content: counter(s); width: 26px; height: 26px; border-radius: 999px; background: var(--ink); color: var(--bg); display: inline-flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 600; }
+  ol.steps li b { color: var(--ink); }
+  ol.steps li span.why { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  /* Callouts */
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--ink); padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 14px; max-width: none; }
+  .note.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .note.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); }
+  .card b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 4px; }
+  .card .chip { margin-top: 6px; }
+  /* Glossary */
+  dl { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 6px 16px; margin: 0; font-size: 14px; }
+  dt { font-weight: 600; color: var(--ink); }
+  dd { margin: 0; color: var(--ink-2); }
+  @media (max-width: 560px) { dl { grid-template-columns: minmax(0,1fr); } dt { margin-top: 6px; } }
+  code.cmd { display: block; font-family: var(--mono); font-size: 12.5px; background: var(--ink); color: var(--bg); padding: 10px 12px; border-radius: 8px; overflow-x: auto; white-space: pre; }
+  :root[data-theme="dark"] code.cmd, .dark code.cmd { background: #0b0f14; color: #e7ecf2; }
+  pre.mermaid { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 8px; overflow-x: auto; }
+  .lesson { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 8px 14px; font-size: 14px; }
+  .lesson .min { font-family: var(--mono); font-size: 12.5px; color: var(--muted); padding-top: 2px; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  html { scroll-behavior: smooth; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">A teaching guide for the AI hub and the collection</span>
+    <h1>Teaching the Collection</h1>
+    <p class="lede">Every screen, every sentence the hub shows, every flow and every process, explained in plain words. Read it before you teach a cohort, or hand it to someone on their first day.</p>
+    <div class="howto">
+      <div><b>You see</b> The exact words on the screen, shown <span class="t">like this</span>.</div>
+      <div><b>It means</b> What the words are telling you, and what is happening underneath.</div>
+      <div><b>Step by step</b> Numbered only where the order matters: a flow you follow from first click to last.</div>
+      <div><b>The rule behind it</b> Notes in blue say why the hub behaves as it does. Nothing here is a side door.</div>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Contents">
+    <span class="eyebrow">Contents</span>
+    <a href="#words">The words you will meet</a>
+    <a href="#signin">1. Signing in</a>
+    <a href="#chrome">2. The top bar and the footer</a>
+    <a href="#discover">3. Discover</a>
+    <a class="sub" href="#discover-flow">Find and open something</a>
+    <a class="sub" href="#request-flow">Ask for access</a>
+    <a href="#listing">4. A listing page</a>
+    <a href="#assistant">5. The employee assistant</a>
+    <a href="#workspace">6. My workspace</a>
+    <a href="#brief">7. Build: the intake brief</a>
+    <a class="sub" href="#brief-sections">The six sections</a>
+    <a class="sub" href="#brief-flow">Filing it</a>
+    <a href="#signoffs">8. Build: sign-offs</a>
+    <a href="#onboarding">9. Build: onboarding</a>
+    <a href="#learn">10. Learn</a>
+    <a href="#settings">11. Settings</a>
+    <a href="#guide">12. The guide</a>
+    <a href="#search">13. Search</a>
+    <a href="#messages">14. Messages you may see</a>
+    <a href="#processes">15. The processes, end to end</a>
+    <a href="#lesson">16. A 45-minute first lesson</a>
+  </nav>
+
+  <main>
+
+    <section id="words">
+      <h2>The words you will meet <small>Fifteen terms. Everything else on the hub is ordinary English.</small></h2>
+      <dl>
+        <dt>The hub</dt><dd>The website. Four areas along the top: Discover, My workspace, Build, Learn.</dd>
+        <dt>The collection</dt><dd>The shared toolbox of reusable AI building blocks, called components. The hub lists every one of them.</dd>
+        <dt>Component</dt><dd>One building block in one of six kinds: an agent, a harness, a tool, an integration, a pattern, or a skill.</dd>
+        <dt>The shelf</dt><dd>Where a component is once two named people have signed it. "On the shelf" means "safe to reuse".</dd>
+        <dt>Sign-off</dt><dd>A named person's word that they tested and read a component. Two are needed: its owner, and an AI security engineer.</dd>
+        <dt>Road</dt><dd>One of six approved ways to build something, R1 to R6. Picking a road decides which checks apply.</dd>
+        <dt>Tier</dt><dd>How much an action can change. <span class="chip">R</span> reads. <span class="chip warn">W1</span> writes after you confirm. <span class="chip crit">W2</span> needs a second person. <span class="chip money">MONEY</span> is refused.</dd>
+        <dt>Ladder</dt><dd>How much autonomy a person or a service is allowed, L0 to L3. A service never acts above the person using it.</dd>
+        <dt>Brief</dt><dd>The one-page form that starts any new use of AI. Six sections, about fifteen minutes.</dd>
+        <dt>Assistant</dt><dd>Something you talk to that reads pages and answers with the page named. It has no tools, so it cannot change anything.</dd>
+        <dt>Agent</dt><dd>Something that can read real systems and propose an action. A write waits for you; money is refused.</dd>
+        <dt>Harness</dt><dd>The loop an agent runs inside. It checks every call the same way; the model cannot skip it.</dd>
+        <dt>Knowledge base</dt><dd>The separate site of practice pages. Every component has a page there too.</dd>
+        <dt>Champion</dt><dd>One engineer per team who carries one initiative and brings the result back to the collection.</dd>
+        <dt>The guide</dt><dd>The spark button at the bottom right of every page. It walks you through the hub and answers from our own pages.</dd>
+      </dl>
+    </section>
+
+    <section id="signin">
+      <h2>1. Signing in <small>One button. The hub never sees your password.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Sign in</span> · <span class="t">Use your bank account. What you can see and do here follows your role and channel; nothing is a side door.</span></td><td>You sign in with the account you use for everything else. The company's identity provider tells the hub who you are and which groups you are in. What you then see is decided by those groups, never by asking nicely.</td></tr>
+        <tr><td><span class="t">Continue with … sign-in</span></td><td>The one button. It carries the bank's name. Clicking it goes to the identity provider and back.</td></tr>
+        <tr><td><span class="t">Development personas</span> · <span class="chip">mock identity</span></td><td>Only in a sandbox: a list of pretend people to sign in as (an operations lead, an investigator, an employee, a platform lead, a security engineer). You will not see this in production.</td></tr>
+        <tr><td><span class="t">Signing you in…</span></td><td>The hub is waiting for the identity provider, then for the platform to say who you are.</td></tr>
+        <tr><td><span class="t">Your role does not allow this</span></td><td>You are signed in, but this page or action is not open to your role. The page offers <span class="t">Back to Discover</span> and <span class="t">Sign in as someone else</span>.</td></tr>
+      </table></div>
+      <ol class="steps">
+        <li><div><b>Open the hub's address and press the sign-in button.</b><span class="why">You are sent to the identity provider and back; there is nothing to type on the hub itself.</span></div></li>
+        <li><div><b>Land on Discover.</b><span class="why">The first screen is the catalog, with what you may use today at the top.</span></div></li>
+        <li><div><b>If something you expected is missing, that is access, not a fault.</b><span class="why">Every card and page has a button to ask for it. See "Ask for access" below.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="chrome">
+      <h2>2. The top bar and the footer <small>The same on every page.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Discover</span> · <span class="t">My workspace</span> · <span class="t">Build</span> · <span class="t">Learn</span></td><td>The four areas. Discover is the catalog. My workspace is what is yours. Build is where you propose and where components get signed. Learn is the roads, the collection and the programme.</td></tr>
+        <tr><td><span class="t">Search assistants, tools, knowledge…</span> <span class="chip">⌘K</span></td><td>Opens the search box from anywhere. Ctrl+K on Windows. Section 13 explains what it finds.</td></tr>
+        <tr><td>The bell</td><td>Takes you to your workspace, where your requests and their state are.</td></tr>
+        <tr><td>Your initials</td><td>The account menu: <span class="t">Settings</span> and <span class="t">Sign out</span>.</td></tr>
+        <tr><td><span class="t">Everything in the Hub runs on the platform: one identity chain, one policy bundle, one audit trail.</span></td><td>The footer's one sentence. Whatever you do here is done as you, checked by the same policy, and recorded.</td></tr>
+        <tr><td><span class="t">Office hour Thursdays 11:00 · escalation: platform lead</span></td><td>Where to go with a question a page does not answer.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="discover">
+      <h2>3. Discover <small>The catalog: what you may use today, and what you can ask for.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">What do you want to do with AI today?</span></td><td>The page's question. Under it, one line says every service here runs on the platform, so your identity, the bank's policy, a budget and an audit trail come with it.</td></tr>
+        <tr><td><span class="t">Summarise this case, draft the R10 letter, find the late-file procedure…</span></td><td>The search box, with examples of what people type. Typing a question offers to ask the assistant.</td></tr>
+        <tr><td><span class="t">Available to you</span> · <span class="t">by your role and channel · request what you cannot see</span></td><td>The row of cards you can open right now. It is worked out per person.</td></tr>
+        <tr><td>Chips on a card: <span class="chip">R2 · read</span> <span class="chip">internal</span> <span class="chip ok">GA</span> <span class="chip warn">preview</span> <span class="chip">ladder L1</span></td><td>The road and profile (R2 · read means an internal agent that only reads), the data class it touches, and whether it is generally available. GA means two named people signed this version. Preview means it is still earning them.</td></tr>
+        <tr><td>Card buttons: <span class="t">Open</span> · <span class="t">View</span> · <span class="t">Read contract</span> · <span class="t">Request access</span> · <span class="t">Requested</span></td><td>Open starts using it. View shows the listing without access. Read contract is for a service under a contract. Request access asks your lead; Requested means you already did.</td></tr>
+        <tr><td><span class="t">Browse the catalog</span> · tabs <span class="t">All</span> <span class="t">Assistants</span> <span class="t">Agents</span> <span class="t">Knowledge</span> <span class="t">Tools and APIs</span> <span class="t">Roads and templates</span></td><td>Everything, by kind. The collection's components sit under their kind with a stage chip such as <span class="chip ok">agent · ready</span>. The count line says every listing is registered, evaluated and audited.</td></tr>
+        <tr><td><span class="t">Cards</span> / <span class="t">List</span></td><td>The same catalog as cards or as a table with Listing, Kind, Road, Lifecycle and Access columns.</td></tr>
+        <tr><td><span class="t">Nothing in this part of the catalog is visible to your role yet.</span></td><td>An empty tab is about access, not about the catalog being empty.</td></tr>
+        <tr><td><span class="t">Bring your own use case</span> · <span class="t">Start a brief</span></td><td>The way to propose something new. One page; the lead confirms only the road, within two working days.</td></tr>
+        <tr><td><span class="t">Building something for your team?</span> · tiles <span class="t">6 weeks</span> <span class="t">2 weeks</span> <span class="t">15 min</span></td><td>What the paved road gives an engineer: six weeks from intake to production for a read profile, two weeks to a sandbox with an embedded engineer, a runnable example in fifteen minutes.</td></tr>
+        <tr><td><span class="t">What changed this week</span> · <span class="t">All updates</span></td><td>New and changed listings since last week.</td></tr>
+      </table></div>
+
+      <h3 id="discover-flow">Find and open something, step by step</h3>
+      <ol class="steps">
+        <li><div><b>Look at the row under "Available to you" first.</b><span class="why">Anything there opens with one click and runs as you.</span></div></li>
+        <li><div><b>Not there? Pick a tab under "Browse the catalog" or press ⌘K and type a word.</b><span class="why">The tabs split by kind; search finds anything your role may see.</span></div></li>
+        <li><div><b>Read the chips before opening.</b><span class="why">The road says what kind of thing it is, the data chip what it touches, and GA or preview whether it is signed.</span></div></li>
+        <li><div><b>Press Open for an assistant, or View for a listing.</b><span class="why">An assistant opens a conversation. Everything else opens its listing page, described in section 4.</span></div></li>
+      </ol>
+
+      <h3 id="request-flow">Ask for access, step by step</h3>
+      <ol class="steps">
+        <li><div><b>On the card or its listing, press "Request access" (or "Request ladder" for more autonomy).</b><span class="why">The hub only routes the ask; the platform's policy decides.</span></div></li>
+        <li><div><b>See the toast <span class="t">Request sent.</span> and the button change to "Requested".</b><span class="why">If you asked for a ladder above your own ceiling, you see instead: <span class="t">Your own ladder is L1; ask your lead to raise it first.</span></span></div></li>
+        <li><div><b>Follow it under My workspace → Your requests.</b><span class="why">Each request shows pending, granted or denied, with a note like "with your lead".</span></div></li>
+      </ol>
+    </section>
+
+    <section id="listing">
+      <h2>4. A listing page <small>What it does, what it may do, who signed it.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td>Breadcrumb <span class="t">Discover / Agents / …</span>, the name and a one-line summary</td><td>Where you are and what this thing is, in the words of the people who made it.</td></tr>
+        <tr><td>Header chips: <span class="chip">road R1</span> <span class="chip">python</span> <span class="chip ok">agent · ready</span> <span class="chip accent">spec §5.1, §5.2…</span></td><td>The road, the language, its readiness, and which parts of the platform design it implements. A component of the collection also shows its tags.</td></tr>
+        <tr><td><span class="t">Open in the portal</span> · <span class="t">Try in playground</span></td><td>Use it for real as yourself, or try it in the sandbox with your playground key (section 6).</td></tr>
+        <tr><td>Tiles: <span class="t">Template</span> <span class="t">Tools</span> <span class="t">Harness</span> <span class="t">Language</span> <span class="t">Status</span> <span class="t">Pairs with</span></td><td>For an agent: it has one template, which tools it calls, which harness it runs inside. Language says "standard library only" when nothing has to be installed. Pairs with lists the components it is usually used with.</td></tr>
+        <tr><td><span class="t">What it does</span></td><td>Three to five plain sentences. For an agent they always say what it will not do, for example "it never posts on its own".</td></tr>
+        <tr><td><span class="t">What it can read and do</span> · columns <span class="t">Operation</span> <span class="t">Tier</span> <span class="t">Data classes</span> <span class="t">What you see</span> · chip <span class="chip">catalog … · signed</span></td><td>The whole permission list. Each row is one thing it may call, with its tier. Nothing outside this table can run; the list is signed, so it cannot change quietly.</td></tr>
+        <tr><td><span class="t">Sign-off</span> card: <span class="t">Owner</span> <span class="t">AI security</span> <span class="t">Stage</span>, chips <span class="chip">pending</span> <span class="chip ok">signed</span> <span class="chip crit">stale</span></td><td>Who has signed this version and who has not. Stale means someone signed an older version; a change makes a signature stale until it is renewed. If you may sign, the form appears right here (section 8).</td></tr>
+        <tr><td><span class="t">Get started</span></td><td>Numbered steps for an engineer: copy the directory, edit the template first, run the example.</td></tr>
+        <tr><td><span class="t">Owner and support</span> · <span class="t">owner</span> <span class="t">source</span> <span class="t">support</span></td><td>The person who signs as owner, where the component came from, and where to ask (the champions channel).</td></tr>
+        <tr><td><span class="t">Versions</span> · <span class="t">Changelog</span> · chip <span class="chip ok">current</span></td><td>Every version and its date. A new version asks both signers again.</td></tr>
+        <tr><td><span class="t">Trust and evidence</span> · <span class="t">Cost and usage</span></td><td>For the bank's own services: the evaluation, the audit trail links, weekly users, task success, and the outcome metric against its baseline.</td></tr>
+        <tr><td><span class="t">No operations are recorded for this listing.</span></td><td>This listing has no tools at all, for example a knowledge service. It can read, not act.</td></tr>
+      </table></div>
+      <div class="note">The rule behind the table: <span class="chip">R</span> runs. <span class="chip warn">W1</span> is parked until the person using it confirms that exact action, once. <span class="chip crit">W2</span> needs a second, named person. <span class="chip money">MONEY</span> is refused outright. If the text the agent read contained instructions, the session is marked as tainted and can only read from then on.</div>
+    </section>
+
+    <section id="assistant">
+      <h2>5. The employee assistant <small>Ask in plain words. Every answer names the page it came from.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Conversations</span> · <span class="t">+</span> · <span class="t">No conversations yet.</span></td><td>Your past conversations with this assistant, newest first. Plus starts a fresh one.</td></tr>
+        <tr><td><span class="t">Assistant</span> list on the left</td><td>The assistants and agents your role may talk to. <span class="chip">playground</span> after a name means you opened it in the sandbox.</td></tr>
+        <tr><td>Header line: <span class="t">reads what your role can read · never writes · session memory only</span></td><td>Three promises. It reads only what you could read yourself, it cannot change anything, and it forgets when the session ends.</td></tr>
+        <tr><td><span class="t">Ask a follow-up…</span> · <span class="t">Send</span> · <span class="t">Stop</span></td><td>Type, press Send. Stop ends an answer mid-way and the record notes that you stopped it.</td></tr>
+        <tr><td><span class="t">Answers are built from sources your role can read; claims without a source are marked.</span></td><td>The line under the box. It is the assistant's whole method in one sentence.</td></tr>
+        <tr><td>An answer with underlined phrases and chips like <span class="chip">Runbook · ACH inbound files §3</span></td><td>Each underlined phrase is a claim, and the chip beside it is the page it came from. A phrase shown differently, with the hint <span class="t">No source supports this claim</span>, is unsupported: read it as a hint, not a fact.</td></tr>
+        <tr><td><span class="t">Sources</span> row with chips like <span class="chip">runbook · internal</span> <span class="chip">policy manual · confidential</span></td><td>Every page used, with its classification, so you know what the answer was allowed to see.</td></tr>
+        <tr><td>A step line such as a search the assistant ran</td><td>It shows its work: what it looked up before answering, so you see what it did, not only what it said.</td></tr>
+        <tr><td><span class="t">budget 2.1K of 8K tokens · 2 of 6 calls · 12s of 60s</span></td><td>Every conversation has a budget of tokens, calls and time. This line is how much of it the answer used.</td></tr>
+        <tr><td><span class="t">Stopped.</span> · <span class="t">Confirmation needed.</span> · <span class="t">Handed to a person.</span></td><td>The assistant stopped (you pressed Stop, or a page read as an instruction and it refused to use it), a step needs your yes on screen, or the conversation went to a person.</td></tr>
+        <tr><td><span class="t">Did this answer your question?</span> <span class="t">Yes</span> <span class="t">No</span> · <span class="t">one question per turn · your answer trains nothing without review</span></td><td>The one thing we ask of you. It goes to the assistant's owner as a labelled example; nothing learns from it on its own.</td></tr>
+        <tr><td><span class="t">Talk to a person</span></td><td>Hands the conversation to a person and tells you the expected wait.</td></tr>
+        <tr><td><span class="t">That assistant is not open to your role.</span> · <span class="t">Ask for access from its listing; the platform lead confirms within two working days.</span></td><td>You opened an assistant you may not use yet. Request it from its listing.</td></tr>
+      </table></div>
+      <ol class="steps">
+        <li><div><b>Open the assistant from Discover, your workspace, or by typing a question into search.</b><span class="why">A question typed into ⌘K arrives ready to send.</span></div></li>
+        <li><div><b>Ask the way you would ask a colleague.</b><span class="why">Whole sentences work best: "What do we do when the inbound file is late?"</span></div></li>
+        <li><div><b>Read the chips before you trust the answer.</b><span class="why">A claim with a page beside it is grounded. A phrase marked unsupported is not.</span></div></li>
+        <li><div><b>Answer Yes or No under the answer.</b><span class="why">That one click is how we measure whether the assistant is any good.</span></div></li>
+        <li><div><b>If it said it stopped because a page looked like an instruction, rephrase or open the page yourself.</b><span class="why">That is the protection working: something in a page was trying to steer it.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="workspace">
+      <h2>6. My workspace <small>What is yours: assistants, your team's services, your requests, your usage, the playground.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">My workspace</span> · your name · role · team · <span class="t">cost centre …</span></td><td>Who the platform thinks you are, and whose budget your usage lands on.</td></tr>
+        <tr><td><span class="t">Start a brief</span></td><td>The same button as on Discover: propose a new use of AI.</td></tr>
+        <tr><td><span class="t">Your assistants</span> · <span class="t">Nothing yet. Open an assistant from Discover and it appears here.</span></td><td>Assistants you have used, with Open buttons.</td></tr>
+        <tr><td><span class="t">Your team's consumers</span> · <span class="t">stages follow §7.11 of the platform specification; a failed gate returns to Build, never to Intake</span> · <span class="t">Your team has nothing on the platform yet. A brief is the way in.</span></td><td>What your team is building and how far along each one is. The stages run Intake, Build, Sandbox, Evaluate, Production. A failed check sends it back to Build, never to the beginning.</td></tr>
+        <tr><td><span class="t">Your requests</span> · <span class="t">No requests. Ask for access or a higher ladder from a listing.</span></td><td>Every access request you made and where it stands: pending, granted, denied.</td></tr>
+        <tr><td><span class="t">Usage and budget</span> · <span class="t">sandbox this month</span> <span class="t">production</span> <span class="t">playground today</span> with a bar</td><td>What you used, shown back to you. Nothing runs against a budget it does not have.</td></tr>
+        <tr><td><span class="t">Playground</span> · <span class="t">per-developer budget</span> · <span class="t">gateway</span> <span class="t">key</span> <span class="t">rotate</span> <span class="t">fixtures</span> <span class="t">example</span></td><td>For engineers: the sandbox gateway address, your own key (masked), a rotate button, the test data and an example command. <span class="t">Every playground call is attributed and budgeted like any other, so experiments are observable and never a second path.</span></td></tr>
+        <tr><td><span class="t">Playground key rotated.</span> · <span class="t">The previous key stops working in 10 minutes.</span></td><td>After pressing rotate. Update the key in your terminal within ten minutes.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="brief">
+      <h2>7. Build: the intake brief <small>One page in six sections. It saves as you go, and it is the whole intake.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Start an intake brief</span> · <span class="t">A one-page brief is the whole intake. Everything after it is generated from what you file here.</span> · <span class="t">about 15 minutes · saved as you go</span> · <span class="t">Start a brief</span></td><td>The first screen when you have no draft. The six sections are listed with one line each. Pressing Start creates the draft and opens section 1.</td></tr>
+        <tr><td>The rail on the left: six numbered sections, ticks on the ones done</td><td>Where you are. You may go back to any section.</td></tr>
+        <tr><td><span class="t">Back</span> · <span class="t">Save draft</span> · <span class="t">Continue to …</span></td><td>Continue checks the section and moves on. Save draft is for leaving; the brief also saves itself about a second after every change.</td></tr>
+        <tr><td>Save states: <span class="t">saved</span> · <span class="t">saving…</span> · <span class="t">unsaved changes</span></td><td>Shown near the title. Nothing is lost if you close the tab once it says saved.</td></tr>
+        <tr><td><span class="t">This draft was saved from another tab.</span> · <span class="t">Reload to see the latest version; edits made here since are not saved.</span> · <span class="t">Reload the draft</span></td><td>Two tabs edited the same brief. The hub stops saving here rather than overwrite the other tab. Reload and continue.</td></tr>
+        <tr><td>Right rail: <span class="t">Recommended road</span> · <span class="t">Estimated cost</span> (<span class="t">model spend</span>, <span class="t">review labour</span>, <span class="t">platform share</span>, <span class="t">basis</span>) · <span class="t">What happens next</span></td><td>Worked out live from what you have written: which road fits, roughly what it costs a month, and what follows filing. They update as you type.</td></tr>
+        <tr><td><span class="t">The brief is not complete</span> · <span class="t">Some sections need attention before it can be filed.</span></td><td>A section is missing something. The field is marked; the rail shows which section.</td></tr>
+        <tr><td><span class="t">Your team lead files this brief.</span> · <span class="t">Lead confirmation.</span></td><td>If your brief lets an AI change a system rather than read one, only a team lead may file it. The form says so on the review step.</td></tr>
+        <tr><td><span class="t">The platform lead confirms the road within two working days; registration, namespaces and the playground follow. Track it in my workspace.</span></td><td>What you see after filing. Nothing else is asked of you until the lead answers.</td></tr>
+      </table></div>
+
+      <h3 id="brief-sections">The six sections, field by field</h3>
+      <div class="cards">
+        <div class="card"><b>1. Use case <span class="chip">name, problem, channel</span></b>
+          <span class="t">Name</span>: one line, in the words of the desk that will use it. <span class="t">The problem today</span>: what happens now, by hand, and how long it takes. <span class="t">Channel</span>: who talks to it (operator, customer, partner, batch); customer and partner channels open on road R3. <span class="t">Team</span>: the team that owns it and its cost centre.</div>
+        <div class="card"><b>2. People <span class="chip">owner, expert, allowance</span></b>
+          <span class="t">Business owner</span>: accountable for the outcome; signs the monthly review. <span class="t">Product owner</span>: runs the build and the sandbox with the embedded engineer. <span class="t">Domain expert</span>: labels the evaluation cases. <span class="t">Labelling allowance</span>: hours a week the expert gives; under one hour stalls the corpus gate.</div>
+        <div class="card"><b>3. Data and tools <span class="chip">systems, tools, classes, tier</span></b>
+          <span class="t">Systems of record</span>: pick from the registry (<span class="t">+ add a system</span>); a system without a recorded contract cannot be named. <span class="t">Tools needed</span> and <span class="t">Tools in the catalog</span>: what it calls, each with its tier. <span class="t">Data classes read</span>: internal, confidential, restricted. <span class="t">Tier ceiling</span>: Read, Write with confirmation, or Write with approval: the most it may ever do.</div>
+        <div class="card"><b>4. Model <span class="chip">need and ceiling</span></b>
+          <span class="t">Model need</span>: No generative model, Utility, Workhorse or Frontier. <span class="t">Classification ceiling for the model</span>: the highest class of data it may see. <span class="t">Substitution</span>: whether the platform may swap the model for an equivalent.</div>
+        <div class="card"><b>5. Outcome <span class="chip">metric, baseline, target</span></b>
+          <span class="t">Outcome metric</span>: one number it is meant to move, for example minutes per case. <span class="t">Unit</span>, <span class="t">Baseline today</span>, <span class="t">Target</span>, <span class="t">Baseline measured on</span>: older than a quarter and the lead asks for a fresh one.</div>
+        <div class="card"><b>6. Review and file <span class="chip">road, cost, what happens next</span></b>
+          The whole brief read back, the road to confirm, the estimate, and one box: <span class="t">I have read what happens next and the estimated cost</span>. Then <span class="t">File</span>.</div>
+      </div>
+
+      <h3 id="brief-flow">Filing it, step by step</h3>
+      <ol class="steps">
+        <li><div><b>Build → "Start a brief".</b><span class="why">A draft is created and section 1 opens. From now on it saves itself.</span></div></li>
+        <li><div><b>Fill each section and press "Continue".</b><span class="why">Continue checks the section with the same rules the server applies, so you never reach an error you could not see.</span></div></li>
+        <li><div><b>Watch the right rail.</b><span class="why">The recommended road and the estimate update as you write. If the road surprises you, section 3's tier ceiling is usually why.</span></div></li>
+        <li><div><b>On "Review and file", tick the confirmation and press File.</b><span class="why">If a lead has to file it, hand it over: your draft is in their workspace under the team's consumers.</span></div></li>
+        <li><div><b>Read the message and go to My workspace.</b><span class="why">The lead confirms the road within two working days. The consumer then appears under your team's consumers at its stage.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="signoffs">
+      <h2>8. Build: sign-offs <small>Two named people per version. The commit is the signature.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Component sign-offs</span> · <span class="t">A component reaches the shelf when its owner and an AI security engineer have each signed it at its current version. Sign here; the manifest in the repository is the record and the commit is the signature.</span></td><td>The page's whole idea. The hub records your sign-off; the repository is where it becomes a record.</td></tr>
+        <tr><td>Chips: <span class="chip ok">3 signed</span> <span class="chip">26 awaiting owner</span> <span class="chip warn">0 awaiting AI security</span></td><td>The state of the shelf at a glance.</td></tr>
+        <tr><td><span class="t">The queue</span> · filters <span class="t">All</span> <span class="t">Open</span> <span class="t">Yours to sign</span> <span class="t">Recorded here</span> · columns <span class="t">Component</span> <span class="t">Version</span> <span class="t">Stage</span> <span class="t">Owner</span> <span class="t">AI security</span> · <span class="t">Sign</span></td><td>Every component with its version and both sign-offs. "Yours to sign" shows what waits on you. Sign opens the form in the row.</td></tr>
+        <tr><td>Sign-off chips: <span class="chip">pending</span> · <span class="chip ok">a name · a date</span> · <span class="chip warn">awaiting commit</span> · <span class="chip crit">stale: signed at 1.0.0</span></td><td>Not yet signed; signed in the repository at this version; recorded here and not yet committed; signed at an older version and needed again.</td></tr>
+        <tr><td><span class="t">You</span> card: <span class="t">You may sign as Owner</span> / <span class="t">You sign nothing yet. Owners sign by name … AI security engineers sign by the ai.security role.</span> · <span class="t">How to become either</span></td><td>Who you are to the queue. The owner is the person named in the component; AI security is a role your security lead grants.</td></tr>
+        <tr><td>The form: <span class="t">I ran the tests and they are green</span> · <span class="t">I ran the live example</span> · <span class="t">I read the walkthrough end to end</span> · <span class="t">I read the rules it enforces and its known limits</span></td><td>Four attestations. The server refuses a form with one unticked, so they cannot be skipped by calling the API directly.</td></tr>
+        <tr><td><span class="t">Used once for real: which project</span> · <span class="t">The owner signs after one real use. Name the project; it is recorded in the manifest.</span></td><td>The owner's extra field on a component's first sign-off. No project, no owner sign-off.</td></tr>
+        <tr><td><span class="t">Note (optional)</span> · <span class="t">What you looked at hardest, and anything the owner should fix in the next version.</span></td><td>For the AI security engineer especially: say what you checked.</td></tr>
+        <tr><td><span class="t">Recorded: owner sign-off on … 1.0.1.</span> · <span class="t">Export the queue and apply it with the shelf tool; the commit is the signature.</span></td><td>The toast after signing. Your sign-off is a request until an engineer commits it.</td></tr>
+        <tr><td><span class="t">Into the repository</span> · <span class="t">A sign-off recorded here is a request until it is in the manifest. Export the queue, apply it, and commit; the shelf tool re-runs the tests before it writes anything.</span> · <span class="t">Download</span></td><td>The engineer's step. The downloaded file is applied with one command; the tool tests again before writing.</td></tr>
+        <tr><td><span class="t">A sign-off needs a ready component; this one is draft.</span> · <span class="t">Already signed</span></td><td>Reasons a form will not open: the component is not built yet, or this version already carries your signature.</td></tr>
+      </table></div>
+      <div class="cards">
+        <div class="card"><b>If you are an owner</b>
+          <ol><li>Use the component once for real.</li><li>Run its tests and its example; read its walkthrough and rules.</li><li>Build → Sign-offs → "Yours to sign" → Sign.</li><li>Tick the four boxes, name the project, sign.</li><li>Tell the engineer who commits.</li></ol></div>
+        <div class="card"><b>If you are an AI security engineer</b>
+          <ol><li>Ask your security lead for the AI security role.</li><li>Read the practices the components enforce.</li><li>For each component: rules, walkthrough, tests, example.</li><li>Sign, and write in the note what you looked at hardest.</li><li>For an agent, read its never list against its tests, one test per line.</li></ol></div>
+        <div class="card"><b>If you commit it</b>
+          <ol><li>Sign-offs → "Into the repository" → Download.</li><li><code class="cmd">python3 tools/shelf.py --apply-signoffs shelf-signoffs.json
+python3 tools/shelf.py --write
+git commit</code></li><li>The tool re-runs the tests first and refuses if they fail.</li></ol></div>
+      </div>
+      <div class="note warn">Nothing here is ever written by hand or invented. A pending sign-off stays pending until a named person gives it, and a new version makes the old signature stale until both sign again.</div>
+    </section>
+
+    <section id="onboarding">
+      <h2>9. Build: onboarding <small>Components on their way to the shelf, and people into the roles that put them there.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Onboarding</span> · <span class="t">Two things are onboarded here: components, on their way to the shelf, and people, into the roles that put them there.</span> · <span class="t">3 of 29 on the shelf</span></td><td>The page and its count.</td></tr>
+        <tr><td><span class="t">A component's way to the shelf</span>: six numbered stages</td><td>Read from each component's own facts, never guessed. Each stage names what proves it.</td></tr>
+        <tr><td>Groups: <span class="t">On the shelf</span> · <span class="t">Awaiting AI security sign-off</span> · <span class="t">Awaiting owner sign-off</span> · <span class="t">Built, not yet used for real</span> · <span class="t">Scaffolded</span> · <span class="t">Deprecated</span></td><td>Every component under the group that says what has to happen next, furthest along first.</td></tr>
+        <tr><td>Checklists: <span class="t">A new champion, week one</span> · <span class="t">A component owner</span> · <span class="t">An AI security engineer</span> · <span class="t">What the enablement lead keeps</span></td><td>What each person does first. The same words as the knowledge base's onboarding page.</td></tr>
+      </table></div>
+      <ol class="steps">
+        <li><div><b>Scaffolded</b><span class="why">A directory with version 0.1.0, both sign-offs pending, and placeholders for the README, walkthrough, example and tests.</span></div></li>
+        <li><div><b>Built</b><span class="why">README, walkthrough, live example and tests filled and green; status set to ready.</span></div></li>
+        <li><div><b>Used once for real</b><span class="why">Used in one real project, named by the owner on the sign-off form.</span></div></li>
+        <li><div><b>Owner signed</b><span class="why">The owner signs at this version after running the tests and the example.</span></div></li>
+        <li><div><b>AI security signed</b><span class="why">An AI security engineer signs at this version after reading the rules and the walkthrough and running the example.</span></div></li>
+        <li><div><b>On the shelf</b><span class="why">Listed as GA on Discover and in the knowledge base. A version bump sends it back to stage 3.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="learn">
+      <h2>10. Learn <small>The six roads, the collection, the programme, and the fifteen-minute example.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">The six roads</span> · <span class="t">pick one in the brief; the repository, gates and reviews follow from it</span></td><td>A table of Road, For and Time. R1 tools and knowledge (no model of its own). R2 an internal agent for staff. R3 a customer and partner assistant. R4 a batch agent with a review queue. R5 a retrieval service with provenance on every chunk. R6 onboarding an AI solution that already exists.</td></tr>
+        <tr><td><span class="t">The collection and the knowledge base</span>: cards <span class="t">Reusable components</span> · <span class="t">The knowledge base</span> · <span class="t">AI champions</span></td><td>What the collection is (tools, integrations and patterns lifted from products in production, each with a five-minute README, tests, a version and two sign-offs), where the practice pages live, and the programme in one paragraph. Links: <span class="t">Open Discover</span>, <span class="t">Sign-offs</span>, <span class="t">Open the knowledge base</span>, <span class="t">Start a brief</span>, <span class="t">Onboarding</span>.</td></tr>
+        <tr><td><span class="t">The 15-minute example</span></td><td>Three steps: get a playground key from My workspace; run the example against the sandbox gateway (every call is attributed to you); change one tool and run again to see the policy decision, the audit entry and the cost.</td></tr>
+        <tr><td><span class="t">Office hours and bootcamp</span></td><td>The weekly office hour, the two-day bootcamp at registration with your embedded engineer, and who to escalate to.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="settings">
+      <h2>11. Settings <small>Preferences apply at once and travel with your account. Roles do not come from here.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Appearance</span>: <span class="t">Theme</span> (System, Light, Dark) · <span class="t">Density</span> (Comfortable, Dense) · <span class="t">Language</span></td><td>Light by default, dark available; System follows your operating system. Dense tightens spacing for long sessions. Assistant answers follow the language of the material, not this setting.</td></tr>
+        <tr><td><span class="t">Accessibility and assistance</span></td><td>Declare that you use assistive technology, so every channel carries it. And decline AI assistance altogether: conversations then route to a person by default.</td></tr>
+        <tr><td><span class="t">Notifications</span>: requests · briefs · digest</td><td>Whether you hear about your requests, your briefs and the weekly digest.</td></tr>
+        <tr><td><span class="t">Your account</span>: name, email, role, ladder (<span class="t">your own ceiling; a consumer's may be lower</span>), teams, cost centre, tenant · <span class="t">Roles, ladder and entitlements are set by the identity service and the policy bundle. To change them, ask your lead; the Hub never edits them.</span></td><td>Read-only facts about you. The hub cannot change your access; that is the point.</td></tr>
+        <tr><td><span class="t">Your data</span></td><td>Conversations keep session memory only; turns are recorded in the audit trail with the sources used. Feedback you give is a labelled example for the owner to review and trains nothing on its own.</td></tr>
+        <tr><td><span class="t">Sign out</span> · <span class="t">ends this session on this device</span></td><td>Exactly that.</td></tr>
+        <tr><td><span class="t">Your preferences could not be saved.</span> · <span class="t">They are kept for this session only.</span></td><td>The save failed; the choice still applies until you sign out.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="guide">
+      <h2>12. The guide <small>The spark button at the bottom right. It knows who it is talking to and where you are.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td>A round blue button with a spark, bottom right; a small amber dot on it</td><td>The guide. Alt+G opens it too. The dot means a next step is waiting for you.</td></tr>
+        <tr><td>A small box beside it: <span class="t">NEXT STEP</span> · <span class="t">New here? Tell me what you're here for and I'll point you at the pages that matter…</span></td><td>The guide speaking first. It shows once per suggestion and goes quiet on its own; the × means "not now" and it will not ask again.</td></tr>
+        <tr><td><span class="t">What brings you here?</span> · <span class="t">I'm here to build something</span> · <span class="t">I'm here to understand and decide</span> · <span class="t">I'm here to use the hub</span> · <span class="t">suggested from your role</span></td><td>The first question, asked once. One is highlighted from your role. <span class="t">Change</span> at the top of the panel changes it later.</td></tr>
+        <tr><td><span class="t">WHERE YOU ARE</span> and a title</td><td>One line on the page you are on, written for the choice you made. A leader on an agent's page reads that the permission table is the whole list; a builder reads where the evidence links are.</td></tr>
+        <tr><td><span class="t">SUGGESTED NEXT STEP</span> · a button · <span class="t">Not now</span></td><td>One suggestion, worked out from your own records: a brief you left half-finished, components waiting for your signature, a page you have not opened. Not now dismisses it for good.</td></tr>
+        <tr><td><span class="t">YOUR PATH</span> · <span class="t">2 of 8</span> · steps with a green tick, a blue ring, or grey</td><td>Your journey. Green is done (the hub knows, from what you did), blue ring is the current step, grey is later. Clicking a step takes you there. <span class="t">Mark as done</span> is for steps only you can know about, such as running a command; the command is shown under it.</td></tr>
+        <tr><td><span class="t">Show me around</span> · then <span class="t">THE HUB FOR A DECISION · 2 OF 5</span> · <span class="t">Back</span> <span class="t">Stop the tour</span> <span class="t">Next</span> <span class="t">Done</span></td><td>The tour. It moves you page by page and lights up the part that matters, with a sentence on it. Arrow keys move; Escape stops; you keep the page you are on.</td></tr>
+        <tr><td><span class="t">ASK</span> with starter chips such as <span class="t">What stops an agent doing something we did not ask for?</span></td><td>Questions people ask most, chosen for your persona. Click one or type your own.</td></tr>
+        <tr><td>An answer starting <span class="t">Here is what our own documentation says, in plain terms.</span> or <span class="t">From the repository's own pages:</span>, with <span class="t">— Action tiers and confirmation, The rule in one line</span> under each passage, and <span class="t">SOURCES</span> chips</td><td>The guide quotes our own pages and names them. It never makes up a sentence about the platform. A "Go to" chip after the answer takes you to the page that covers it.</td></tr>
+        <tr><td><span class="t">I couldn't find that in our own documentation, so I won't guess…</span></td><td>The pages do not cover it. Ask the programme lead, or it goes on the open-decisions list.</td></tr>
+        <tr><td><span class="t">That reads as an instruction rather than a question, so I won't act on it.</span></td><td>Something typed looked like an attempt to steer it. It declines and asks for a question instead.</td></tr>
+        <tr><td><span class="t">Answers quote the collection's own pages and name them. The guide never acts on your behalf.</span></td><td>The footer of the panel. It has no tools: it points and explains, it never changes anything.</td></tr>
+      </table></div>
+      <div class="cards">
+        <div class="card"><b>The builder's path</b> See what is on the shelf → Open the reference agent → Run its five-minute example → Write an intake brief → File it with your lead → Build from components → Take your component to the shelf → Get it signed off.</div>
+        <div class="card"><b>The leader's path</b> What this is, in five minutes → What an agent cannot do → The controls, in plain terms (a question) → Who signs, and what they attest → What it costs and who uses it → The decisions that are yours → Ask for a walkthrough.</div>
+        <div class="card"><b>The everyday path</b> Find what you may use → Ask the employee assistant → Request access to something → Say whether an answer helped.</div>
+      </div>
+      <ol class="steps">
+        <li><div><b>Press the spark button, or Alt+G.</b><span class="why">The panel opens on the right; the page stays usable beside it.</span></div></li>
+        <li><div><b>Pick what brings you here.</b><span class="why">Everything after keeps to that choice. Change it any time at the top of the panel.</span></div></li>
+        <li><div><b>Take the suggested next step, or press "Show me around".</b><span class="why">The tour is two minutes and ends where you started.</span></div></li>
+        <li><div><b>Ask anything, in your own words.</b><span class="why">The answer names the page it came from; open it if you want the rest.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="search">
+      <h2>13. Search <small>⌘K, or the box in the top bar.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means</th></tr>
+        <tr><td><span class="t">Search assistants, tools, knowledge… or type a question</span></td><td>One box, three things: listings, places in the hub, and a question for the assistant.</td></tr>
+        <tr><td>Group <span class="t">Assistants, agents, knowledge and tools</span></td><td>Listings that match, limited to what your role may see. Each shows its kind, road and lifecycle.</td></tr>
+        <tr><td>Group <span class="t">Go to</span>: Discover · My workspace · Start or continue a brief · Component sign-offs · Onboarding · Learn · Settings · Sign out</td><td>Every place in the hub, so you never need the top bar.</td></tr>
+        <tr><td>Group <span class="t">Or</span>: <span class="t">Ask the employee assistant: "…"</span></td><td>Anything longer than two letters can be sent to the assistant as a question, ready to send.</td></tr>
+        <tr><td><span class="t">↑↓ move · ↵ open · esc close</span> · <span class="t">results are limited to what your role may see</span></td><td>The keys, and the one rule.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="messages">
+      <h2>14. Messages you may see <small>Every toast, error and empty state, and what to do about it.</small></h2>
+      <div class="scroll"><table class="ui">
+        <tr><th>You see</th><th>It means, and what to do</th></tr>
+        <tr><td><span class="t">Request sent.</span></td><td>Your access request is with your lead. Follow it in My workspace.</td></tr>
+        <tr><td><span class="t">Recorded: owner sign-off on … 1.0.1.</span></td><td>Your sign-off is recorded on the hub. An engineer commits it.</td></tr>
+        <tr><td><span class="t">Playground key rotated.</span> · <span class="t">The previous key stops working in 10 minutes.</span></td><td>Update the key where you use it.</td></tr>
+        <tr><td><span class="t">Your session has ended. Sign in again to continue.</span></td><td>The token expired or was revoked. Sign in; you return to the same page.</td></tr>
+        <tr><td><span class="t">Your role does not allow this.</span></td><td>Not open to your role. Request it from the listing, or ask your lead.</td></tr>
+        <tr><td><span class="t">That item does not exist or you cannot see it.</span> · <span class="t">Nothing here</span> · <span class="t">That page does not exist, or it belongs to something you cannot see.</span></td><td>A wrong link, or something outside your access.</td></tr>
+        <tr><td><span class="t">This was changed by someone else. Reload and try again.</span></td><td>The brief or record was updated elsewhere since you opened it. Reload; your last saved state is intact.</td></tr>
+        <tr><td><span class="t">Some answers need attention.</span></td><td>A field is invalid. The field is marked with what is wrong.</td></tr>
+        <tr><td><span class="t">You are sending requests faster than the platform allows. Wait a moment and try again.</span></td><td>A per-person limit. Wait the seconds shown; nobody else is affected.</td></tr>
+        <tr><td><span class="t">The platform hit a problem. It has been recorded; try again in a moment.</span> and a line such as <span class="t">HTTP 503 · request 7f3a…</span></td><td>Something on the platform failed. Quote the request id to support; it matches a line in the logs.</td></tr>
+        <tr><td><span class="t">Loading the catalog…</span> · <span class="t">Opening the listing…</span> · <span class="t">Reading the shelf…</span> · <span class="t">Loading your briefs…</span> · <span class="t">Loading your workspace…</span> · <span class="t">Opening the assistant…</span></td><td>Waiting on the platform. If it lasts, the matching "could not be loaded" line appears with a request id.</td></tr>
+        <tr><td><span class="t">The platform could not resolve your account.</span></td><td>You signed in, but the platform has no record for you. Your lead adds your group to the identity map.</td></tr>
+      </table></div>
+    </section>
+
+    <section id="processes">
+      <h2>15. The processes, end to end <small>Four pictures of how things move.</small></h2>
+      <h3>An initiative, from idea to production</h3>
+      <pre class="mermaid">
+flowchart LR
+  A[A team feels a problem] --> B[Champion writes the brief<br/>Build → Intake, 15 min]
+  B --> C{Reads only?}
+  C -- yes --> D[Champion files it]
+  C -- no --> E[Team lead files it]
+  D --> F[Platform lead confirms the road<br/>within two working days]
+  E --> F
+  F --> G[Build from the collection<br/>on the road, embedded engineer]
+  G --> H[Sandbox and evaluation<br/>a failed gate returns to Build]
+  H --> I[Production, read-only first]
+  I --> J[Something returned to the collection]
+      </pre>
+      <h3>A component's way to the shelf</h3>
+      <pre class="mermaid">
+flowchart LR
+  S[Scaffolded] --> B[Built<br/>tests green, status ready] --> U[Used once for real<br/>owner names the project] --> O[Owner signed] --> A[AI security signed] --> G[On the shelf<br/>GA on Discover]
+  G -. a new version .-> U
+      </pre>
+      <h3>How an answer is produced</h3>
+      <pre class="mermaid">
+flowchart LR
+  Q[Your question] --> G[Guard scores it<br/>and every source for instructions]
+  G -- looks like an instruction --> X[Stopped, not used]
+  G --> K[Knowledge base searched<br/>pages fenced as sources]
+  K --> M[Model answers from<br/>the sources only]
+  M --> C[Every claim cited<br/>or dropped]
+  C --> A[The answer, sources shown]
+      </pre>
+      <h3>What stops an agent</h3>
+      <pre class="mermaid">
+flowchart LR
+  T[Agent proposes a call] --> H{In the signed catalog?}
+  H -- no --> R1[Refused]
+  H -- yes --> P{Tier}
+  P -- R --> RUN[Runs]
+  P -- W1 --> W[Parked until the person<br/>confirms that exact action, once]
+  P -- W2 --> S[Needs a second named person]
+  P -- MONEY --> R2[Refused]
+  W --> REC[Everything lands on the chained record]
+  RUN --> REC
+  S --> REC
+      </pre>
+    </section>
+
+    <section id="lesson">
+      <h2>16. A 45-minute first lesson <small>For a first cohort of champions, or a leadership walkthrough. Show, don't tell.</small></h2>
+      <div class="lesson">
+        <span class="min">0–5</span><span><b>Why we are here.</b> The footer's sentence and the sign-in page's sentence. Nothing here is a side door.</span>
+        <span class="min">5–10</span><span><b>Discover.</b> Available to you; the chips; open one card; request one thing and watch it appear in the workspace.</span>
+        <span class="min">10–17</span><span><b>A listing.</b> The permission table, row by row. Ask the room what W1 means before saying it. Show the sign-off card.</span>
+        <span class="min">17–24</span><span><b>The assistant.</b> Ask a real question. Point at a claim and its chip. Answer the feedback question. Show a stopped answer if you can.</span>
+        <span class="min">24–32</span><span><b>The brief.</b> Start one live. Fill section 1 and 3; watch the road and the estimate change. Stop before filing.</span>
+        <span class="min">32–38</span><span><b>Sign-offs and onboarding.</b> The queue's counts; the four attestations; the six stages. Say who in the room is an owner and who could sign for AI security.</span>
+        <span class="min">38–43</span><span><b>The guide.</b> Open it as a leader, then as a builder. Run the tour. Ask it the leader's first question.</span>
+        <span class="min">43–45</span><span><b>Close.</b> Each person names one problem their team feels this month. The brief is due before the next meeting.</span>
+      </div>
+      <div class="note ok">What to leave people with: the hub shows only what your role opens; an assistant reads and cites; an agent reads, and writes only when a named person says yes; a component is on the shelf only when two named people signed it; and the guide will walk you through any of it.</div>
+    </section>
+
+  </main>
+</div>

@@ -12,6 +12,7 @@ name in the secrets provider; nothing is patched in code. Placeholders are in ca
 | `collection-<sha>/` | The repository: components, tools, the two services, the hub's source **and its built `hub/dist`**, deploy files, documentation. `MANIFEST.sha256` lists every file |
 | `deliverables/user-manual.pdf`, `technical-guide.pdf`, `leadership-brief.pdf` | The three documents, current for this build |
 | `deliverables/collection-walkthrough.mp4` (+ `.en.vtt`) | The walkthrough video, nine minutes, captions burned in |
+| `deliverables/teaching-the-collection.html` | The teaching guide: every screen, every on-screen sentence, every flow and process in plain words, with a 45-minute first lesson. Opens in any browser |
 | `deliverables/screenshots/` | The hub and the guide as they render in this build |
 | `INSTALL.md` (this page), `HANDOVER.md` | How to install it; how the parts fit and who owns what |
 
