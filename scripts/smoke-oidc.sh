@@ -9,7 +9,7 @@ set -eu
 cd "$(dirname "$0")/.."
 IDP_PORT="${IDP_PORT:-9443}"; HUB_PORT="${HUB_PORT:-18443}"
 for port in "$IDP_PORT" "$HUB_PORT"; do python3 -c "import socket,sys; s=socket.socket(); sys.exit(0 if s.connect_ex(('127.0.0.1', int(sys.argv[1]))) else 1)" "$port" || { echo "port $port is in use"; exit 1; }; done
-work="$(mktemp -d)"
+work="$(mktemp -d)"; idp=""; hub=""
 trap 'kill $idp $hub 2>/dev/null || true; rm -rf "$work"' EXIT
 # A throwaway certificate for the provider; hub-api trusts it through SSL_CERT_FILE for this run only.
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$work/key.pem" -out "$work/cert.pem" -days 1 -subj "/CN=127.0.0.1" -addext "subjectAltName=IP:127.0.0.1" >/dev/null 2>&1
@@ -18,7 +18,7 @@ idp=$!
 sleep 1
 root="$PWD"
 hubenv() { exec env SSL_CERT_FILE="$work/cert.pem" HUB_ENV=sandbox HUB_AUTH=oidc HUB_IDP_ISSUER="https://127.0.0.1:$IDP_PORT" HUB_IDP_AUDIENCE=hub-api \
-  HUB_AI_SECURITY_GROUP=GROUP_ID_AI_SECURITY HUB_WEB_OIDC_AUTHORITY="https://127.0.0.1:$IDP_PORT" HUB_WEB_OIDC_CLIENT_ID=hub-web \
+  HUB_AI_SECURITY_GROUP=GROUP_ID_AI_SECURITY HUB_OWNER_DOMAIN=bank.example HUB_WEB_OIDC_AUTHORITY="https://127.0.0.1:$IDP_PORT" HUB_WEB_OIDC_CLIENT_ID=hub-web \
   HUB_WEB_OIDC_SCOPE="openid profile email hub-api" HUB_PUBLIC_URL="http://127.0.0.1:$HUB_PORT" HUB_LISTEN_PORT="$HUB_PORT" HUB_STATIC_DIR="$root/hub/dist" \
   HUB_DB=:memory: "$@"; }
 (cd services/hub-api && hubenv python3 -m hubapi check-config)

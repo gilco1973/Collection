@@ -50,6 +50,34 @@ SYSTEM = {
 SYSTEM_SHAPE = ' Return JSON: {"answer": string, "claims": [{"text": string, "citations": [source id]}]}. If the sources do not answer, say so in the answer and return no claims.'
 LEAD = {"engineer": "From the repository's own pages:", "leadership": "Here is what our own documentation says, in plain terms.", "employee": "Here is what the hub's pages say:"}
 
+# The guard scores one marker hit at 0.5, above its threshold: right for a ticket or a log line a model will read,
+# too eager for a person's own question ("how do I roll back a deploy?" is a question, not an order). A question is
+# refused on two independent hits. The pages are scored without the shell fragments every README carries.
+SHELL_FRAGMENTS = ("&& ", "curl ", "wget ")
+PAGE_MARKERS = tuple(m for m in G.MARKERS if m not in SHELL_FRAGMENTS)
+QUESTION_PER = 4.0
+
+
+def question_score(text: str) -> float:
+    """The injection score of a person's own question: two independent marker hits reach the guard's threshold."""
+    try:
+        return G.injection_score(text, per=QUESTION_PER)
+    except TypeError:  # a guard without `per`: count the markers ourselves
+        t = (text or "").lower()
+        return min(1.0, sum(1 for m in G.MARKERS if m in t) / QUESTION_PER)
+
+
+def page_score(text: str) -> float:
+    return G.injection_score(text, PAGE_MARKERS)
+
+
+def well_formed_claims(claims) -> list[dict]:
+    """Only claims shaped `{"text": str, "citations": [str]}` reach the citation check and the span builder; the
+    model's other shapes are dropped rather than becoming a 500 or a mid-stream TypeError."""
+    if not isinstance(claims, list):
+        return []
+    return [c for c in claims if isinstance(c, dict) and isinstance(c.get("text"), str) and isinstance(c.get("citations"), list) and all(isinstance(i, str) for i in c["citations"])]
+
 
 _SEP = re.compile(r"^\s*\|?\s*:?-{3,}")
 
@@ -143,7 +171,7 @@ class Guide:
         base = {"mode": self.mode, "audience": audience, "suggestions": suggestions(question, page)}
         if not question:
             return {**base, "answer": "Ask me anything about the hub, the collection, or what to do next.", "sources": []}
-        if G.injection_score(question) >= G.THRESHOLD:
+        if question_score(question) >= G.THRESHOLD:
             return {**base, "answer": "That reads as an instruction to me rather than a question, so I won't act on it. Ask me what you'd like to know or where you'd like to go.", "sources": [], "refused": "taint"}
         hits = self.corpus.search(question, audience)
         if not hits:
@@ -164,16 +192,20 @@ class Guide:
     def _model(self, question: str, audience: str, hits) -> dict:
         ctx = G.Context(); by_id = {}
         for _, x in hits:
-            s = ctx.add(x["kind"], x["id"], x["text"], x["source"]); by_id[s.id] = x
+            s = ctx.add(x["kind"], x["id"], x["text"], x["source"], scorer=page_score); by_id[s.id] = x
         if ctx.tainted:
-            return self._rules(audience, [h for h in hits if not any(s.id for s in ctx.sources if s.suspicious and by_id.get(s.id) is h[1])])
+            clean = [h for h in hits if not any(s.id for s in ctx.sources if s.suspicious and by_id.get(s.id) is h[1])]
+            note = "a page looked like an instruction rather than evidence and was left out; these are the remaining passages themselves"
+            if not clean:
+                return {"answer": LEAD[audience] + " I found pages on this, but each read as an instruction rather than evidence, so I did not use them. Open the page directly or ask the champions channel.", "sources": [], "note": note}
+            return {**self._rules(audience, clean), "note": note}
         try:
             text, _, _ = self.adapter.complete(self.model_id, SYSTEM[audience] + SYSTEM_SHAPE, ctx.fenced() + f"\n<question>\n{question}\n</question>", self.max_tokens)
             o = json.loads(text)
             answer, claims = str(o.get("answer", "")), o.get("claims", [])
         except Exception:
             return {**self._rules(audience, hits), "note": "the model did not answer in the agreed shape; these are the passages themselves"}
-        kept = G.check_citations(claims if isinstance(claims, list) else [], ctx)
+        kept = G.check_citations(well_formed_claims(claims), ctx)
         cited = sorted({c["citations"][0] for c in kept})
         return {"answer": answer, "sources": [self._src(by_id[i]) for i in cited if i in by_id]}
 

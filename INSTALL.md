@@ -14,7 +14,7 @@ The zip unpacks to one directory, `collection-<sha>/`, which is the repository i
 | `components/`, `tools/`, `services/`, `hub/`, `deploy/`, `scripts/`, the `*.md` pages | The repository: components, tools, the two services, the hub's source **and its built `hub/dist`**, deploy files, documentation |
 | `MANIFEST.sha256` | Every file in the zip with its sha256, the deliverables included |
 | `deliverables/user-manual.pdf`, `technical-guide.pdf`, `leadership-brief.pdf` | The three documents, current for this build |
-| `deliverables/collection-walkthrough.mp4` (+ `.en.vtt`) | The walkthrough video, nine minutes, captions burned in |
+| `deliverables/collection-walkthrough.mp4` (+ `.en.vtt`) | The walkthrough video, just under nine minutes, captions burned in |
 | `deliverables/teaching-the-collection.html` | The teaching guide: every screen, every on-screen sentence, every flow and process in plain words, with a 45-minute first lesson. Opens in any browser |
 | `deliverables/screenshots/` | The hub and the guide as they render in this build |
 | `INSTALL.md` (this page), `HANDOVER.md`, `DELIVERY.txt` | How to install it; how the parts fit and who owns what; the build's sha and date |
@@ -61,7 +61,7 @@ what and which variables it lands in; `CONFIGURATION.md` explains each system in
 
 | From | What to ask for | Variables |
 | --- | --- | --- |
-| Identity (IdP team) | Two app registrations (hub, agent) with `aud` set to each client id; the `groups` claim on tokens; the OIDC issuer URL; the group ids for each role | `HUB_IDP_ISSUER`, `HUB_IDP_AUDIENCE`, `HUB_WEB_OIDC_AUTHORITY`, `HUB_WEB_OIDC_CLIENT_ID`, `HUB_AI_SECURITY_GROUP`, `AGENT_IDENTITY=oidc`, `AGENT_IDP_*`, `AGENT_OPERATOR_GROUP_ID`, `AGENT_APPROVER_GROUP_ID`; the group ids in `identity-map.json` |
+| Identity (IdP team) | Two app registrations (hub, agent) with `aud` set to each client id; the `groups` claim on tokens; the OIDC issuer URL; the group ids for each role | `HUB_IDP_ISSUER`, `HUB_IDP_AUDIENCE`, `HUB_WEB_OIDC_AUTHORITY`, `HUB_WEB_OIDC_CLIENT_ID`, `HUB_AI_SECURITY_GROUP`, `HUB_OWNER_DOMAIN` (the directory's email domain), `AGENT_IDENTITY=oidc`, `AGENT_IDP_*`, `AGENT_OPERATOR_GROUP_ID`, `AGENT_APPROVER_GROUP_ID`; the group ids in `identity-map.json` |
 | Platform team | The record volumes; the secrets (`hub/assistant-token`, `agents/jira-token`, `agents/ado-pat`, under the prefixes `hub/` and `agents/`) and the task roles allowed to read them; an asymmetric KMS key the agent's role may `Sign` with; a bucket the agent's role may `PutObject` to | `HUB_DB`, `AGENT_DB`, `*_SECRETS=aws`, `AGENT_KMS_KEY_ID`, `AGENT_AUDIT_EXPORT` |
 | Model risk | An approved inference profile and the VPC endpoint for Bedrock; the roles allowed `InvokeModel` on it | `*_BEDROCK_REGION`, `*_BEDROCK_ENDPOINT`, `*_BEDROCK_INFERENCE_PROFILE_ARN` (or `_MODEL_ID`) |
 | Integrations | A Jira service account with read on the incident projects and comment on them; an Azure DevOps PAT with read on pipelines; the pipeline id per service | `AGENT_JIRA_URL`, `AGENT_JIRA_USER`, `AGENT_JIRA_AUTH`, secret `agents/jira-token`; `AGENT_DEPLOYS_URL`, `AGENT_DEPLOYS_PROJECT`, `AGENT_DEPLOYS_PIPELINES`, secret `agents/ado-pat` |

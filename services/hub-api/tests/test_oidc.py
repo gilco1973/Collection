@@ -57,7 +57,7 @@ class Oidc(unittest.TestCase):
         problems = s.validate()
         self.assertTrue(any("mock identity" in p for p in problems)); self.assertTrue(any("fake assistant" in p for p in problems))
         ok = Settings(env="production", auth="oidc", assistant="http", assistant_url="https://runtime.bank.example", db_path="/var/hub/hub.db", public_url="https://hub.bank.example",
-                      secrets="aws", idp_issuer="https://idp.bank.example", idp_audience="hub-web", ai_security_group="GROUP")
+                      secrets="aws", idp_issuer="https://idp.bank.example", idp_audience="hub-web", ai_security_group="GROUP", owner_domain="bank.example")
         self.assertEqual(ok.validate(), [])
         served = Settings(**{**{f: getattr(ok, f) for f in ok.__dataclass_fields__ if f != "prefix"}, "static_dir": os.path.dirname(__file__)})
         self.assertTrue(any("WEB_OIDC_AUTHORITY" in p for p in served.validate()))

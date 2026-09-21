@@ -40,6 +40,9 @@ def validate_step(step: str, v) -> dict:
         elif h > 40: add("labellingHoursPerWeek", "That is more than a working week.")
     elif step == "dataAndTools":
         systems, tools, classes = v.get("systems") or [], v.get("tools") or [], v.get("dataClasses") or []
+        shape = [k for k, val in (("systems", systems), ("tools", tools), ("dataClasses", classes)) if not isinstance(val, list)]
+        for k in shape: add(k, "Must be a list.")
+        if shape: return e   # nothing below can be checked on a value of the wrong shape
         if not systems: add("systems", "Name at least one system of record.")
         if not tools: add("tools", "Add at least one tool.")
         if len(tools) > 15: add("tools", "Over the 15-tool session ceiling; remove tools or split the consumer.")
@@ -48,7 +51,7 @@ def validate_step(step: str, v) -> dict:
         ceiling = v.get("tierCeiling")
         if ceiling not in CEILINGS: add("tierCeiling", "Choose a tier ceiling.")
         else:
-            over = [t for t in tools if isinstance(t, dict) and TIER_RANK.get(t.get("tier"), 9) > TIER_RANK[ceiling]]
+            over = [t for t in tools if isinstance(t, dict) and TIER_RANK.get(t.get("tier") if isinstance(t.get("tier"), str) else "", 9) > TIER_RANK[ceiling]]
             if over: add("tierCeiling", "The tier ceiling must cover every tool: " + ", ".join(f"{t.get('name')} ({t.get('tier')})" for t in over) + ".")
         for t in tools:
             if not isinstance(t, dict) or not t.get("name") or t.get("tier") not in TIERS or not t.get("classes"): add("tools", "Each tool needs a name, a tier and its data classes."); break
@@ -92,7 +95,8 @@ def with_baseline(content: dict) -> dict:
     needed = baseline_for(content)
     if not needed: return content
     d = dict(content["dataAndTools"]); ids = {b["id"] for b in needed}
-    own = [r for r in (d.get("reuses") or []) if isinstance(r, dict) and r.get("id") not in ids]
+    reuses = d.get("reuses") if isinstance(d.get("reuses"), list) else []
+    own = [r for r in reuses if isinstance(r, dict) and r.get("id") not in ids]
     d["reuses"] = [dict(b) for b in needed] + own
     return {**content, "dataAndTools": d}
 

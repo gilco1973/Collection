@@ -15,6 +15,7 @@ class Catalog:
         self.details = {**consumers.get("details", {}), **collection.get("details", {})}
         self.all = self.bank + list(collection.get("listings", []))
         self.shelf = list(collection.get("shelf", []))
+        self.owner_domain = ""   # HUB_OWNER_DOMAIN: when set, an owner signs only from an email in this domain (the API sets it from the settings)
 
     @classmethod
     def load(cls, consumers_file: str, collection_file: str) -> "Catalog":
@@ -72,6 +73,10 @@ class Catalog:
     # ---------------- the shelf ----------------
     def may_sign(self, r: dict, p: Principal, role: str) -> bool:
         if role == "owner":
+            # The manifest names the owner by handle; the handle alone would match the same local part at any domain.
+            domain = p.email.rsplit("@", 1)[-1].lower() if "@" in p.email else ""
+            if self.owner_domain and domain != self.owner_domain.lower():
+                return False
             return bool(r.get("owner")) and r["owner"].lower() == p.handle
         return role == "ai_security" and "ai.security" in p.roles
 

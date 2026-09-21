@@ -71,6 +71,21 @@ class Store:
         finally:
             dest.close()
 
+    @staticmethod
+    def backup_file(src_path: str, dest_path: str) -> int:
+        """The backup command's copy: the source is opened read-only, so backing up never migrates (or creates) the
+        live record; whatever schema version the file is at is what the copy carries. Returns the pages copied."""
+        src = sqlite3.connect(f"file:{src_path}?mode=ro", uri=True)
+        try:
+            dest = sqlite3.connect(dest_path)
+            try:
+                src.backup(dest)
+                return int(dest.execute("PRAGMA page_count").fetchone()[0])
+            finally:
+                dest.close()
+        finally:
+            src.close()
+
     # ---------------- documents ----------------
     def put(self, kind: str, id: str, doc: dict, owner: str | None = None) -> dict:
         with self.lock:

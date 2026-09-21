@@ -117,7 +117,7 @@ class Record(unittest.TestCase):
             ticks.append(n)
             if len(ticks) == 2: stop.set()
         retention_loop(st, Settings(conversation_retention_days=90), stop=stop, sleep=sleep)
-        self.assertEqual(ticks, [86400, 86400])
+        self.assertEqual(ticks, [60, 86400], "once shortly after start, then daily")
         self.assertIn("HUB_CONVERSATION_RETENTION_DAYS must be set", " ".join(Settings(env="production", conversation_retention_days=0).validate()))
 
     def test_backup_is_a_consistent_copy(self):

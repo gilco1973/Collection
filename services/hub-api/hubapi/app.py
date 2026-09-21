@@ -6,15 +6,28 @@ as `event: view` server-sent events. Logs carry ids only. The built hub is serve
 fallback so one process is the whole deployable.
 """
 from __future__ import annotations
-import json, logging, mimetypes, os, re, threading, time, urllib.parse, uuid
+import json, logging, mimetypes, os, re, socket, threading, time, urllib.parse, uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from . import briefs as B
-from .auth import AuthError, bearer
+from .auth import DEFAULT_PREFS, AuthError, bearer
 from .catalog import Catalog
 from .ops import RateLimiter, current_request_id, readiness, request_id
 from .store import Store
 
 log = logging.getLogger("hubapi")
+
+ROUTE_BODY_LIMIT = 64 * 1024      # briefs, preferences and turns: a form or a message, never a megabyte
+MAX_TURNS = 200                   # turns (both sides) in one conversation; past it the person starts a new one
+MAX_USED_IN, MAX_NOTE = 200, 2000
+
+
+def _no_constant(name: str):
+    raise ValueError(f"{name} is not JSON")
+
+
+def loads_strict(raw: bytes):
+    """JSON as other readers parse it: NaN and Infinity are refused rather than stored and re-emitted as invalid JSON."""
+    return json.loads(raw.decode("utf-8"), parse_constant=_no_constant)
 
 
 class Problem(Exception):
@@ -44,15 +57,16 @@ def now_iso() -> str:
 class HubApi:
     def __init__(self, settings, store: Store, catalog: Catalog, auth, assistant, guide=None):
         self.s, self.store, self.catalog, self.auth, self.assistant, self.guide = settings, store, catalog, auth, assistant, guide
-        self.routes: list[tuple[str, re.Pattern, list, callable, bool]] = []
+        self.catalog.owner_domain = getattr(settings, "owner_domain", "") or ""   # the owner signs from the bank's own directory, never a look-alike domain
+        self.routes: list[tuple[str, re.Pattern, list, callable, bool, int]] = []
         self.seq_lock = threading.Lock(); self.seq = 100
         self.limiter = RateLimiter(getattr(settings, "rate_per_minute", 0))
         self._register()
 
-    def route(self, method: str, path: str, handler, anonymous: bool = False):
+    def route(self, method: str, path: str, handler, anonymous: bool = False, max_body: int = 0):
         keys: list[str] = []
         pattern = re.compile("^" + re.sub(r":(\w+)", lambda m: (keys.append(m.group(1)), "([^/]+)")[1], path) + "$")
-        self.routes.append((method, pattern, keys, handler, anonymous))
+        self.routes.append((method, pattern, keys, handler, anonymous, max_body))
 
     def next_seq(self) -> int:
         with self.seq_lock:
@@ -64,10 +78,10 @@ class HubApi:
         """Returns (status, headers, body_bytes) or a Stream. Raises nothing: every error is a problem."""
         query = urllib.parse.parse_qs(urllib.parse.urlparse(path).query)
         path = urllib.parse.urlparse(path).path
-        match = next(((p, k, h, a) for m, p, k, h, a in self.routes if m == method and p.match(path)), None)
+        match = next(((p, k, h, a, mb) for m, p, k, h, a, mb in self.routes if m == method and p.match(path)), None)
         if not match:
             return self.problem(Problem(404, "Not found", f"No route {method} {path}"))
-        pattern, keys, handler, anonymous = match
+        pattern, keys, handler, anonymous, max_body = match
         principal = None
         if not anonymous:
             token = bearer(headers)
@@ -85,14 +99,16 @@ class HubApi:
         route = f"{method} {path}"
         if key and principal:
             hit = self.store.replay(key, principal.id)
-            if hit and hit[3] != route:
+            if hit and hit[3] and hit[3] != route:   # a row migrated from before routes were recorded has route '': it still replays
                 return self.problem(Problem(422, "Key reused", "This Idempotency-Key was used for another call; a key belongs to one request.", "idempotency.reused"))
             if hit:
                 return hit[0], {"Content-Type": hit[1], "Idempotent-Replayed": "true"}, hit[2]
         m = pattern.match(path)
         params = {k: urllib.parse.unquote(m.group(i + 1)) for i, k in enumerate(keys)}
+        if max_body and len(body) > max_body:
+            return self.problem(Problem(413, "Body too large", f"This call takes at most {max_body} bytes.", "body.too_large"))
         try:
-            data = json.loads(body.decode("utf-8")) if body else None
+            data = loads_strict(body) if body else None
         except (ValueError, RecursionError):
             return self.problem(Problem(400, "Bad request", "the body is not JSON"))
         if data is not None and not isinstance(data, dict):
@@ -108,7 +124,11 @@ class HubApi:
         if isinstance(res, Stream):
             return res
         status, payload = res if isinstance(res, tuple) else (200, res)
-        raw = b"" if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        try:
+            raw = b"" if payload is None else json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        except ValueError:  # a number the record holds that JSON cannot carry: a problem, never half a document
+            log.exception("%s %s produced a payload that is not JSON", method, path)
+            return self.problem(Problem(500, "Internal error", "The answer could not be encoded; the request id identifies it in the log.", "internal"))
         ctype = "application/json"
         if key and principal and status < 500:
             self.store.remember(key, principal.id, status, ctype, raw, route)
@@ -124,7 +144,7 @@ class HubApi:
         r("GET", "/health", self.health, anonymous=True)
         r("GET", "/ready", self.ready, anonymous=True)
         r("GET", "/me", lambda c: {**c["principal"].to_json(), "preferences": self.store.get("prefs", c["principal"].id) or c["principal"].preferences})
-        r("PUT", "/me/preferences", self.put_prefs)
+        r("PUT", "/me/preferences", self.put_prefs, max_body=ROUTE_BODY_LIMIT)
         r("GET", "/catalog", lambda c: self.catalog.catalog_for(c["principal"]))
         r("GET", "/catalog/search", lambda c: self.catalog.search(c["principal"], c["query"].get("q", "")))
         r("GET", "/consumers/:slug", self.consumer)
@@ -135,18 +155,18 @@ class HubApi:
         r("GET", "/registry/systems", lambda c: self.catalog.c.get("registrySystems", []))
         r("GET", "/registry/tools", lambda c: self.catalog.c.get("registryTools", []))
         r("GET", "/briefs", self.list_briefs)
-        r("POST", "/briefs", lambda c: (201, self.store.put("brief", *self._new_brief(c["principal"]))))
+        r("POST", "/briefs", lambda c: (201, self.store.put("brief", *self._new_brief(c["principal"]))), max_body=ROUTE_BODY_LIMIT)
         r("GET", "/briefs/:id", lambda c: self.load_brief(c))
-        r("PATCH", "/briefs/:id", self.patch_brief)
-        r("POST", "/briefs/:id/estimate", lambda c: B.estimate(self.catalog.c.get("estimate", {}), c["body"] or {}))
-        r("POST", "/briefs/:id/road", lambda c: B.road(self.catalog.c.get("roadR2Read", {}), c["body"] or {}))
-        r("POST", "/briefs/:id/file", self.file_brief)
+        r("PATCH", "/briefs/:id", self.patch_brief, max_body=ROUTE_BODY_LIMIT)
+        r("POST", "/briefs/:id/estimate", lambda c: B.estimate(self.catalog.c.get("estimate", {}), c["body"] or {}), max_body=ROUTE_BODY_LIMIT)
+        r("POST", "/briefs/:id/road", lambda c: B.road(self.catalog.c.get("roadR2Read", {}), c["body"] or {}), max_body=ROUTE_BODY_LIMIT)
+        r("POST", "/briefs/:id/file", self.file_brief, max_body=ROUTE_BODY_LIMIT)
         r("GET", "/conversations", self.list_conversations)
         r("GET", "/conversations/:id", lambda c: self.load_conversation(c))
         r("POST", "/conversations", self.create_conversation)
-        r("POST", "/conversations/:id/turns", self.turn)
+        r("POST", "/conversations/:id/turns", self.turn, max_body=ROUTE_BODY_LIMIT)
         r("POST", "/conversations/:id/feedback", self.feedback)
-        r("POST", "/conversations/:id/handoff", lambda c: {"route": "human", "expected_wait_s": 240})
+        r("POST", "/conversations/:id/handoff", self.handoff)
         r("POST", "/guide/ask", self.guide_ask)
         r("GET", "/shelf", lambda c: [self.catalog.shelf_entry(x, c["principal"], self.store.list("signoff")) for x in self.catalog.shelf])
         r("GET", "/shelf/signoffs/export", lambda c: {"generatedAt": now_iso(), "apply": "python3 tools/shelf.py --apply-signoffs shelf-signoffs.json", "signoffs": self.store.list("signoff")})
@@ -176,6 +196,16 @@ class HubApi:
     def put_prefs(self, c):
         p = c["body"]
         if not isinstance(p, dict): raise Problem(422, "Not valid", "preferences must be an object", "validation")
+        errors = {}
+        for k, v in p.items():
+            d = DEFAULT_PREFS.get(k)
+            if k not in DEFAULT_PREFS: errors[k] = ["not a preference"]
+            elif isinstance(d, dict):
+                if not isinstance(v, dict) or any(kk not in d or not isinstance(vv, bool) for kk, vv in v.items()): errors[k] = ["must be an object of " + ", ".join(d) + " as true or false"]
+            elif isinstance(d, bool):
+                if not isinstance(v, bool): errors[k] = ["must be true or false"]
+            elif not isinstance(v, str) or len(v) > 64: errors[k] = ["must be a short string"]
+        if errors: raise Problem(422, "Not valid", "Some preferences are not ones the hub keeps, or have the wrong type.", "validation", errors)
         self.store.put("prefs", c["principal"].id, p, c["principal"].id)
         return {**c["principal"].to_json(), "preferences": p}
 
@@ -188,18 +218,22 @@ class HubApi:
         b, p = c["body"] or {}, c["principal"]
         kind = b.get("kind")
         if kind not in ("access", "ladder", "role"): raise Problem(422, "Not valid", "kind must be access, ladder or role", "validation")
-        listing = next((l for l in self.catalog.all if l["id"] == b.get("consumerId")), None)
+        cid = b.get("consumerId")
+        listing = next((l for l in self.catalog.all if l["id"] == cid), None) if isinstance(cid, str) else None
+        if not listing: raise Problem(422, "Not valid", "consumerId must name a listing in the catalog.", "validation", {"consumerId": ["unknown listing"]})
         ladders = ["L0", "L1", "L2", "L3"]
-        if kind == "ladder" and b.get("ladder") in ladders and ladders.index(b["ladder"]) > ladders.index(p.ladder):
-            raise Problem(403, "Above your ceiling", f"Your own ladder is {p.ladder}; ask your lead to raise it first.", "ladder.above")
-        name = listing["name"] if listing else b.get("consumerId", "")
+        if kind == "ladder":
+            if b.get("ladder") not in ladders: raise Problem(422, "Not valid", "ladder must be L0, L1, L2 or L3.", "validation", {"ladder": ["unknown ladder"]})
+            if ladders.index(b["ladder"]) > ladders.index(p.ladder):
+                raise Problem(403, "Above your ceiling", f"Your own ladder is {p.ladder}; ask your lead to raise it first.", "ladder.above")
+        name = listing["name"]
         req = {"id": "req_" + uuid.uuid4().hex[:8], "kind": kind, "consumerId": b.get("consumerId"), "status": "pending", "createdAt": now_iso(),
                "title": f"Ladder {b.get('ladder')} on {name}" if kind == "ladder" else f"{name} · {'reviewer role' if kind == 'role' else 'access'}", "note": "with your lead"}
         self.store.put("request", req["id"], req, p.id)
         return 201, req
 
     def workspace(self, c):
-        ws = self.catalog.workspace_for(c["principal"], self.store.list("brief"))
+        ws = self.catalog.workspace_for(c["principal"], self.store.list("brief", c["principal"].id))   # only this person's briefs, never the whole record
         ws["requests"] = self.store.list("request", c["principal"].id)
         return ws
 
@@ -210,7 +244,7 @@ class HubApi:
 
     def list_briefs(self, c):
         p = c["principal"]
-        return [b for b in self.store.list("brief") if b["createdBy"] == p.id or "platform.lead" in p.roles]
+        return self.store.list("brief") if "platform.lead" in p.roles else self.store.list("brief", p.id)
 
     def load_brief(self, c):
         b = self.store.get("brief", c["params"]["id"]); p = c["principal"]
@@ -218,29 +252,31 @@ class HubApi:
         return b
 
     def patch_brief(self, c):
-        b = self.load_brief(c)
-        if b["status"] not in ("draft", "needs_info"): raise Problem(409, "Not editable", "A filed brief cannot be edited.")
-        if_match = c["headers"].get("If-Match")
-        if if_match and if_match != b["etag"]: raise Problem(409, "Changed elsewhere", "This draft was saved from another tab. Reload to see the latest version.")
-        patch = c["body"] or {}
-        if isinstance(patch.get("content"), dict): b["content"] = {**b["content"], **{k: v for k, v in patch["content"].items() if k in B.STEPS and isinstance(v, dict)}}
-        if patch.get("currentStep") in B.STEPS: b["currentStep"] = patch["currentStep"]
-        if isinstance(patch.get("completed"), list): b["completed"] = [s for s in patch["completed"] if s in B.STEPS]
-        b["updatedAt"] = now_iso(); b["etag"] = B.bump(b["etag"])
-        return self.store.put("brief", b["id"], b, b["createdBy"])
+        with self.store.lock:  # read, compare If-Match, write: one section, so two tabs saving at once cannot both win
+            b = self.load_brief(c)
+            if b["status"] not in ("draft", "needs_info"): raise Problem(409, "Not editable", "A filed brief cannot be edited.")
+            if_match = c["headers"].get("If-Match")
+            if if_match and if_match != b["etag"]: raise Problem(409, "Changed elsewhere", "This draft was saved from another tab. Reload to see the latest version.")
+            patch = c["body"] or {}
+            if isinstance(patch.get("content"), dict): b["content"] = {**b["content"], **{k: v for k, v in patch["content"].items() if k in B.STEPS and isinstance(v, dict)}}
+            if patch.get("currentStep") in B.STEPS: b["currentStep"] = patch["currentStep"]
+            if isinstance(patch.get("completed"), list): b["completed"] = [s for s in patch["completed"] if s in B.STEPS]
+            b["updatedAt"] = now_iso(); b["etag"] = B.bump(b["etag"])
+            return self.store.put("brief", b["id"], b, b["createdBy"])
 
     def file_brief(self, c):
-        b = self.load_brief(c); p = c["principal"]
-        if_match = c["headers"].get("If-Match")
-        if if_match and if_match != b["etag"]: raise Problem(409, "Changed elsewhere", "Reload before filing.")
-        errors = B.validate(b["content"])
-        if errors: raise Problem(422, "The brief is not complete", "Some sections need attention before it can be filed.", errors=errors)
-        write = b["content"]["dataAndTools"]["tierCeiling"] != "R"
-        if write and not any(r in ("ops.lead", "platform.lead") for r in p.roles):
-            raise Problem(403, "Lead confirmation needed", "A write profile is filed by your team lead. Save the draft and ask them to file it.", "brief.lead_required")
-        b["content"] = B.with_baseline(b["content"])  # the harness baseline is the record's, not the form's
-        b.update({"status": "filed", "road": "R2", "etag": B.bump(b["etag"]), "updatedAt": now_iso()})
-        return self.store.put("brief", b["id"], b, b["createdBy"])
+        with self.store.lock:
+            b = self.load_brief(c); p = c["principal"]
+            if_match = c["headers"].get("If-Match")
+            if if_match and if_match != b["etag"]: raise Problem(409, "Changed elsewhere", "Reload before filing.")
+            errors = B.validate(b["content"])
+            if errors: raise Problem(422, "The brief is not complete", "Some sections need attention before it can be filed.", errors=errors)
+            write = b["content"]["dataAndTools"]["tierCeiling"] != "R"
+            if write and not any(r in ("ops.lead", "platform.lead") for r in p.roles):
+                raise Problem(403, "Lead confirmation needed", "A write profile is filed by your team lead. Save the draft and ask them to file it.", "brief.lead_required")
+            b["content"] = B.with_baseline(b["content"])  # the harness baseline is the record's, not the form's
+            b.update({"status": "filed", "road": "R2", "etag": B.bump(b["etag"]), "updatedAt": now_iso()})
+            return self.store.put("brief", b["id"], b, b["createdBy"])
 
     # ---------------- conversations ----------------
     def list_conversations(self, c):
@@ -250,7 +286,13 @@ class HubApi:
     def load_conversation(self, c):
         x = self.store.get("conversation", c["params"]["id"])
         if not x or x.get("owner") != c["principal"].id: raise Problem(404, "Not found")
+        if x.get("assistantId") not in c["principal"].entitlements:  # a revoked entitlement bites on old conversations too
+            raise Problem(403, "Not entitled", "Your role no longer opens this assistant.", "entitlement.missing")
         return x
+
+    def handoff(self, c):
+        self.load_conversation(c)
+        return {"route": "human", "expected_wait_s": 240}
 
     def create_conversation(self, c):
         p = c["principal"]; aid = (c["body"] or {}).get("assistantId")
@@ -264,6 +306,8 @@ class HubApi:
     def turn(self, c):
         x = self.load_conversation(c); text = str((c["body"] or {}).get("text", "")).strip()
         if not text: raise Problem(422, "Not valid", "text is required", "validation")
+        if len(x["turns"]) >= MAX_TURNS:
+            raise Problem(409, "Conversation full", f"This conversation has reached {MAX_TURNS} turns; start a new conversation.", "conversation.full")
         at = time.strftime("%H:%M")
         x["turns"].append({"id": f"t{self.next_seq()}", "role": "user", "at": at, "views": [{"kind": "text", "text": text, "provenance": "system"}]})
         if x["title"] == "New conversation": x["title"] = text[:45] + "…" if len(text) > 48 else text
@@ -305,18 +349,23 @@ class HubApi:
             raise Problem(403, "Not the owner" if role == "owner" else "Not an AI security engineer",
                           f"The manifest names {r['owner']} as the owner; you are {p.handle}." if role == "owner" else "The ai.security role is granted by the security team lead on your platform principal.", "shelf.role")
         if r["status"] != "ready": raise Problem(409, "Not ready", f"The component is {r['status']}; a sign-off needs a ready component.", "shelf.status")
-        attest = b.get("attest") or {}
+        attest = b.get("attest")
+        if attest is not None and not isinstance(attest, dict): raise Problem(422, "Not valid", "attest must be an object of the four attestations.", "validation", {"attest": ["must be an object"]})
+        attest = attest or {}
         missing = [k for k in ("testsGreen", "exampleRun", "walkthroughRead", "rulesRead") if attest.get(k) is not True]
         if missing: raise Problem(422, "Every attestation is required", f"Not ticked: {', '.join(missing)}.", "validation", {f"attest.{k}": ["required"] for k in missing})
-        used_in = str(b.get("usedIn") or "").strip()
+        used_in, note = str(b.get("usedIn") or "").strip(), str(b.get("note") or "").strip()
         if role == "owner" and not r.get("usedIn") and not used_in: raise Problem(422, "Where was it used?", "The owner signs after one real use; name the project.", "validation", {"usedIn": ["required"]})
-        recorded = self.store.list("signoff")
-        if (r["signoff"].get(role) or {}).get("version") == r["version"] or any(s["component"] == r["name"] and s["role"] == role and s["version"] == r["version"] for s in recorded):
-            raise Problem(409, "Already signed", f"The {'owner' if role == 'owner' else 'AI security'} sign-off at {r['version']} is already recorded.", "shelf.signed")
+        if len(used_in) > MAX_USED_IN: raise Problem(422, "Not valid", f"usedIn is at most {MAX_USED_IN} characters.", "validation", {"usedIn": ["too long"]})
+        if len(note) > MAX_NOTE: raise Problem(422, "Not valid", f"note is at most {MAX_NOTE} characters.", "validation", {"note": ["too long"]})
         rec = {"id": "so_" + uuid.uuid4().hex[:8], "component": r["name"], "role": role, "by": f"{p.name} <{p.email}>", "email": p.email, "date": now_iso()[:10], "version": r["version"],
-               "usedIn": used_in or None, "note": str(b.get("note") or "").strip() or None, "attest": {k: True for k in ("testsGreen", "exampleRun", "walkthroughRead", "rulesRead")}, "recordedAt": now_iso()}
+               "usedIn": used_in or None, "note": note or None, "attest": {k: True for k in ("testsGreen", "exampleRun", "walkthroughRead", "rulesRead")}, "recordedAt": now_iso()}
         rec = {k: v for k, v in rec.items() if v is not None}
-        self.store.put("signoff", rec["id"], rec, p.id)
+        with self.store.lock:  # the duplicate check and the write are one section: one sign-off per (component, role, version)
+            recorded = self.store.list("signoff")
+            if (r["signoff"].get(role) or {}).get("version") == r["version"] or any(s["component"] == r["name"] and s["role"] == role and s["version"] == r["version"] for s in recorded):
+                raise Problem(409, "Already signed", f"The {'owner' if role == 'owner' else 'AI security'} sign-off at {r['version']} is already recorded.", "shelf.signed")
+            self.store.put("signoff", rec["id"], rec, p.id)
         log.info("shelf.signed component=%s role=%s by=%s version=%s", r["name"], role, p.id, r["version"])
         return 201, rec
 
@@ -328,9 +377,23 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
         server_version = "hub-api/1.0"
+        timeout = 30  # seconds a socket may sit idle (a stalled body, a keep-alive nobody uses) before its thread is released
 
         def log_message(self, fmt, *args):  # ids only, structured
             pass
+
+        def handle(self):
+            """Counts itself in and out so a stop can wait for the requests still being answered (see `drain`)."""
+            lock = getattr(self.server, "inflight_lock", None)
+            if lock is None:
+                return super().handle()
+            with lock:
+                self.server.inflight += 1
+            try:
+                super().handle()
+            finally:
+                with lock:
+                    self.server.inflight -= 1
 
         def _send(self, status: int, headers: dict, body: bytes):
             self.send_response(status)
@@ -348,6 +411,8 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self._dispatch_one()
             except (BrokenPipeError, ConnectionResetError):
                 pass  # the browser navigated away mid-response; nothing to log and nothing to answer
+            except (TimeoutError, socket.timeout):
+                self.close_connection = True  # the client stopped sending; the thread goes back to the pool
             except Exception:  # noqa: BLE001 - a defect outside the API's own handling: answer 500 when nothing was sent yet
                 log.exception("%s %s failed", self.command, self.path.split("?")[0])
                 try:
@@ -360,12 +425,8 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             t0 = time.time()
             path = self.path
             request_id(self.headers.get("X-Request-Id"))
-            if urllib.parse.urlparse(path).path == "/config.js":
-                raw = ("// Runtime configuration from hub-api's settings; public values only.\nwindow.__HUB_CONFIG__ = " + json.dumps(api.s.web_config()) + ";\n").encode("utf-8")
-                self.send_response(200); self.send_header("Content-Type", "application/javascript"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-cache"); self.end_headers()
-                return self.wfile.write(raw) if self.command != "HEAD" else None
-            if not path.startswith(api_prefix + "/") and path != api_prefix:
-                return self._static(path)
+            # The body's framing is checked before any branch answers: a body sent to a page, an asset or /config.js
+            # that nobody reads would be parsed as the next request on the connection (request smuggling).
             if self.headers.get("Transfer-Encoding"):
                 # Bodies arrive with a length here; a chunked body would otherwise be read as the next request.
                 self.close_connection = True
@@ -376,6 +437,21 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             except ValueError:
                 self.close_connection = True
                 return self._send(400, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 400, "title": "Bad request", "detail": "Content-Length must be a non-negative integer"}).encode())
+            if not path.startswith(api_prefix + "/") and path != api_prefix:
+                if length:
+                    # Pages and assets take no body. A small one is drained so the refusal reaches the client; the connection closes either way.
+                    remaining = length if length <= 65536 else 0
+                    while remaining > 0:
+                        chunk = self.rfile.read(min(65536, remaining))
+                        if not chunk: break
+                        remaining -= len(chunk)
+                    self.close_connection = True
+                    return self._send(405, {"Content-Type": "application/problem+json", "Connection": "close", "Allow": "GET, HEAD"}, json.dumps({"status": 405, "title": "Method not allowed", "detail": "pages and assets take no request body"}).encode())
+                if urllib.parse.urlparse(path).path == "/config.js":
+                    raw = ("// Runtime configuration from hub-api's settings; public values only.\nwindow.__HUB_CONFIG__ = " + json.dumps(api.s.web_config()) + ";\n").encode("utf-8")
+                    self.send_response(200); self.send_header("Content-Type", "application/javascript"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-cache"); self.end_headers()
+                    return self.wfile.write(raw) if self.command != "HEAD" else None
+                return self._static(path)
             if length > api.s.max_body_bytes:
                 # Drain what the client is sending (bounded) so the refusal reaches it instead of a broken pipe, then close.
                 remaining = min(length, 8 * api.s.max_body_bytes)
@@ -392,7 +468,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 aborted = False
                 try:
                     for ev in res.events:
-                        self.wfile.write(f"event: view\ndata: {json.dumps(ev, ensure_ascii=False)}\n\n".encode("utf-8")); self.wfile.flush()
+                        self.wfile.write(f"event: view\ndata: {json.dumps(ev, ensure_ascii=False, allow_nan=False)}\n\n".encode("utf-8")); self.wfile.flush()
                 except (BrokenPipeError, ConnectionResetError):
                     aborted = True
                 except Exception:  # noqa: BLE001 - the adapter failed mid-stream: the person sees why the answer stopped
@@ -462,4 +538,17 @@ def csp_for(settings) -> str:
 def serve(api: HubApi, host: str, port: int, static_dir: str = "") -> ThreadingHTTPServer:
     httpd = ThreadingHTTPServer((host, port), make_handler(api, static_dir))
     httpd.daemon_threads = True
+    httpd.inflight, httpd.inflight_lock = 0, threading.Lock()
     return httpd
+
+
+def drain(httpd, timeout_s: float = 25.0, sleep=time.sleep) -> bool:
+    """After `shutdown()`: waits for the requests still being answered (a turn mid-stream finishes and is written to
+    the record); True when none remain, False when the timeout passed first."""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        with httpd.inflight_lock:
+            if httpd.inflight == 0: return True
+        sleep(0.05)
+    with httpd.inflight_lock:
+        return httpd.inflight == 0

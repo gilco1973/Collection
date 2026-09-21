@@ -66,6 +66,8 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Preferences" } } } }
       responses:
         "200": { description: The principal with the new preferences, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
+        "413": { description: The body is over the 64 KB ceiling for this call, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "A key that is not a preference, or a value of the wrong type; `errors` names the key", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "422": { $ref: "#/components/responses/Problem" }
   /me/requests:
     get:
@@ -92,6 +94,7 @@ paths:
       responses:
         "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/AccessRequest" } } } }
         "403": { description: "Refused by policy; `code` names why (e.g. `ladder.above`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "`consumerId` is not a listing in the catalog, or `ladder` is not one of the four; `errors` names the field", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /me/workspace:
     get:
       tags: [workspace]
@@ -172,7 +175,8 @@ paths:
                 completed: { type: array, items: { $ref: "#/components/schemas/BriefStep" } }
       responses:
         "200": { description: The brief with its new etag, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
-        "409": { description: Stale If-Match or a brief that is no longer editable, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "409": { description: Stale If-Match or a brief that is no longer editable (the check and the write are one section; two saves with the same etag cannot both win), content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "413": { description: The body is over the 64 KB ceiling for briefs, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /briefs/{id}/estimate:
     post:
       tags: [briefs]
@@ -255,6 +259,9 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string } } } } } }
       responses:
         "200": { description: Event stream, content: { text/event-stream: { schema: { type: string } } } }
+        "403": { description: "The person's entitlement to this assistant was revoked (`entitlement.missing`); the same on GET, feedback and handoff", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "409": { description: "The conversation has reached 200 turns (`conversation.full`); start a new one", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "413": { description: The body is over the 64 KB ceiling for a turn, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations/{id}/feedback:
     post:
       tags: [conversations]
@@ -270,6 +277,8 @@ paths:
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
       responses:
         "200": { description: OK, content: { application/json: { schema: { type: object, required: [route], properties: { route: { type: string, enum: [human, callback, secure_message] }, expected_wait_s: { type: integer } } } } } }
+        "403": { $ref: "#/components/responses/Problem" }
+        "404": { description: No conversation with that id owned by this person, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
 
   /shelf:
     get:
@@ -293,9 +302,9 @@ paths:
   /shelf/{name}/signoffs:
     post:
       tags: [shelf]
-      summary: Record a sign-off; the owner by name (the manifest's owner is their handle), AI security by the ai.security role; every attestation required
+      summary: Record a sign-off; the owner by name (the manifest's owner is their handle, and with HUB_OWNER_DOMAIN only from that email domain), AI security by the ai.security role; every attestation required; one per component, role and version
       parameters: [{ name: name, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [role, attest], properties: { role: { type: string, enum: [owner, ai_security] }, attest: { type: object, required: [testsGreen, exampleRun, walkthroughRead, rulesRead], additionalProperties: { type: boolean } }, usedIn: { type: string }, note: { type: string } } } } } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [role, attest], properties: { role: { type: string, enum: [owner, ai_security] }, attest: { type: object, required: [testsGreen, exampleRun, walkthroughRead, rulesRead], additionalProperties: { type: boolean } }, usedIn: { type: string, maxLength: 200 }, note: { type: string, maxLength: 2000 } } } } } }
       responses:
         "201": { description: Recorded, content: { application/json: { schema: { $ref: "#/components/schemas/ShelfSignoffRecord" } } } }
         "403": { $ref: "#/components/responses/Problem" }

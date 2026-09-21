@@ -49,6 +49,7 @@ class Settings:
     bedrock_max_output_tokens: int = 1500
     secrets: str = "env"                                   # env | file:<path> | aws
     ai_security_group: str = ""                            # the directory group whose members sign for AI security (oidc)
+    owner_domain: str = ""                                 # the email domain an owner signs from (required with oidc; empty in the sandbox)
     # the hub's own runtime configuration, served as /config.js so one built dist runs everywhere
     web_oidc_authority: str = ""                           # the identity provider's OIDC authority for the browser (Authorization Code + PKCE)
     web_oidc_client_id: str = ""
@@ -83,7 +84,7 @@ class Settings:
                    kb_search_url=e("KB_SEARCH_URL", ""), bedrock_region=e("BEDROCK_REGION", os.environ.get("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""),
                    bedrock_max_output_tokens=num("BEDROCK_MAX_OUTPUT_TOKENS", d.bedrock_max_output_tokens), secrets=e("SECRETS", d.secrets),
-                   ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
+                   ai_security_group=e("AI_SECURITY_GROUP", ""), owner_domain=e("OWNER_DOMAIN", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
                    web_oidc_redirect_uri=e("WEB_OIDC_REDIRECT_URI", ""), web_oidc_post_logout_uri=e("WEB_OIDC_POST_LOGOUT_URI", ""), web_oidc_scope=e("WEB_OIDC_SCOPE", d.web_oidc_scope),
                    max_body_bytes=num("MAX_BODY_BYTES", d.max_body_bytes), rate_per_minute=num("RATE_PER_MINUTE", d.rate_per_minute),
                    idempotency_ttl_s=num("IDEMPOTENCY_TTL_S", d.idempotency_ttl_s), conversation_retention_days=num("CONVERSATION_RETENTION_DAYS", d.conversation_retention_days),
@@ -112,6 +113,9 @@ class Settings:
         if self.auth == "oidc" and (not self.idp_issuer or not self.idp_audience): p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")
         if self.auth == "oidc" and self.idp_issuer and not self.idp_issuer.startswith("https://"): p.append(f"{P}IDP_ISSUER must be https")
         if self.auth == "oidc" and not self.ai_security_group: p.append(f"{P}AI_SECURITY_GROUP is empty: nobody could sign for AI security")
+        if self.auth == "oidc" and not self.owner_domain: p.append(f"{P}OWNER_DOMAIN is required with oidc: the owner's handle alone would match the same name at any domain")
+        if self.owner_domain and ("@" in self.owner_domain or "/" in self.owner_domain or " " in self.owner_domain): p.append(f"{P}OWNER_DOMAIN must be a bare domain name")
+        if self.log_level.upper() not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"): p.append(f"{P}LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR or CRITICAL")
         if self.auth == "oidc" and self.static_dir and (not self.web_oidc_authority or not self.web_oidc_client_id):
             p.append(f"{P}WEB_OIDC_AUTHORITY and {P}WEB_OIDC_CLIENT_ID are required to serve the hub with oidc (they become /config.js)")
         if self.web_oidc_authority and not self.web_oidc_authority.startswith("https://"): p.append(f"{P}WEB_OIDC_AUTHORITY must be https")
@@ -148,6 +152,8 @@ class Settings:
             cfg.update({"VITE_OIDC_AUTHORITY": self.web_oidc_authority, "VITE_OIDC_CLIENT_ID": self.web_oidc_client_id,
                         "VITE_OIDC_REDIRECT_URI": self.web_oidc_redirect_uri or f"{base}/auth/callback", "VITE_OIDC_POST_LOGOUT_URI": self.web_oidc_post_logout_uri or f"{base}/",
                         "VITE_OIDC_SCOPE": self.web_oidc_scope})
+        else:
+            cfg["HUB_ALLOW_MOCK"] = True   # a production hub build refuses mock identity unless the configuration that names it says so (sandbox only: validate() refuses mock in staging and production)
         return cfg
 
     def advice(self) -> list[str]:
