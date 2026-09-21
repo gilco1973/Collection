@@ -62,6 +62,17 @@ of the same API contract.
 
 See `ARCHITECTURE.md` for the module map and the request/state design.
 
+## The composer
+
+Section 3 of the intake brief, "Data and tools", opens a composer from "Browse the catalog"
+(`src/features/intake/Composer.tsx`): on the left everything that exists (the registry's systems and their tools
+with tiers, the collection's components, the bank's services), on the right the brief's own section as a drop
+zone. Drag or Add writes straight into the brief; a tool brings its system with it; the panel shows the
+consequences live (the ceiling the tools need, the data classes they read, the session limit, whether a lead
+files) with one button per fix. A system without a recorded contract is shown but cannot be dropped; a money
+tool is refused for a first consumer. What is reused is kept in the brief's optional `reuses` list and shown on
+the review page. The default render of the step is unchanged, so the pixel guard still passes at 0 px.
+
 ## The guide
 
 A companion drawn over every signed-in screen (`src/features/guide/`): the button at the bottom right, Alt+G, or

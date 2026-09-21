@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { type BriefContent, type BriefStepKey, type FieldErrors } from "../../api/schemas";
-import type { DataClass, RegistrySystem, RegistryTool, Tier } from "../../api/types";
+import type { DataClass, RegistrySystem, Tier } from "../../api/types";
 import { usePrincipal } from "../../auth/AuthProvider";
 import { CheckRow, Field, NumberInput, RadioCard, Seg, TextInput } from "../../ui/fields";
 import { Check, Close, Grid } from "../../ui/icons";
 import type { BriefState } from "./useBrief";
+import { Composer, reusesOf } from "./Composer";
 
 /** Titles and the one-line summaries the steps rail and the section headers show (§7.11). */
 export const STEP_META: Record<BriefStepKey, { title: string; small: string; sub: string }> = {
@@ -126,12 +127,11 @@ export function PeopleStep({ s, content, errors }: StepProps) {
 export function DataAndToolsStep({ s, content, errors }: StepProps) {
   const v = content.dataAndTools;
   const systems = useQuery({ queryKey: ["registry", "systems"], queryFn: ({ signal }) => api.registry.systems(signal), staleTime: Infinity });
-  const tools = useQuery({ queryKey: ["registry", "tools"], queryFn: ({ signal }) => api.registry.tools(signal), staleTime: Infinity });
   const [pick, setPick] = useState<"system" | "tool" | null>(null);
   const popRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!pick) return;
+    if (!pick || pick === "tool") return; // the composer is a dialog and closes itself
     const close = (e: MouseEvent | KeyboardEvent) => {
       if (e instanceof KeyboardEvent ? e.key === "Escape" : !popRef.current?.contains(e.target as Node)) setPick(null);
     };
@@ -150,10 +150,6 @@ export function DataAndToolsStep({ s, content, errors }: StepProps) {
     setPick(null);
   };
   const removeSystem = (id: string) => s.update("dataAndTools", { systems: v.systems.filter((x) => x.id !== id) });
-  const addTool = (t: RegistryTool) => {
-    s.update("dataAndTools", { tools: [...v.tools, { name: t.name, tier: t.tier, classes: t.classes }] });
-    setPick(null);
-  };
   const removeTool = (name: string) => s.update("dataAndTools", { tools: v.tools.filter((x) => x.name !== name) });
 
   return (
@@ -257,7 +253,7 @@ export function DataAndToolsStep({ s, content, errors }: StepProps) {
           <button
             type="button"
             className="btn s"
-            aria-haspopup="listbox"
+            aria-haspopup="dialog"
             aria-expanded={pick === "tool"}
             onClick={() => setPick(pick === "tool" ? null : "tool")}
           >
@@ -268,30 +264,31 @@ export function DataAndToolsStep({ s, content, errors }: StepProps) {
             className="muted"
             style={{ fontSize: "12px" }}
           >{`${v.tools.length} tools · ${v.tools.length > 15 ? "over" : "under"} the 15-tool session ceiling`}</span>
-          {pick === "tool" && (
-            <div ref={popRef} className="pop" role="listbox" aria-label="Tools in the catalog" style={{ minWidth: 420 }}>
-              {(tools.data ?? [])
-                .filter((x) => !v.tools.some((y) => y.name === x.name))
-                .map((x) => (
-                  <button key={x.name} type="button" role="option" aria-selected={false} className="opt" onClick={() => addTool(x)}>
-                    <span className={`chip ${TIER_CHIP[x.tier]}`}>{x.tier}</span>
-                    <div className="col" style={{ gap: 0, flex: 1 }}>
-                      <span className="mono">{x.name}</span>
-                      <small>
-                        {x.description} · {x.classes.join(" · ")}
-                      </small>
-                    </div>
-                  </button>
-                ))}
-              {tools.isPending && (
-                <span className="muted" style={{ padding: 8, fontSize: 12 }}>
-                  Loading the catalog…
-                </span>
-              )}
-            </div>
-          )}
+          {pick === "tool" && <Composer s={s} content={content} onClose={() => setPick(null)} />}
         </div>
       </Field>
+      {reusesOf(v).length > 0 && (
+        <Field
+          label="Reused from what exists"
+          help="components of the collection and services of the bank the consumer builds on; a signed one is review time saved"
+        >
+          <div className="row" style={{ flexWrap: "wrap" }}>
+            {reusesOf(v).map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="chip line"
+                title="Remove"
+                aria-label={`${r.name} · remove`}
+                onClick={() => s.update("dataAndTools", { reuses: reusesOf(v).filter((x) => x.id !== r.id) })}
+              >
+                {r.name}
+                <Close size={10} />
+              </button>
+            ))}
+          </div>
+        </Field>
+      )}
       <Field label="Data classes read" error={errors["dataAndTools.dataClasses"]}>
         <CheckRow label="internal" note="no extra review" checked={v.dataClasses.includes("internal")} onChange={(on) => setClass("internal", on)} />
         <CheckRow
@@ -502,6 +499,16 @@ export function ReviewStep({ s, content, errors, needsLead, canFile }: StepProps
       {sec("3 · Data and tools", "dataAndTools", [
         ["systems", c.dataAndTools.systems.map((x) => x.name).join(" · ") || "—"],
         ["tools", c.dataAndTools.tools.map((t) => `${t.name} (${t.tier})`).join(", ") || "—"],
+        ...(reusesOf(c.dataAndTools).length
+          ? [
+              [
+                "reuses",
+                reusesOf(c.dataAndTools)
+                  .map((r) => r.name)
+                  .join(" · "),
+              ] as [string, string],
+            ]
+          : []),
         ["data classes", c.dataAndTools.dataClasses.join(" · ") || "—"],
         ["tier ceiling", c.dataAndTools.tierCeiling],
       ])}

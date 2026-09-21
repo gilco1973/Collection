@@ -45,6 +45,11 @@ export const dataAndToolsSchema = z
     tools: z.array(toolSchema).min(1, "Add at least one tool.").max(15, "Over the 15-tool session ceiling; remove tools or split the consumer."),
     dataClasses: z.array(dataClassSchema).min(1, "Choose the data classes the consumer reads."),
     tierCeiling: ceilingSchema,
+    /** Components of the collection and services of the bank the consumer reuses; named in the brief, reviewed as reuse. */
+    reuses: z
+      .array(z.object({ id: z.string().min(1), name: z.string().min(1), kind: z.string().min(1) }))
+      .max(20)
+      .optional(),
   })
   .superRefine((v, ctx) => {
     if (v.dataClasses.includes("restricted")) {

@@ -426,6 +426,7 @@ components:
           properties:
             systems: { type: array, minItems: 1, items: { type: object, properties: { id: { type: string }, name: { type: string } } } }
             tools: { type: array, minItems: 1, maxItems: 15, items: { type: object, properties: { name: { type: string }, tier: { type: string, enum: [R, W1, W2, M] }, classes: { type: array, items: { type: string } } } } }
+            reuses: { type: array, maxItems: 20, description: Components of the collection and services of the bank the consumer reuses (the intake composer writes them), items: { type: object, required: [id, name, kind], properties: { id: { type: string }, name: { type: string }, kind: { type: string } } } }
             dataClasses: { type: array, minItems: 1, items: { type: string, enum: [internal, confidential, restricted] }, description: restricted is refused for a first consumer }
             tierCeiling: { type: string, enum: [R, W1, W2], description: must cover every tool's tier }
         model: { type: object, required: [need, classificationCeiling, substitute], properties: { need: { type: string, enum: [none, utility, workhorse, frontier] }, classificationCeiling: { type: string, enum: [internal, confidential, restricted] }, substitute: { type: boolean } } }
