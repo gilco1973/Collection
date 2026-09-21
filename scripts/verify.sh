@@ -31,6 +31,7 @@ if [ "$what" = all ] || [ "$what" = hub ]; then
   # The browser proof runs wherever a Chromium is: CHROMIUM_PATH, a PLAYWRIGHT_BROWSERS_PATH directory, or Playwright's default cache (CI installs one there).
   if [ -n "${CHROMIUM_PATH:-}" ] || [ -d "${PLAYWRIGHT_BROWSERS_PATH:-/nonexistent}" ] || [ -d "${HOME:-/nonexistent}/.cache/ms-playwright" ]; then
     gate "hub + hub-api: real sign-in end to end (OIDC, PKCE, JWKS, silent renew, refusals)"; scripts/smoke-oidc.sh >/dev/null
+    gate "hub: pixel guard against the artboards and the browser flows"; scripts/smoke-hub-browser.sh >/dev/null
   fi
 fi
 printf 'ok: every gate passed (%s)\n' "$what"

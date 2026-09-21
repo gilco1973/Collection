@@ -128,6 +128,7 @@ pnpm build && pnpm preview               # the production build: it refuses the 
 pnpm build:demo && pnpm preview          # a browsable demo build (VITE_ALLOW_MOCK=1): mock API and personas by default
 pnpm verify:shoot && pnpm verify:diff    # pixel guard on the production build (the tools answer /config.js like the sandbox); needs Chromium
 ../scripts/smoke-oidc.sh                 # the real sign-in path against a stand-in OpenID Connect provider (needs Chromium and hub/dist)
+../scripts/smoke-hub-browser.sh          # the pixel guard and every browser flow on hub/dist, on a preview port of its own (what CI runs)
 pnpm verify:e2e          # nav, intake, discover/listing/workspace, assistant, settings flows
 pnpm build:artifact      # static-host bundle (HashRouter, relative assets) in dist-artifact/
 ```

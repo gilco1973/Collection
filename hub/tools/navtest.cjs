@@ -2,7 +2,7 @@
 // in-page buttons, and browser back. Fails non-zero on the first miss.
 const pw = require("playwright-core");
 const { mockConfig } = require("./mockconfig.cjs");
-const BASE = "http://127.0.0.1:4173";
+const BASE = process.env.HUB_BASE || "http://127.0.0.1:4173";
 const steps = [
   { do: async (p) => p.goto(BASE + "/"),                                            expect: "/discover",                              note: "root redirects to Discover" },
   { do: async (p) => p.locator(".hnav .links > *", { hasText: "My workspace" }).click(), expect: "/workspace",                         note: "nav: My workspace" },
