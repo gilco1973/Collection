@@ -1,6 +1,7 @@
 // Exercise the delegated navigation in HubShell end to end: primary nav links,
 // in-page buttons, and browser back. Fails non-zero on the first miss.
 const pw = require("playwright-core");
+const { mockConfig } = require("./mockconfig.cjs");
 const BASE = "http://127.0.0.1:4173";
 const steps = [
   { do: async (p) => p.goto(BASE + "/"),                                            expect: "/discover",                              note: "root redirects to Discover" },
@@ -18,6 +19,7 @@ const steps = [
 (async () => {
   const browser = await pw.chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, ignoreHTTPSErrors: true });
+  await mockConfig(page);
   // Sign in as the artboard persona before the app boots (mock auth mode).
   await page.addInitScript(() => { try { window.sessionStorage.setItem("crai.hub.mockPersona", "gk"); } catch {} });
   const errors = [];

@@ -1,6 +1,7 @@
 // Settings: preferences apply at once, are saved through the API, and survive
 // in-app navigation; dark theme, density and accessibility stamp the root.
 const pw = require("playwright-core");
+const { mockConfig } = require("./mockconfig.cjs");
 const BASE = process.env.HUB_BASE || "http://127.0.0.1:4173";
 let fails = 0;
 const check = (ok, note, extra = "") => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"}  ${note}${extra ? "   " + extra : ""}`); };
@@ -8,6 +9,7 @@ const ready = (p) => p.waitForSelector(".hub:not([data-loading])", { timeout: 15
 (async () => {
   const browser = await pw.chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, ignoreHTTPSErrors: true });
+  await mockConfig(page);
   await page.addInitScript(() => { try { window.sessionStorage.setItem("crai.hub.mockPersona", "gk"); } catch {} });
   const errors = []; page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto(BASE + "/settings", { waitUntil: "load" }); await ready(page);

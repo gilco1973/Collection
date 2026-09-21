@@ -4,6 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const pw = require("playwright-core");
+const { mockConfig } = require("./mockconfig.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const UX = process.env.HUB_ARTBOARDS || path.join(ROOT, "artboards");
@@ -74,6 +75,7 @@ async function settle(page) {
 
     // Candidate: the React app route.
     const app = await browser.newPage({ viewport, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
+    await mockConfig(app);
     await offlineFonts(app);
     await signIn(app);
     const errors = [];

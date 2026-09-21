@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth, type SignInState } from "../auth/AuthProvider";
 import { env } from "../config/env";
 
 /**
@@ -12,7 +12,12 @@ export default function SignIn() {
   const [params] = useSearchParams();
   const location = useLocation();
   const returnTo = params.get("returnTo") ?? "/discover";
-  const reason = (location.state as { reason?: string } | null)?.reason ?? snapshot.error;
+  // A failure on this page (the provider unreachable, a refused callback) is the freshest word; otherwise the
+  // reason the guard sent us here with, then whatever the provider last said.
+  const sent = (location.state as SignInState | null) ?? undefined;
+  const fresh = snapshot.status === "error" ? snapshot : undefined;
+  const reason = fresh?.error ?? sent?.reason ?? snapshot.error;
+  const detail = fresh?.detail ?? (sent?.reason ? sent.detail : snapshot.detail);
   const [busy, setBusy] = useState<string | null>(null);
 
   const go = async (persona?: string) => {
@@ -54,7 +59,14 @@ export default function SignIn() {
         </p>
         {reason && (
           <div className="banner warn" role="status" style={{ marginBottom: 14 }}>
-            <span>{reason}</span>
+            <div className="col" style={{ gap: 4 }}>
+              <span>{reason}</span>
+              {detail && detail !== reason && (
+                <span className="mono" style={{ fontSize: 11.5 }} data-signin-detail>
+                  {detail}
+                </span>
+              )}
+            </div>
           </div>
         )}
 

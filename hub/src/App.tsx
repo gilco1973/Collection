@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { BrowserRouter, HashRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { queryClient } from "./api";
 import { AuthProvider, CALLBACK_PATH } from "./auth/AuthProvider";
-import { RequireAuth } from "./auth/RequireAuth";
+import { AuthCallback, RequireAuth } from "./auth/RequireAuth";
 import { env } from "./config/env";
 import HubShell from "./HubShell";
 import { ROUTES, SCREEN_TITLES } from "./routes";
@@ -21,7 +21,6 @@ import Learn from "./screens/Learn";
 import SignIn from "./screens/SignIn";
 import { Forbidden, NotFound } from "./screens/Status";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
-import { PageState } from "./ui/PageState";
 import { ThemeProvider } from "./ui/ThemeProvider";
 import { ToastProvider } from "./ui/Toast";
 
@@ -70,7 +69,7 @@ export default function App() {
                         <Routes>
                           <Route path="/" element={<Navigate to={ROUTES.discover} replace />} />
                           <Route path="/signin" element={<SignIn />} />
-                          <Route path={CALLBACK_PATH} element={<PageState kind="loading" text="Finishing sign-in…" />} />
+                          <Route path={CALLBACK_PATH} element={<AuthCallback />} />
                           <Route path="/403" element={<Forbidden />} />
                           <Route path={ROUTES.discover} element={guarded(<Discover />)} />
                           <Route path="/discover/:kind/:slug" element={guarded(<Listing />)} />

@@ -52,7 +52,10 @@ export interface AuthSnapshot {
   accessToken?: string;
   /** Provider's own subject and display name, before the platform resolves the principal. */
   subject?: { id: string; name?: string; email?: string };
+  /** What to tell the person, in plain words. */
   error?: string;
+  /** The provider's code or the underlying message behind `error`, for the support line; never the headline. */
+  detail?: string;
 }
 
 /** A sign-in persona for the mock provider (dev, demos, tests). */

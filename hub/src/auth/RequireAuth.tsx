@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { ForbiddenError } from "../api/errors";
 import { PageState } from "../ui/PageState";
-import { useAuth } from "./AuthProvider";
+import { SIGN_IN_PATH, useAuth, type SignInState } from "./AuthProvider";
 import type { Action, Resource } from "./permits";
 
 /**
@@ -19,7 +19,8 @@ export function RequireAuth({ children, action, resource }: { children: ReactNod
   }
   if (snapshot.status === "signed-out" || snapshot.status === "error") {
     const returnTo = `${location.pathname}${location.search}`;
-    return <Navigate to={`/signin?returnTo=${encodeURIComponent(returnTo)}`} replace state={{ reason: snapshot.error }} />;
+    const state: SignInState = { reason: snapshot.error, detail: snapshot.detail };
+    return <Navigate to={`${SIGN_IN_PATH}?returnTo=${encodeURIComponent(returnTo)}`} replace state={state} />;
   }
   if (principalError) {
     if (principalError instanceof ForbiddenError) return <Navigate to="/403" replace />;
@@ -28,4 +29,17 @@ export function RequireAuth({ children, action, resource }: { children: ReactNod
   if (!principal) return <PageState kind="loading" text="Loading your workspace…" />;
   if (action && !can(action, resource)) return <Navigate to="/403" replace />;
   return <>{children}</>;
+}
+
+/**
+ * The provider's redirect callback, rendered from the auth snapshot: a spinner while the sign-in is
+ * being finished, and the sign-in page with the reason as soon as it failed, never a spinner that stays.
+ */
+export function AuthCallback() {
+  const { snapshot } = useAuth();
+  if (snapshot.status === "error" || snapshot.status === "signed-out") {
+    const state: SignInState = { reason: snapshot.error, detail: snapshot.detail };
+    return <Navigate to={SIGN_IN_PATH} replace state={state} />;
+  }
+  return <PageState kind="loading" text="Finishing sign-in…" />;
 }

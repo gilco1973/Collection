@@ -5,6 +5,7 @@ import { api, onUnauthorized } from "../api";
 import { track } from "../telemetry";
 import { authClient } from "./client";
 import { permits, type Action, type Resource } from "./permits";
+import { describeCallbackError, describeProviderError } from "./reasons";
 import type { AuthSnapshot, MockPersona, Principal } from "./types";
 
 interface AuthContextValue {
@@ -21,6 +22,13 @@ interface AuthContextValue {
 const Ctx = createContext<AuthContextValue | null>(null);
 
 export const CALLBACK_PATH = "/auth/callback";
+export const SIGN_IN_PATH = "/signin";
+
+/** What the sign-in page reads from `location.state` when it is navigated to with a reason. */
+export interface SignInState {
+  reason?: string;
+  detail?: string;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<AuthSnapshot>({ status: "loading" });
@@ -34,12 +42,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         if (authClient.isCallbackUrl()) {
-          const { snapshot: s, returnTo } = await authClient.completeSignIn();
+          let result: Awaited<ReturnType<typeof authClient.completeSignIn>>;
+          try {
+            result = await authClient.completeSignIn();
+          } catch (e) {
+            // A silent-renew frame reports to the page that opened it; the page decides, not the frame.
+            if (cancelled || window.self !== window.top) return;
+            const reason = describeCallbackError(e, window.location.href);
+            setSnapshot({ status: "error", error: reason.message, detail: reason.code });
+            track("auth.sign_in_failed", { stage: "callback", code: reason.code });
+            navigate(SIGN_IN_PATH, { replace: true, state: { reason: reason.message, detail: reason.code } satisfies SignInState });
+            return;
+          }
           if (cancelled) return;
           // A silent-renew frame: the client has handed the result to the page that opened it; render nothing here.
           if (window.self !== window.top) return;
-          setSnapshot(s);
-          navigate(returnTo ?? "/", { replace: true });
+          setSnapshot(result.snapshot);
+          navigate(result.returnTo ?? "/", { replace: true });
           track("auth.signed_in", { mode: "redirect" });
           return;
         }
@@ -91,7 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(
     async (opts?: { returnTo?: string; persona?: string }) => {
       setSnapshot((s) => ({ ...s, status: "signing-in" }));
-      const s = await authClient.signIn(opts);
+      let s: AuthSnapshot | void;
+      try {
+        s = await authClient.signIn(opts);
+      } catch (e) {
+        // The provider's discovery document could not be fetched, or it refused the request: say so on the
+        // sign-in page instead of leaving the button busy and the promise rejected.
+        const reason = describeProviderError(e);
+        setSnapshot({ status: "error", error: reason.message, detail: reason.code });
+        track("auth.sign_in_failed", { stage: "start", code: reason.code });
+        return;
+      }
       if (s) {
         setSnapshot(s);
         track("auth.signed_in", { mode: "mock" });
@@ -104,9 +133,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     track("auth.signed_out");
     queryClient.clear();
-    await authClient.signOut();
-    setSnapshot({ status: "signed-out" });
-    navigate("/signin", { replace: true });
+    try {
+      await authClient.signOut();
+    } catch (e) {
+      // The provider could not be told (no end-session endpoint, unreachable): the hub is still signed out.
+      track("auth.sign_out_failed", { code: describeProviderError(e).code });
+    } finally {
+      setSnapshot({ status: "signed-out" });
+      navigate(SIGN_IN_PATH, { replace: true });
+    }
   }, [navigate, queryClient]);
 
   const value = useMemo<AuthContextValue>(

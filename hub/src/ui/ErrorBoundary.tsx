@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { ApiError } from "../api/errors";
+import { env } from "../config/env";
 import { track } from "../telemetry";
 
 interface Props {
@@ -32,6 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
     if (this.props.fallback) return this.props.fallback(error, this.reset);
     const support = error instanceof ApiError ? error.supportLine : undefined;
+    // A full document load, on purpose: the boundary sits outside the routes, and the path depends on the router.
+    const discoverHref = env.VITE_ROUTER === "hash" ? "#/discover" : "/discover";
     return (
       <div className="hub" style={{ minHeight: 400 }}>
         <div className="hwrap">
@@ -48,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <button type="button" className="btn s" onClick={this.reset}>
                   Try again
                 </button>
-                <a className="btn g s" href="#/discover">
+                <a className="btn g s" href={discoverHref}>
                   Back to Discover
                 </a>
               </div>

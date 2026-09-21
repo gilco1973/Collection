@@ -108,6 +108,75 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   check((await p4.locator("text=You sign nothing yet").count()) > 0, "an employee in no hub group signs nothing");
   await ctx4.close();
 
+  // 10. What the person sees when the provider says no, or cannot be reached: plain words, never a spinner that
+  // stays, never a raw code as the headline. Each case in its own context, so nothing carries over.
+  const fresh = async () => { const c = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 900 } }); return [c, await c.newPage()]; };
+  const banner = (p) => p.locator(".banner").first().innerText().then((t) => t.replace(/\s+/g, " ").trim()).catch(() => "");
+  const seedAs = (p, persona) => p.goto(IDP + "/authorize?client_id=hub-web&response_type=code&code_challenge=x&code_challenge_method=S256&redirect_uri=" + encodeURIComponent(HUB + "/auth/callback") + "&persona=" + persona + "&state=seed", { waitUntil: "commit" }).catch(() => {});
+
+  // 10a. The provider answers the callback with an error (the person cancelled at the bank's page).
+  { const [c, p] = await fresh();
+    await p.goto(HUB + "/auth/callback?error=access_denied&error_description=The+person+cancelled&state=abc");
+    await p.waitForURL((u) => u.pathname.startsWith("/signin"), { timeout: 20000 }).catch(() => {});
+    const b = await banner(p);
+    check(new URL(p.url()).pathname === "/signin" && /The person cancelled/.test(b) && (await p.locator("#signin-sso").count()) === 1, `a callback the provider refused lands on /signin with the provider's reason, never a spinner (${b})`);
+    await c.close(); }
+
+  // 10b. A callback without state, and a used callback link loaded again: the link was already used.
+  { const [c, p] = await fresh();
+    await p.goto(HUB + "/auth/callback?code=abc");
+    await p.waitForURL((u) => u.pathname.startsWith("/signin"), { timeout: 20000 }).catch(() => {});
+    check(new URL(p.url()).pathname === "/signin" && /already used/.test(await banner(p)), "a callback without state lands on /signin: the link was already used");
+    let cbUrl = "";
+    p.on("request", (r) => { if (r.url().startsWith(HUB + "/auth/callback?code=")) cbUrl = r.url(); });
+    await p.click("#signin-sso");
+    await p.waitForURL((u) => u.pathname.startsWith("/discover"), { timeout: 20000 });
+    await p.waitForSelector(".hub:not([data-loading])", { timeout: 20000 });
+    await p.goto(cbUrl);
+    await p.waitForURL((u) => u.pathname.startsWith("/signin"), { timeout: 20000 }).catch(() => {});
+    check(cbUrl !== "" && new URL(p.url()).pathname === "/signin" && /already used/.test(await banner(p)), "a replayed callback link lands on /signin: the link was already used, not a spinner");
+    await c.close(); }
+
+  // 10c. Sign-out against a provider whose discovery names no end_session_endpoint: the hub is still signed out.
+  { const [c, p] = await fresh();
+    await p.route(IDP + "/.well-known/openid-configuration", async (route) => {
+      const res = await route.fetch(); const doc = await res.json(); delete doc.end_session_endpoint;
+      await route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": HUB }, body: JSON.stringify(doc) });
+    });
+    await p.goto(HUB + "/signin"); await p.waitForSelector("#signin-sso", { timeout: 20000 }); await p.click("#signin-sso");
+    await p.waitForURL((u) => u.pathname.startsWith("/discover"), { timeout: 20000 });
+    await p.waitForSelector(".hub:not([data-loading])", { timeout: 20000 });
+    await p.click('[aria-label^="Account: "]');
+    await p.getByRole("menuitem", { name: "Sign out" }).click();
+    await p.waitForURL((u) => u.pathname.startsWith("/signin"), { timeout: 20000 }).catch(() => {});
+    const acct = await p.locator('[aria-label^="Account: "]').count();
+    check(new URL(p.url()).pathname === "/signin" && acct === 0, `sign-out with no end-session endpoint still signs the hub out and shows /signin (${new URL(p.url()).pathname}, account menus: ${acct})`);
+    await c.close(); }
+
+  // 10d. The provider cannot be reached: the button says so and works again, instead of failing silently.
+  { const [c, p] = await fresh();
+    await p.route(IDP + "/**", (route) => route.abort("connectionrefused"));
+    await p.goto(HUB + "/discover");
+    await p.waitForSelector("#signin-sso", { timeout: 20000 });
+    await p.click("#signin-sso");
+    await p.waitForSelector(".banner", { timeout: 20000 }).catch(() => {});
+    const b = await banner(p);
+    check(/could not be reached/.test(b) && !(await p.locator("#signin-sso").isDisabled()), `an unreachable provider is named on the sign-in page and the button is usable again (${b})`);
+    await c.close(); }
+
+  // 10e. A refused silent renew (the provider's session gone) is said in plain words; the provider's code is the detail.
+  // The `brief` persona's token lasts 70 s, so the renew (60 s before expiry) fires within seconds.
+  { const [c, p] = await fresh();
+    await seedAs(p, "brief");
+    await p.goto(HUB + "/discover");
+    await p.waitForSelector(".hub:not([data-loading])", { timeout: 20000 });
+    await c.clearCookies();
+    await p.waitForURL((u) => u.pathname.startsWith("/signin"), { timeout: 40000 }).catch(() => {});
+    const b = await banner(p);
+    const detail = await p.locator("[data-signin-detail]").innerText().catch(() => "");
+    check(/Your sign-in at the identity provider has ended/.test(b) && detail.trim() === "login_required", `a refused silent renew says the session ended, with the provider's code as the detail (${b})`);
+    await c.close(); }
+
   await browser.close();
   check(csp.length === 0, `no Content-Security-Policy violations in the browser${csp.length ? ": " + csp[0] : ""}`);
   check(errors.length === 0, `no page errors${errors.length ? ": " + errors[0] : ""}`);

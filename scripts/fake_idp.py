@@ -23,7 +23,12 @@ PEOPLE = {
     "employee": {"sub": "sub-emp", "oid": "11111111-0000-0000-0000-000000000003", "name": "Sam Okafor", "upn": "sam.okafor@bank.example", "groups": []},
     "overage": {"sub": "sub-many", "oid": "11111111-0000-0000-0000-000000000004", "name": "Many Groups", "preferred_username": "many.groups@bank.example",
                 "_claim_names": {"groups": "src1"}, "_claim_sources": {"src1": {"endpoint": "https://graph.example/users/x/getMemberObjects"}}},
+    # The lead again, with a token that lasts 70 s: the hub's silent renew (60 s before expiry) fires within seconds, so a
+    # test can watch a renew succeed or, with the provider's cookie gone, be refused with login_required.
+    "brief": {"sub": "sub-brief", "oid": "11111111-0000-0000-0000-000000000005", "name": "Gil Klainert", "preferred_username": "gil.klainert@bank.example", "groups": ["GROUP_ID_PAYMENTS_OPS_LEADS"], "ttl": 70},
 }
+TOKEN_TTL = 600  # seconds, unless the person carries a `ttl`
+PRIVATE = {"sub", "ttl"}  # entries of a person that are not claims
 
 
 def main() -> int:
@@ -120,10 +125,11 @@ def main() -> int:
                 return self._send(400, {"error": "invalid_grant", "error_description": "pkce or client mismatch"})
             who = PEOPLE[c["who"]]; now = int(time.time())
             sessions[who["sub"]] = c["who"]
-            base = {"iss": issuer, "sub": who["sub"], "iat": now, "nbf": now - 5, "exp": now + 600}
-            access = jwt({**base, "aud": a.audience, "scp": c["scope"], **{k: v for k, v in who.items() if k != "sub"}})
+            ttl = int(who.get("ttl", TOKEN_TTL))
+            base = {"iss": issuer, "sub": who["sub"], "iat": now, "nbf": now - 5, "exp": now + ttl}
+            access = jwt({**base, "aud": a.audience, "scp": c["scope"], **{k: v for k, v in who.items() if k not in PRIVATE}})
             idt = jwt({**base, "aud": a.client, "nonce": c["nonce"], "name": who["name"], "preferred_username": who.get("preferred_username") or who.get("upn")})
-            return self._send(200, {"token_type": "Bearer", "access_token": access, "id_token": idt, "expires_in": 600, "scope": c["scope"]})
+            return self._send(200, {"token_type": "Bearer", "access_token": access, "id_token": idt, "expires_in": ttl, "scope": c["scope"]})
 
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); ctx.load_cert_chain(a.cert, a.key)
     httpd = http.server.ThreadingHTTPServer((a.host, a.port), H)

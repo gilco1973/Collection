@@ -124,8 +124,9 @@ produced the first, static screens from the artboards.
 pnpm install
 pnpm dev                 # http://127.0.0.1:5173, mock API and mock sign-in
 pnpm verify              # typecheck, lint, unit tests, build
-pnpm build && pnpm preview
-pnpm verify:shoot && pnpm verify:diff    # pixel guard (needs Chromium; CHROMIUM_PATH=… if not registered)
+pnpm build && pnpm preview               # the production build: it refuses the mock unless /config.js allows it
+pnpm build:demo && pnpm preview          # a browsable demo build (VITE_ALLOW_MOCK=1): mock API and personas by default
+pnpm verify:shoot && pnpm verify:diff    # pixel guard on the production build (the tools answer /config.js like the sandbox); needs Chromium
 ../scripts/smoke-oidc.sh                 # the real sign-in path against a stand-in OpenID Connect provider (needs Chromium and hub/dist)
 pnpm verify:e2e          # nav, intake, discover/listing/workspace, assistant, settings flows
 pnpm build:artifact      # static-host bundle (HashRouter, relative assets) in dist-artifact/
@@ -135,7 +136,10 @@ Node ≥ 22, pnpm 10. In mock mode, sign in as one of five personas: **Gil Klain
 (ops.lead, the artboard user), **Ana Petrov** (investigator, ladder L1), **Sam Okafor**
 (employee, no team, prefers assistive technology), **Dana Ruiz** (platform lead), **Maya Chen**
 (AI security engineer, the `ai.security` role that signs components off).
-`?mockPersona=gk` on any URL signs in without the picker (tests use this).
+`?mockPersona=gk` on any URL signs in without the picker (tests use this). A production build (`pnpm build`)
+fails closed: without `/config.js` it shows a configuration error, never the mock; the mock server is a lazy
+chunk that loads only when the configuration names it and allows it (`HUB_ALLOW_MOCK`, which hub-api sets in
+the sandbox) or the build is a demo build.
 
 Behind hub-api (`services/hub-api`), nothing is set at build time: the page loads `/config.js`, which hub-api
 renders from its `HUB_WEB_*` settings, so one `dist/` runs in every environment.

@@ -1,12 +1,14 @@
 // Drive the intake brief end to end against the preview build and mock API:
 // autosave, step validation, the tier-ceiling rule, filing, and the lead rule.
 const pw = require("playwright-core");
+const { mockConfig } = require("./mockconfig.cjs");
 const BASE = process.env.HUB_BASE || "http://127.0.0.1:4173";
 let fails = 0;
 const check = (ok, note, extra = "") => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"}  ${note}${extra ? "   " + extra : ""}`); };
 
 async function session(browser, persona) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, ignoreHTTPSErrors: true });
+  await mockConfig(page);
   await page.addInitScript((id) => { try { window.sessionStorage.setItem("crai.hub.mockPersona", id); } catch {} }, persona);
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));

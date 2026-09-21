@@ -2,12 +2,14 @@
 // against the preview build and the mock API: entitlement and ladder
 // requests, catalog tabs and views, key rotation, and role-based visibility.
 const pw = require("playwright-core");
+const { mockConfig } = require("./mockconfig.cjs");
 const BASE = process.env.HUB_BASE || "http://127.0.0.1:4173";
 let fails = 0;
 const check = (ok, note, extra = "") => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"}  ${note}${extra ? "   " + extra : ""}`); };
 
 async function session(browser, persona) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, ignoreHTTPSErrors: true });
+  await mockConfig(page);
   await page.addInitScript((id) => { try { window.sessionStorage.setItem("crai.hub.mockPersona", id); } catch {} }, persona);
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
@@ -26,14 +28,26 @@ const ready = (p) => p.waitForSelector(".hub:not([data-loading])", { timeout: 15
   check(await page.locator(".lc", { hasText: "Compliance narration" }).locator(".btn:has-text('Requested')").count() === 1, "pending role request shows as Requested (disabled)");
 
   // Tabs and list view.
+  // The catalog is the fixtures' listings plus the collection's own (SHELF -> collection.ts): counts follow the collection.
+  const tabCounts = {};
+  for (const tab of ["Agents", "Assistants", "Roads", "Services", "Knowledge"]) {
+    const t = page.getByRole("tab", { name: tab });
+    if (!(await t.count())) continue;
+    await t.click(); tabCounts[tab] = await page.locator(".hsec").nth(1).locator(".lc").count();
+  }
   await page.getByRole("tab", { name: "Agents" }).click();
-  check(await page.locator(".hsec").nth(1).locator(".lc").count() === 3, "Agents tab shows three agents");
+  const agentNames = await page.locator(".hsec").nth(1).locator(".lc h3").allTextContents();
+  check(tabCounts.Agents >= 3 && agentNames.includes("Investigation triage") && agentNames.includes("Incident first read agent"), "Agents tab shows the fixture agents and the collection's agents", String(tabCounts.Agents));
   await page.getByRole("tab", { name: "Roads and templates" }).click();
   check(await page.locator(".hsec").nth(1).locator(".lc").count() === 2, "Roads tab shows two templates");
   await page.getByRole("radio", { name: "List" }).click();
   check(await page.locator(".hsec").nth(1).locator("table.t tbody tr").count() === 2, "list view of the same tab");
   await page.getByRole("tab", { name: /^All/ }).click();
-  check(await page.locator(".hsec").nth(1).locator("table.t tbody tr").count() === 9, "list view of All shows all nine listings");
+  const allRows = await page.locator(".hsec").nth(1).locator("table.t tbody tr").count();
+  await page.getByRole("radio", { name: "Cards" }).click();
+  const allCards = (await page.locator(".hsec").nth(1).locator(".lc h3").allTextContents()).filter((n) => n !== "Bring your own use case").length;
+  check(allRows === allCards && allRows > 0, "list view of All shows the same listings as its cards (the rest of the catalog)", `${allRows} rows, ${allCards} cards`);
+  await page.getByRole("radio", { name: "List" }).click();
   await page.getByRole("radio", { name: "Cards" }).click();
 
   // Request access on a card (payments exception agent · approver role).

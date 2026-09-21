@@ -171,7 +171,7 @@ export default function Discover() {
                 </tr>
               </thead>
               <tbody>
-                {(tab === "all" ? cat.listings : shown).map((c) => (
+                {shown.map((c) => (
                   <tr key={c.id}>
                     <td>
                       <Link to={consumerRoute(c)} style={{ color: "inherit", fontWeight: 500 }}>

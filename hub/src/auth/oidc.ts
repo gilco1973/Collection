@@ -1,5 +1,6 @@
 import { InMemoryWebStorage, UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import type { AuthClient } from "./provider";
+import { describeProviderError } from "./reasons";
 import type { AuthSnapshot } from "./types";
 
 export interface OidcConfig {
@@ -58,7 +59,12 @@ export function createOidcClient(cfg: OidcConfig): AuthClient {
     void manager.removeUser();
     emit({ status: "signed-out", error: "You were signed out." });
   });
-  manager.events.addSilentRenewError((e) => emit({ status: "error", error: e.message }));
+  // A refused renew (`login_required` and its kin) is the provider saying the session is over: say so in
+  // plain words and keep the provider's code for the support line.
+  manager.events.addSilentRenewError((e) => {
+    const reason = describeProviderError(e);
+    emit({ status: "error", error: reason.message, detail: reason.code ?? e.message });
+  });
 
   return {
     async initialize() {
@@ -81,6 +87,14 @@ export function createOidcClient(cfg: OidcConfig): AuthClient {
       return { snapshot: snapshotOf(user), returnTo };
     },
     async signOut() {
+      // A provider without an end-session endpoint (or one whose discovery cannot be read right now)
+      // cannot be told; the person is still signed out of the hub, here and now.
+      const endSession = await manager.metadataService.getEndSessionEndpoint().catch(() => undefined);
+      if (!endSession) {
+        await manager.removeUser();
+        emit({ status: "signed-out" });
+        return;
+      }
       await manager.signoutRedirect();
     },
     async getAccessToken() {
