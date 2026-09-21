@@ -5,7 +5,7 @@ values. `validate()` names every problem at once; the entrypoint's `check-config
 with a missing gate. Fake identity is refused in production.
 """
 from __future__ import annotations
-import os, sys
+import json, os, sys
 from dataclasses import dataclass, field, fields
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,40 +62,52 @@ class Settings:
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="HUB_", repr=False)
+    parse_errors: list = field(default_factory=list, repr=False)  # numbers that were not numbers; reported by validate()
 
     @classmethod
     def from_env(cls, prefix: str = "HUB_") -> "Settings":
         e = lambda k, d=None: _env(prefix + k, d)
         d = cls()
-        return cls(env=e("ENV", d.env), auth=e("AUTH", d.auth), listen_host=e("LISTEN_HOST", d.listen_host), listen_port=int(e("LISTEN_PORT", str(d.listen_port))),
+        errors: list[str] = []
+        def num(k: str, default: int) -> int:
+            raw = e(k, str(default))
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                errors.append(f"{prefix}{k} must be an integer"); return default
+        return cls(env=e("ENV", d.env), auth=e("AUTH", d.auth), listen_host=e("LISTEN_HOST", d.listen_host), listen_port=num("LISTEN_PORT", d.listen_port),
                    public_url=e("PUBLIC_URL", d.public_url), db_path=e("DB", d.db_path), idp_issuer=e("IDP_ISSUER", ""), idp_audience=e("IDP_AUDIENCE", ""),
                    idp_jwks_url=e("IDP_JWKS_URL", ""), identity_map=e("IDENTITY_MAP", d.identity_map), consumers_file=e("CONSUMERS_FILE", d.consumers_file),
                    collection_file=e("COLLECTION_FILE", d.collection_file), guide_file=e("GUIDE_FILE", d.guide_file), static_dir=e("STATIC_DIR", ""), kb_url=e("KB_URL", d.kb_url),
                    assistant=e("ASSISTANT", d.assistant), assistant_url=e("ASSISTANT_URL", ""), assistant_token_name=e("ASSISTANT_TOKEN_NAME", d.assistant_token_name),
                    kb_search_url=e("KB_SEARCH_URL", ""), bedrock_region=e("BEDROCK_REGION", e("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""),
-                   bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", str(d.bedrock_max_output_tokens))), secrets=e("SECRETS", d.secrets),
+                   bedrock_max_output_tokens=num("BEDROCK_MAX_OUTPUT_TOKENS", d.bedrock_max_output_tokens), secrets=e("SECRETS", d.secrets),
                    ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
                    web_oidc_redirect_uri=e("WEB_OIDC_REDIRECT_URI", ""), web_oidc_post_logout_uri=e("WEB_OIDC_POST_LOGOUT_URI", ""), web_oidc_scope=e("WEB_OIDC_SCOPE", d.web_oidc_scope),
-                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), rate_per_minute=int(e("RATE_PER_MINUTE", str(d.rate_per_minute))),
-                   idempotency_ttl_s=int(e("IDEMPOTENCY_TTL_S", str(d.idempotency_ttl_s))), conversation_retention_days=int(e("CONVERSATION_RETENTION_DAYS", str(d.conversation_retention_days))),
-                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   max_body_bytes=num("MAX_BODY_BYTES", d.max_body_bytes), rate_per_minute=num("RATE_PER_MINUTE", d.rate_per_minute),
+                   idempotency_ttl_s=num("IDEMPOTENCY_TTL_S", d.idempotency_ttl_s), conversation_retention_days=num("CONVERSATION_RETENTION_DAYS", d.conversation_retention_days),
+                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix, parse_errors=errors)
 
     @property
     def live(self) -> bool:
         return self.env in ("staging", "production")
 
     def validate(self) -> list[str]:
-        p, P = [], self.prefix
+        p, P = list(self.parse_errors), self.prefix
         if self.env not in ("sandbox", "staging", "production"): p.append(f"{P}ENV must be sandbox, staging or production")
         if self.auth not in ("mock", "oidc"): p.append(f"{P}AUTH must be mock or oidc")
-        if self.env == "production" and self.auth == "mock": p.append("mock identity is refused in production")
+        if self.live and self.auth == "mock": p.append("mock identity is refused in staging and production")
         if self.assistant not in ("fake", "http", "bedrock"): p.append(f"{P}ASSISTANT must be fake, http or bedrock")
-        if self.env == "production" and self.assistant == "fake": p.append("the fake assistant is refused in production")
+        if self.live and self.assistant == "fake": p.append("the fake assistant is refused in staging and production")
         if not 1 <= self.listen_port <= 65535: p.append(f"{P}LISTEN_PORT out of range")
         if not 100 <= self.bedrock_max_output_tokens <= 100_000: p.append(f"{P}BEDROCK_MAX_OUTPUT_TOKENS out of range")
         for name, path in (("IDENTITY_MAP", self.identity_map), ("CONSUMERS_FILE", self.consumers_file), ("COLLECTION_FILE", self.collection_file), ("GUIDE_FILE", self.guide_file)):
-            if not os.path.exists(path): p.append(f"{P}{name} does not exist")
+            if not os.path.isfile(path): p.append(f"{P}{name} does not exist"); continue
+            try:
+                with open(path, encoding="utf-8") as f: json.load(f)
+            except (OSError, ValueError): p.append(f"{P}{name} is not readable JSON")
+        if self.secrets.startswith("file:") and not os.path.isfile(self.secrets[5:]): p.append(f"{P}SECRETS names a file that does not exist")
         if self.static_dir and not os.path.isdir(self.static_dir): p.append(f"{P}STATIC_DIR is not a directory")
         if self.auth == "oidc" and (not self.idp_issuer or not self.idp_audience): p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")
         if self.auth == "oidc" and self.idp_issuer and not self.idp_issuer.startswith("https://"): p.append(f"{P}IDP_ISSUER must be https")
@@ -153,7 +165,7 @@ class Settings:
         """Presence and shape only, never a value."""
         out = {}
         for f in fields(self):
-            if f.name == "prefix": continue
+            if f.name in ("prefix", "parse_errors"): continue
             v = getattr(self, f.name)
             out[f.name] = v if f.name in ("env", "auth", "assistant", "secrets", "log_level", "listen_port") else ("unset" if v in ("", None) else "set")
         return out

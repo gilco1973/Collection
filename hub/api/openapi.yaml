@@ -306,7 +306,7 @@ components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
   parameters:
-    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: Client-generated; the server replays the first response for a repeat. }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. }
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string }, description: The etag last seen; a mismatch is 409. }
   responses:
     Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }

@@ -53,13 +53,21 @@ class HttpRelayAssistant:
         self.base, self.secrets, self.token_name, self.timeout = base_url.rstrip("/"), secrets, token_name, timeout
 
     def stream(self, conversation: dict, text: str, principal):
-        headers = {"Content-Type": "application/json", "Accept": "text/event-stream", "Authorization": f"Bearer {self.secrets.get(self.token_name)}",
+        try:
+            token = self.secrets.get(self.token_name)
+        except Exception:  # noqa: BLE001 - the secrets provider; its class is in the log, never its message
+            yield {"kind": "stop", "reason": "upstream.error", "message": "The assistant's credential could not be read; the platform team has been told."}
+            return
+        headers = {"Content-Type": "application/json", "Accept": "text/event-stream", "Authorization": f"Bearer {token}",
                    "X-On-Behalf-Of": principal.id, "Idempotency-Key": f"{conversation['id']}:{len(conversation['turns'])}"}
         req = urllib.request.Request(f"{self.base}/conversations/{urllib.parse.quote(conversation['id'])}/turns", data=json.dumps({"text": text}).encode(), headers=headers, method="POST")
         try:
             resp = urllib.request.urlopen(req, timeout=self.timeout)
         except urllib.error.HTTPError as e:
             yield {"kind": "stop", "reason": "upstream.error", "message": f"The assistant did not answer (status {e.code})."}
+            return
+        except (urllib.error.URLError, OSError):
+            yield {"kind": "stop", "reason": "upstream.error", "message": "The assistant could not be reached; try again in a moment."}
             return
         for line in resp:
             line = line.decode("utf-8").rstrip("\n")
@@ -83,7 +91,10 @@ class BedrockAssistant:
         """The knowledge base's search: `[{source, chunk_ref, classification, text}]`; none when not configured."""
         if not self.kb_search_url:
             return []
-        status, _, body = self.http.request("GET", f"{self.kb_search_url}?q={urllib.parse.quote(q)}&limit=6", {"Accept": "application/json"}, None)
+        try:
+            status, _, body = self.http.request("GET", f"{self.kb_search_url}?q={urllib.parse.quote(q)}&limit=6", {"Accept": "application/json"}, None)
+        except (urllib.error.URLError, OSError):
+            return []  # the knowledge base is down: the answer carries no citations rather than no answer
         if status != 200:
             return []
         try:

@@ -34,3 +34,23 @@ class SigV4(unittest.TestCase):
         aws = sigv4.AwsJson(Http(), "us-east-1", creds_loader=lambda: sigv4.Credentials("A", "S"))
         r = aws.call("secretsmanager", "secretsmanager", "secretsmanager.GetSecretValue", {"SecretId": "app/key"})
         self.assertEqual(r["SecretString"], "v"); self.assertIn("Authorization", seen[0][2]); self.assertEqual(seen[0][2]["X-Amz-Target"], "secretsmanager.GetSecretValue")
+
+    def test_task_role_credentials_reload_before_they_expire(self):
+        soon = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=120)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        later = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        import os
+        os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"] = "/v2/credentials/x"
+        try:
+            c = sigv4.load_credentials(http_get=lambda u: json.dumps({"AccessKeyId": "A1", "SecretAccessKey": "S", "Token": "T", "Expiration": soon}))
+            self.assertTrue(c.expiring(), "two minutes from expiry counts as expiring")
+            c2 = sigv4.load_credentials(http_get=lambda u: json.dumps({"AccessKeyId": "A2", "SecretAccessKey": "S", "Token": "T", "Expiration": later}))
+            self.assertFalse(c2.expiring())
+        finally:
+            del os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+        self.assertFalse(sigv4.Credentials("A", "S").expiring(), "keys without an expiry are kept")
+        loads = iter([c, c2])
+        class Http:
+            def request(self, method, url, headers, body): return 200, {}, b"{}"
+        aws = sigv4.AwsJson(Http(), "us-east-1", creds_loader=lambda: next(loads))
+        aws.call("secretsmanager", "secretsmanager", "x", {}); aws.call("secretsmanager", "secretsmanager", "x", {})
+        self.assertEqual(aws.creds().access_key, "A2", "the expiring credentials were replaced on the next call")

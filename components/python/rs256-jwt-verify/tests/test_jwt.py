@@ -43,3 +43,32 @@ class Jwt(unittest.TestCase):
 
     def test_openid_discovery(self):
         self.assertEqual(J.openid_jwks_url(lambda u: {"jwks_uri": "https://issuer.example/jwks"}, "https://issuer.example/.well-known/openid-configuration"), "https://issuer.example/jwks")
+
+
+class JwksCache(unittest.TestCase):
+    """Rotation, a stranger's invented kids, and a provider blip: what the cache does with each."""
+
+    def setUp(self):
+        self.n, self.e, self.d = keypair()
+        self.calls = 0; self.fail = False
+        def fetch(url):
+            self.calls += 1
+            if self.fail: raise OSError("provider unreachable")
+            return {"keys": [{"kty": "RSA", "kid": "k1", "use": "sig", "n": J.b64url_encode(self.n.to_bytes((self.n.bit_length() + 7) // 8, "big")), "e": J.b64url_encode(self.e.to_bytes(3, "big"))}]}
+        self.jwks = J.Jwks(fetch, "https://issuer.example/jwks", ttl_s=3600, min_refresh_s=60, max_age_s=86_400)
+
+    def test_unknown_kids_refresh_at_most_once_a_minute(self):
+        self.jwks.key("k1"); self.assertEqual(self.calls, 1)
+        for _ in range(20):
+            with self.assertRaises(J.JwtError): self.jwks.key("invented")
+        self.assertEqual(self.calls, 1, "twenty invented kids inside a minute cost the provider nothing")
+        self.jwks._tried -= 61
+        with self.assertRaises(J.JwtError): self.jwks.key("invented")
+        self.assertEqual(self.calls, 2, "after the minute one refresh is allowed again")
+
+    def test_cached_keys_serve_through_a_provider_blip(self):
+        self.jwks.key("k1"); self.fail = True
+        self.jwks._at -= 3601; self.jwks._tried -= 61
+        self.assertEqual(self.jwks.key("k1"), (self.n, self.e)); self.assertTrue(self.jwks.stale); self.assertEqual(self.jwks.last_error, "OSError")
+        self.jwks._at -= 86_400; self.jwks._tried -= 61
+        with self.assertRaises(OSError): self.jwks.key("k1")  # past the maximum age the failure is the answer

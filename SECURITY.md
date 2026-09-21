@@ -5,7 +5,7 @@ here. Each row names the control and where its test is.
 
 | Threat | Control | Where |
 | --- | --- | --- |
-| A forged or replayed token | RS256 through the provider's JWKS, exp/nbf/iss/aud checked, algorithm pinned; mock identity refused in production | `rs256-jwt-verify`, `hub-api/tests/test_oidc.py`, `governed-action-loop/tests/test_production_adapters.py` |
+| A forged or replayed token | RS256 through the provider's JWKS, exp/nbf/iss/aud checked, algorithm pinned; the provider's keys cached with a throttled refresh (a stranger's invented key ids cost the provider one fetch a minute) and served through a provider blip; mock identity refused in staging and production | `rs256-jwt-verify`, `hub-api/tests/test_oidc.py`, `governed-action-loop/tests/test_production_adapters.py` |
 | A person acting beyond their role | Roles come from directory groups through a map the platform team owns; the policy bundle decides per tier; the front end only hides | `hub-api/auth.py`, `actionloop/policy.py`, `hub/src/auth/permits.ts` |
 | Prompt injection through a ticket, a page, a tool description | Sources fenced and scored; a tainted context refuses proposals before any model call and caps the session at reads; tool descriptions of external MCP servers scored and pinned | `untrusted-input-guard`, `cited-llm-engine`, `mcp-gateway-client`, the agent's `never` tests |
 | The model acting without a person | W1 parks with a hash and runs once after the acting person confirms; W2 needs another person's approval; MONEY forbidden | `governed-action-loop/tests`, `mcp-tool-server` (elicitation) |

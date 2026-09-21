@@ -17,6 +17,12 @@ CREATE TABLE IF NOT EXISTS idempotency (key TEXT PRIMARY KEY, principal TEXT NOT
 CREATE TABLE IF NOT EXISTS feedback (conversation TEXT NOT NULL, seq INTEGER NOT NULL, answered INTEGER NOT NULL, principal TEXT NOT NULL, at REAL NOT NULL);
 """,
     "CREATE INDEX IF NOT EXISTS idempotency_created ON idempotency (created);",
+    # Replays belong to one person and one call: the key alone was the primary key, so another person's key could evict yours.
+    """CREATE TABLE idempotency_v2 (principal TEXT NOT NULL, key TEXT NOT NULL, route TEXT NOT NULL DEFAULT '', status INTEGER NOT NULL, ctype TEXT NOT NULL, body BLOB NOT NULL, created REAL NOT NULL, PRIMARY KEY (principal, key));
+INSERT INTO idempotency_v2 (principal, key, status, ctype, body, created) SELECT principal, key, status, ctype, body, created FROM idempotency;
+DROP TABLE idempotency;
+ALTER TABLE idempotency_v2 RENAME TO idempotency;
+CREATE INDEX IF NOT EXISTS idempotency_created ON idempotency (created);""",
 ]
 SCHEMA_VERSION = len(MIGRATIONS)
 
@@ -92,12 +98,12 @@ class Store:
     # ---------------- idempotency ----------------
     def replay(self, key: str, principal: str):
         with self.lock:
-            row = self.conn.execute("SELECT status, ctype, body FROM idempotency WHERE key = ? AND principal = ?", (key, principal)).fetchone()
-        return (row[0], row[1], row[2]) if row else None
+            row = self.conn.execute("SELECT status, ctype, body, route FROM idempotency WHERE principal = ? AND key = ?", (principal, key)).fetchone()
+        return (row[0], row[1], row[2], row[3]) if row else None
 
-    def remember(self, key: str, principal: str, status: int, ctype: str, body: bytes) -> None:
+    def remember(self, key: str, principal: str, status: int, ctype: str, body: bytes, route: str = "") -> None:
         with self.lock:
-            self.conn.execute("INSERT OR REPLACE INTO idempotency (key, principal, status, ctype, body, created) VALUES (?, ?, ?, ?, ?, ?)", (key, principal, status, ctype, body, time.time()))
+            self.conn.execute("INSERT OR REPLACE INTO idempotency (principal, key, route, status, ctype, body, created) VALUES (?, ?, ?, ?, ?, ?, ?)", (principal, key, route, status, ctype, body, time.time()))
             self._prunes += 1
             if self._prunes % 100 == 0:
                 self.prune()

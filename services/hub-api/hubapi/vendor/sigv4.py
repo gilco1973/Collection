@@ -14,6 +14,21 @@ class Credentials:
     access_key: str
     secret_key: str
     session_token: str | None = None
+    expires_at: float | None = None  # epoch seconds; the task role rotates its keys every few hours
+
+    def expiring(self, within_s: float = 300.0) -> bool:
+        """True when these credentials expire within the window (or already have); never for keys without an expiry."""
+        return self.expires_at is not None and _dt.datetime.now(_dt.timezone.utc).timestamp() >= self.expires_at - within_s
+
+
+def _epoch(iso: str | None) -> float | None:
+    """`2026-09-21T20:54:26Z` from the credentials endpoint to epoch seconds; None when absent or unreadable."""
+    if not iso:
+        return None
+    try:
+        return _dt.datetime.strptime(iso.replace("+00:00", "Z"), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_dt.timezone.utc).timestamp()
+    except ValueError:
+        return None
 
 
 def load_credentials(http_get=None) -> Credentials:
@@ -24,7 +39,7 @@ def load_credentials(http_get=None) -> Credentials:
     if url:
         get = http_get or (lambda u: urllib.request.urlopen(u, timeout=2).read())
         j = json.loads(get(url))
-        return Credentials(j["AccessKeyId"], j["SecretAccessKey"], j.get("Token"))
+        return Credentials(j["AccessKeyId"], j["SecretAccessKey"], j.get("Token"), _epoch(j.get("Expiration")))
     ak, sk = os.environ.get("AWS_ACCESS_KEY_ID"), os.environ.get("AWS_SECRET_ACCESS_KEY")
     if not ak or not sk:
         raise RuntimeError("no AWS credentials: task role or environment")
@@ -79,7 +94,7 @@ class AwsJson:
         self.http, self.region, self._creds_loader, self._creds = http, region, creds_loader, None
 
     def creds(self) -> Credentials:
-        if self._creds is None:
+        if self._creds is None or self._creds.expiring():
             self._creds = self._creds_loader()
         return self._creds
 

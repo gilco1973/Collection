@@ -90,15 +90,23 @@ class OidcAuth:
         self.jwks = J.Jwks(fetch, jwks_url or J.openid_jwks_url(fetch, issuer.rstrip("/") + "/.well-known/openid-configuration"))
 
     def ready(self) -> str | None:
-        """The identity provider's keys are cached and fresh, or reachable now; raises when they are not."""
-        if self.jwks._keys and time.time() - self.jwks._at < self.jwks.ttl:
+        """The identity provider's keys are cached and fresh, or reachable now. Keys past their refresh time but
+        still within their maximum age keep serving (the verifier does the same), so a provider blip degrades this
+        check without turning every task unhealthy; keys older than that, or none, mean not ready."""
+        if self.jwks._keys and not self.jwks.stale:
             return None
-        self.jwks._refresh()
+        try:
+            self.jwks._refresh()
+        except Exception as e:  # noqa: BLE001 - the provider or the network
+            if self.jwks._keys and time.time() - self.jwks._at < self.jwks.max_age:
+                return None  # stale but serving; the log has the refresh failure
+            raise e
         return None if self.jwks._keys else "the JWKS has no signing keys"
 
     def principal(self, token: str) -> Principal:
         try:
-            claims = J.verify(token, self.jwks, (self.issuer,), (self.audience,), leeway_s=self.leeway)
+            issuers = (self.issuer.rstrip("/"), self.issuer.rstrip("/") + "/")  # providers and operators spell it both ways
+            claims = J.verify(token, self.jwks, issuers, (self.audience,), leeway_s=self.leeway)
         except J.JwtError as e:
             raise AuthError(401, "Unauthenticated", str(e))
         except Exception as e:  # the verifier is the authority; anything it cannot read is not a token

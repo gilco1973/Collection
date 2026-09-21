@@ -26,7 +26,7 @@ class BedrockConverseAdapter:
         self._creds_loader, self._creds = creds_loader, None
 
     def creds(self):
-        if self._creds is None:
+        if self._creds is None or getattr(self._creds, "expiring", lambda: False)():
             self._creds = self._creds_loader()
         return self._creds
 

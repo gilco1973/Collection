@@ -6,7 +6,7 @@ an unknown `kid` refreshes once. Every claim the standards require is checked: s
 `aud`, and the algorithm is pinned to RS256 (no `none`, no HMAC confusion).
 """
 from __future__ import annotations
-import base64, binascii, hashlib, json, time
+import base64, binascii, hashlib, json, threading, time
 
 SHA256_DIGESTINFO = bytes.fromhex("3031300d060960864801650304020105000420")
 
@@ -63,11 +63,17 @@ def decode_unverified(token: str) -> tuple[dict, dict, bytes, bytes]:
 
 
 class Jwks:
-    """Keys by kid from a JWKS document; `fetch` returns the JSON of the JWKS URL (injected for tests)."""
+    """Keys by kid from a JWKS document; `fetch` returns the JSON of the JWKS URL (injected for tests).
 
-    def __init__(self, fetch, jwks_url: str, ttl_s: int = 3600):
-        self.fetch, self.url, self.ttl = fetch, jwks_url, ttl_s
-        self._keys: dict[str, tuple[int, int]] = {}; self._at = 0.0
+    The cache is refreshed after `ttl_s`, or when a token names a kid it does not hold (key rotation), but never
+    more often than `min_refresh_s`: a stranger sending tokens with invented kids cannot make the service hammer
+    the provider. When a refresh fails, keys fetched within `max_age_s` keep serving (the provider being unreachable
+    for a moment must not sign everyone out); `stale` tells the readiness check the difference."""
+
+    def __init__(self, fetch, jwks_url: str, ttl_s: int = 3600, min_refresh_s: int = 60, max_age_s: int = 86_400):
+        self.fetch, self.url, self.ttl, self.min_refresh, self.max_age = fetch, jwks_url, ttl_s, min_refresh_s, max_age_s
+        self._keys: dict[str, tuple[int, int]] = {}; self._at = 0.0; self._tried = 0.0; self._lock = threading.Lock()
+        self.last_error: str | None = None
 
     def _refresh(self):
         doc = self.fetch(self.url)
@@ -76,14 +82,26 @@ class Jwks:
             if k.get("kty") != "RSA" or k.get("use", "sig") != "sig":
                 continue
             keys[k["kid"]] = (_int(b64url_decode(k["n"])), _int(b64url_decode(k["e"])))
-        self._keys, self._at = keys, time.time()
+        self._keys, self._at, self.last_error = keys, time.time(), None
+
+    @property
+    def stale(self) -> bool:
+        return time.time() - self._at > self.ttl
 
     def key(self, kid: str) -> tuple[int, int]:
-        if kid not in self._keys or time.time() - self._at > self.ttl:
-            self._refresh()
-        if kid not in self._keys:
-            raise JwtError("unknown signing key")
-        return self._keys[kid]
+        with self._lock:
+            now = time.time()
+            if (kid not in self._keys or now - self._at > self.ttl) and now - self._tried >= self.min_refresh:
+                self._tried = now
+                try:
+                    self._refresh()
+                except Exception as e:  # noqa: BLE001 - the provider or the network; the cache decides what happens next
+                    self.last_error = type(e).__name__
+                    if kid not in self._keys or now - self._at > self.max_age:
+                        raise
+            if kid not in self._keys:
+                raise JwtError("unknown signing key")
+            return self._keys[kid]
 
 
 def verify(token: str, jwks: Jwks, issuers: tuple, audiences: tuple, now: float | None = None, leeway_s: int = 60) -> dict:

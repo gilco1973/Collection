@@ -52,6 +52,9 @@ class Catalog:
                 "catalog": {"name": "—", "signed": False, "entries": []}, "trust": [], "evidence": [], "cost": [], "getStarted": [], "owner": [], "versions": [], "changelogHref": "#"}
 
     def workspace_for(self, p: Principal, briefs: list[dict]) -> dict:
+        def _name_of(b: dict):
+            uc = b.get("content", {}).get("useCase")
+            return uc.get("name") if isinstance(uc, dict) else None
         draft = next((b for b in briefs if b["status"] == "draft" and b["createdBy"] == p.id), None)
         w = self.c.get("workspace", {})
         assistants = [a for a in w.get("assistants", []) if a["consumerId"] in p.entitlements]
@@ -59,7 +62,7 @@ class Catalog:
         team_consumers = [dict(tc) for tc in w.get("teamConsumers", []) if tc.get("teamId") in team_ids]
         for tc in team_consumers: tc.pop("teamId", None)
         if draft:
-            team_consumers.append({"id": "brief-" + draft["id"], "name": (draft["content"]["useCase"].get("name") or "new use case").lower().replace(" ", "-"), "status": {"text": "proposed", "kind": "line"},
+            team_consumers.append({"id": "brief-" + draft["id"], "name": (_name_of(draft) or "new use case").lower().replace(" ", "-"), "status": {"text": "proposed", "kind": "line"},
                                    "step": 1, "stepNote": "step 1 · brief in draft", "pipe": ["on", "", "", "", "", "", ""], "note": f"filed by you · {len(draft['completed']) + 1} of 6 sections", "briefId": draft["id"]})
         usage = dict(w.get("usage", {"sandboxMonth": "not measured", "sandboxNote": "shown back, not charged", "productionNote": "", "playgroundToday": "not measured", "playgroundBudget": "", "playgroundPct": 0}))
         usage["productionNote"] = usage.get("productionNote") or f"charged back to cost centre {p.costCentre}"

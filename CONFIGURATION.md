@@ -5,7 +5,7 @@ and read by one settings module per deployable. Nothing is hard-wired: the ident
 provider, the ticket and deploy systems, the knowledge base and the record's location are configuration. Every
 settings module fails closed: `check-config` lists every problem by variable name (never a value) and exits 2, and
 the container's entrypoint runs it before the process listens. Fakes and mock identity exist for sandbox and
-demonstrations and are refused in production by the same check.
+demonstrations and are refused in staging and production by the same check.
 
 ## The rule for credentials
 

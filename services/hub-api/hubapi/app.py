@@ -82,28 +82,36 @@ class HubApi:
             if wait:
                 return self.problem(Problem(429, "Too many requests", "Slow down; the limit is per person and per minute.", "rate.limited"), {"Retry-After": str(int(wait))})
         key = headers.get("Idempotency-Key")
+        route = f"{method} {path}"
         if key and principal:
             hit = self.store.replay(key, principal.id)
+            if hit and hit[3] != route:
+                return self.problem(Problem(422, "Key reused", "This Idempotency-Key was used for another call; a key belongs to one request.", "idempotency.reused"))
             if hit:
                 return hit[0], {"Content-Type": hit[1], "Idempotent-Replayed": "true"}, hit[2]
         m = pattern.match(path)
         params = {k: urllib.parse.unquote(m.group(i + 1)) for i, k in enumerate(keys)}
         try:
             data = json.loads(body.decode("utf-8")) if body else None
-        except ValueError:
+        except (ValueError, RecursionError):
             return self.problem(Problem(400, "Bad request", "the body is not JSON"))
+        if data is not None and not isinstance(data, dict):
+            return self.problem(Problem(400, "Bad request", "the body must be a JSON object"))
         ctx = {"principal": principal, "params": params, "query": {k: v[0] for k, v in query.items()}, "body": data, "headers": headers}
         try:
             res = handler(ctx)
         except Problem as p:
             return self.problem(p)
+        except Exception:  # noqa: BLE001 - a defect, never a dropped connection: the person gets a problem, the log the traceback
+            log.exception("%s %s failed", method, path)
+            return self.problem(Problem(500, "Internal error", "Something went wrong on the platform; the request id identifies it in the log.", "internal"))
         if isinstance(res, Stream):
             return res
         status, payload = res if isinstance(res, tuple) else (200, res)
         raw = b"" if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
         ctype = "application/json"
         if key and principal and status < 500:
-            self.store.remember(key, principal.id, status, ctype, raw)
+            self.store.remember(key, principal.id, status, ctype, raw, route)
         return status, {"Content-Type": ctype}, raw
 
     @staticmethod
@@ -215,7 +223,7 @@ class HubApi:
         if_match = c["headers"].get("If-Match")
         if if_match and if_match != b["etag"]: raise Problem(409, "Changed elsewhere", "This draft was saved from another tab. Reload to see the latest version.")
         patch = c["body"] or {}
-        if isinstance(patch.get("content"), dict): b["content"] = {**b["content"], **patch["content"]}
+        if isinstance(patch.get("content"), dict): b["content"] = {**b["content"], **{k: v for k, v in patch["content"].items() if k in B.STEPS and isinstance(v, dict)}}
         if patch.get("currentStep") in B.STEPS: b["currentStep"] = patch["currentStep"]
         if isinstance(patch.get("completed"), list): b["completed"] = [s for s in patch["completed"] if s in B.STEPS]
         b["updatedAt"] = now_iso(); b["etag"] = B.bump(b["etag"])
@@ -246,6 +254,7 @@ class HubApi:
 
     def create_conversation(self, c):
         p = c["principal"]; aid = (c["body"] or {}).get("assistantId")
+        if not isinstance(aid, str): raise Problem(422, "Not valid", "assistantId must be a string.", "validation")
         meta = self.catalog.c.get("assistantMeta", {}).get(aid)
         if not meta: raise Problem(404, "Not found", "No assistant with that id.")
         if aid not in p.entitlements: raise Problem(403, "Not entitled", "Your role does not open this assistant.", "entitlement.missing")
@@ -276,7 +285,9 @@ class HubApi:
 
     def feedback(self, c):
         x = self.load_conversation(c); b = c["body"] or {}
-        self.store.feedback(x["id"], int(b.get("seq", 0)), bool(b.get("answered")), c["principal"].id)
+        seq = b.get("seq", 0)
+        if not isinstance(seq, int) or isinstance(seq, bool): raise Problem(422, "Not valid", "seq must be an integer.", "validation")
+        self.store.feedback(x["id"], seq, bool(b.get("answered")), c["principal"].id)
         return 204, None
 
     # ---------------- the shelf ----------------
@@ -337,6 +348,13 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self._dispatch_one()
             except (BrokenPipeError, ConnectionResetError):
                 pass  # the browser navigated away mid-response; nothing to log and nothing to answer
+            except Exception:  # noqa: BLE001 - a defect outside the API's own handling: answer 500 when nothing was sent yet
+                log.exception("%s %s failed", self.command, self.path.split("?")[0])
+                try:
+                    self.close_connection = True
+                    self._send(500, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 500, "title": "Internal error", "code": "internal"}).encode())
+                except Exception:  # noqa: BLE001 - headers already sent or the socket gone
+                    pass
 
         def _dispatch_one(self):
             t0 = time.time()
@@ -345,10 +363,19 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             if urllib.parse.urlparse(path).path == "/config.js":
                 raw = ("// Runtime configuration from hub-api's settings; public values only.\nwindow.__HUB_CONFIG__ = " + json.dumps(api.s.web_config()) + ";\n").encode("utf-8")
                 self.send_response(200); self.send_header("Content-Type", "application/javascript"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-cache"); self.end_headers()
-                return self.wfile.write(raw)
+                return self.wfile.write(raw) if self.command != "HEAD" else None
             if not path.startswith(api_prefix + "/") and path != api_prefix:
                 return self._static(path)
-            length = int(self.headers.get("Content-Length") or 0)
+            if self.headers.get("Transfer-Encoding"):
+                # Bodies arrive with a length here; a chunked body would otherwise be read as the next request.
+                self.close_connection = True
+                return self._send(411, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 411, "title": "Length required", "detail": "send Content-Length, not Transfer-Encoding"}).encode())
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                if length < 0: raise ValueError(length)
+            except ValueError:
+                self.close_connection = True
+                return self._send(400, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 400, "title": "Bad request", "detail": "Content-Length must be a non-negative integer"}).encode())
             if length > api.s.max_body_bytes:
                 # Drain what the client is sending (bounded) so the refusal reaches it instead of a broken pipe, then close.
                 remaining = min(length, 8 * api.s.max_body_bytes)
@@ -368,6 +395,13 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                         self.wfile.write(f"event: view\ndata: {json.dumps(ev, ensure_ascii=False)}\n\n".encode("utf-8")); self.wfile.flush()
                 except (BrokenPipeError, ConnectionResetError):
                     aborted = True
+                except Exception:  # noqa: BLE001 - the adapter failed mid-stream: the person sees why the answer stopped
+                    log.exception("stream failed")
+                    try:
+                        stop = {"kind": "stop", "reason": "upstream.error", "message": "The assistant stopped answering; try again in a moment."}
+                        self.wfile.write(f"event: view\ndata: {json.dumps(stop)}\n\n".encode("utf-8")); self.wfile.flush()
+                    except (BrokenPipeError, ConnectionResetError):
+                        aborted = True
                 finally:
                     if res.done: res.done(aborted)
                     self.close_connection = True
@@ -381,9 +415,13 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             if not static_dir:
                 return self._send(404, {"Content-Type": "application/json"}, b'{"status":404,"title":"Not found"}')
             rel = urllib.parse.unquote(urllib.parse.urlparse(path).path).lstrip("/")
-            full = os.path.normpath(os.path.join(static_dir, rel))
-            if not full.startswith(os.path.normpath(static_dir)) or not os.path.isfile(full):
-                full = os.path.join(static_dir, "index.html")  # the SPA's routes
+            root = os.path.realpath(static_dir)
+            try:
+                full = os.path.realpath(os.path.join(root, rel))
+            except ValueError:  # a null byte in the path: not a file, so the SPA's route
+                full = root
+            if os.path.commonpath([root, full]) != root or not os.path.isfile(full):
+                full = os.path.join(root, "index.html")  # the SPA's routes
             if not os.path.isfile(full):
                 return self._send(404, {"Content-Type": "text/plain"}, b"not found")
             ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
@@ -395,7 +433,8 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             if api.s.public_url.startswith("https://"):
                 self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
             self.end_headers()
-            self.wfile.write(data)
+            if self.command != "HEAD":
+                self.wfile.write(data)
 
         do_GET = do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = _dispatch
 

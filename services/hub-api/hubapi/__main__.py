@@ -58,8 +58,8 @@ def main(argv=None) -> int:
         n = retention(Store(s.db_path, s.idempotency_ttl_s), s)
         print(f"pruned: {n} conversations past {s.conversation_retention_days} days"); return 0
     if cmd == "mock-token":
-        if s.env == "production" or s.auth != "mock":
-            print("mock tokens exist only with HUB_AUTH=mock outside production"); return 2
+        if s.live or s.auth != "mock":
+            print("mock tokens exist only with HUB_AUTH=mock in the sandbox"); return 2
         print(f"mock.{argv[1] if len(argv) > 1 else 'gk'}"); return 0
     if cmd != "serve":
         print(__doc__); return 2
