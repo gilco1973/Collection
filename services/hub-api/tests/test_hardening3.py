@@ -101,6 +101,9 @@ class Drain(unittest.TestCase):
         c = http.client.HTTPConnection(host, int(port), timeout=10)
         try:
             c.request("GET", "/api/health"); r = c.getresponse(); r.read()
+            for _ in range(50):  # the counter drops right after the last byte is written; give the handler thread its turn
+                if srv.httpd.inflight == 0: break
+                time.sleep(0.02)
             self.assertEqual(srv.httpd.inflight, 0, "nothing is being answered once the response is written")
             srv.httpd.shutdown()
             t0 = time.time()
@@ -285,7 +288,10 @@ class ContentLength(unittest.TestCase):
                 out = raw(srv, head + cl + b"\r\n\r\n" + body)
                 self.assertIn(b"HTTP/1.1 400", out, cl); self.assertIn(b"Connection: close", out, cl); self.assertEqual(out.count(b"HTTP/1.1 "), 1, cl)
             self.assertIn(b"HTTP/1.1 201", raw(srv, head + b" 53 \r\n\r\n" + body), "surrounding whitespace is the header's, not the number's")
-            self.assertIn(b"HTTP/1.1 201", raw(srv, head + b"53\r\nContent-Length: 53\r\n\r\n" + body), "the same value twice is one value")
+            # A second ask for the same access is 409 (a duplicate pending request); a different listing shows the length was read.
+            body2 = b'{"kind":"access","consumerId":"sanctions-screening"}'
+            n = str(len(body2)).encode()
+            self.assertIn(b"HTTP/1.1 201", raw(srv, head + n + b"\r\nContent-Length: " + n + b"\r\n\r\n" + body2), "the same value twice is one value")
         finally:
             srv.close()
 
