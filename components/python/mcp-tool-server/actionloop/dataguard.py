@@ -9,14 +9,14 @@ reporter because the ticket's assignment is the claim and the reporter is the ti
 threshold. Projection: a result projected to the declared shape before it reaches the model; a field declared "id" in the shape is kept verbatim (identifiers are not text).
 """
 from __future__ import annotations
-import re
+import html, re
 from dataclasses import dataclass, field
 
-PII_PATTERNS = {
+PII_PATTERNS = {  # the most specific shapes first: a social security number is not a phone number
     "email": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
+    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
     "account": re.compile(r"\b\d{8,17}\b"),
     "phone": re.compile(r"\+?\d[\d\s().-]{8,}\d"),
-    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
 }
 INJECTION_MARKERS = (
     "ignore previous", "ignore all previous", "disregard", "you are now", "system prompt", "run the following",
@@ -63,10 +63,15 @@ def tag_brief(ticket: dict, assignee_id: str, groomer_ids: set[str] | None = Non
     return Provenance(segs, bool(sources), sources)
 
 
+KEEP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?|\b\d{8}\.\d+\b")  # ISO dates and yyyymmdd.r run names: evidence, not PII
+
+
 def mask(text: str, audience: str) -> tuple[str, list]:
-    """Mask PII for the audience. model: replace with class tokens; log: hash-like stubs; human: keep last 4."""
+    """Mask PII for the audience. model: replace with class tokens; log: hash-like stubs; human: keep last 4.
+    Timestamps and pipeline run names are kept: a first read is about when things happened."""
     found = []
-    out = text
+    kept: list[str] = []
+    out = KEEP.sub(lambda m: (kept.append(m.group(0)), f"\x00{len(kept) - 1}\x00")[1], text)
     for cls, pat in PII_PATTERNS.items():
         def rep(m):
             found.append(cls)
@@ -75,6 +80,7 @@ def mask(text: str, audience: str) -> tuple[str, list]:
             if audience == "log": return f"[{cls}:***]"
             return f"[{cls}:…{v[-4:]}]"
         out = pat.sub(rep, out)
+    out = re.sub(r"\x00(\d+)\x00", lambda m: kept[int(m.group(1))], out)
     return out, found
 
 
@@ -85,12 +91,17 @@ def injection_score(text: str) -> float:
 
 
 def fence(segments: list, audience: str = "model") -> str:
-    """Render the brief for the model with delimiting and a provenance header per segment (no verbatim interpolation)."""
+    """Render the brief for the model with delimiting and a provenance header per segment. Bodies and attributes
+    are escaped: a ticket cannot close the fence and open a forged one, a display name cannot inject an attribute."""
     parts = []
     for i, s in enumerate(segments):
         body, _ = mask(s.text, audience)
-        parts.append(f"<segment id=\"{i}\" origin=\"{s.origin}\" author=\"{s.author_display}\" role=\"{s.role}\">\n{body}\n</segment>")
+        parts.append(f"<segment id=\"{i}\" origin=\"{_esc(s.origin)}\" author=\"{_esc(s.author_display)}\" role=\"{_esc(s.role)}\">\n{_esc(body)}\n</segment>")
     return "\n".join(parts)
+
+
+def _esc(v) -> str:
+    return html.escape(str(v), quote=True)
 
 
 def project(raw: dict, shape: dict) -> dict:
@@ -107,28 +118,22 @@ class GuardResult:
     taint: bool
 
 
+def _walk(v, classes: list, score: list):
+    """Every string at any depth is masked and scored: a nested object or a list of strings never reaches the model raw."""
+    if isinstance(v, str):
+        m, f = mask(v, "model"); classes += f; score[0] = max(score[0], injection_score(v)); return m
+    if isinstance(v, dict):
+        return {k: _walk(x, classes, score) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_walk(x, classes, score) for x in v]
+    return v
+
+
 def after_call(raw: dict, shape: dict, threshold: float = 0.34) -> GuardResult:
     p = project(raw, shape)
-    masked, classes, score = {}, [], 0.0
+    masked, classes, score = {}, [], [0.0]
     for k, v in p.items():
         if shape.get(k) == "id":
             masked[k] = v; continue   # an identifier field (channel id, URL, key): never text, never masked, never scored
-        if isinstance(v, str):
-            m, f = mask(v, "model"); masked[k] = m; classes += f; score = max(score, injection_score(v))
-        elif isinstance(v, list):
-            items = []
-            for it in v:
-                if isinstance(it, dict):
-                    d = {}
-                    for kk, vv in it.items():
-                        if isinstance(vv, str):
-                            m, f = mask(vv, "model"); d[kk] = m; classes += f; score = max(score, injection_score(vv))
-                        else:
-                            d[kk] = vv
-                    items.append(d)
-                else:
-                    items.append(it)
-            masked[k] = items
-        else:
-            masked[k] = v
-    return GuardResult(p, masked, sorted(set(classes)), score, score >= threshold)
+        masked[k] = _walk(v, classes, score)
+    return GuardResult(p, masked, sorted(set(classes)), score[0], score[0] >= threshold)

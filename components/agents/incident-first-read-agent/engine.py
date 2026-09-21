@@ -12,7 +12,7 @@ claim runs through `check_citations`, a malformed answer is refused (never guess
 refused on a tainted context before any model call (the taint ceiling).
 """
 from __future__ import annotations
-import json, time
+import html, json, time
 from dataclasses import dataclass, field
 from guard import SYSTEM_PROMPT_RULES, Context, check_citations, confidence
 
@@ -51,7 +51,7 @@ def _attr(v) -> str:
 def _user_text(ctx: Context, payload: dict) -> str:
     parts = [ctx.fenced()]
     for k, v in (payload or {}).items():
-        parts.append(f"<{k}>\n{_attr(v) if not isinstance(v, str) else v}\n</{k}>")
+        parts.append(f"<{k}>\n{html.escape(_attr(v) if not isinstance(v, str) else v, quote=False)}\n</{k}>")
     return "\n".join(parts)
 
 

@@ -17,8 +17,7 @@ only the road, within two working days. Write and money profiles need the lead's
 
 - **Name** and **team** (the champion's own team).
 - **The problem, in a few sentences a teammate would recognise:** what happens today, who feels it, how often.
-- **Road**, chosen from the consumer classes: tools and knowledge, internal agent, batch with a review queue,
-  knowledge service. Customer and partner assistants are not a champion's first initiative.
+- **Road**, chosen from the consumer classes: tools and knowledge, internal agent, batch with a review queue, knowledge service. Customer and partner assistants are not a champion's first initiative.
 - **Owner:** the champion.
 
 ## 2. People
@@ -30,8 +29,7 @@ only the road, within two working days. Write and money profiles need the lead's
 ## 3. Data and tools
 
 - **Systems of record** it reads from and writes to, each with a recorded contract or the owner who will record one.
-- **Tools needed** (at most fifteen per session) and the **tier ceiling**: R only, W1 under confirmation, or W2 under
-  dual control. Money is out of scope for an initiative.
+- **Tools needed** (at most fifteen per session) and the **tier ceiling**: R only, W1 under confirmation, or W2 under dual control. Money is out of scope for an initiative.
 - **Data classes read**, and the channel (operator for a champion's initiative).
 - **From the collection:** the components and skills reused, and what the initiative returns to it.
 
@@ -43,16 +41,14 @@ only the road, within two working days. Write and money profiles need the lead's
 
 ## 5. Outcome
 
-- **One outcome metric** with its unit, **today's baseline** and the date it was measured (or "not measured" and who
-  will measure it), and the **target**.
+- **One outcome metric** with its unit, **today's baseline** and the date it was measured (or "not measured" and who will measure it), and the **target**.
 - **Increments:** three at most, each ending in a demonstration a teammate uses, the first within six weeks.
 
 ## 6. Review
 
 - **Materiality tier** proposed under [model risk](../governance/model-risk.md), and why.
 - **What remains on an account** (identity, secrets, a webhook) and who owns each step.
-- Acknowledged by the champion and the team lead: what happens next is registration, the bootcamp, and a build on
-  the road's template with the platform's embedded engineer for the first two weeks.
+- Acknowledged by the champion and the team lead: what happens next is registration, the bootcamp, and a build on the road's template with the platform's embedded engineer for the first two weeks.
 
 ## After filing
 

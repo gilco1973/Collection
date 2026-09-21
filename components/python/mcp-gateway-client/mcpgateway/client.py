@@ -114,6 +114,8 @@ class McpGateway:
     # ---------------- the call ----------------
     def tools_call(self, name: str, args: dict, env: dict, harness_decision: Decision, reference: str, run_id: str) -> GatewayResult:
         span = "span_" + uuid.uuid4().hex[:12]
+        if self._names is None:
+            self.verify()  # a server nobody verified is a server whose descriptions may have drifted since review
         if self.quarantined:
             raise GatewayError(f"{self.name} is quarantined: {'; '.join(self.quarantined)}")
         if not harness_decision.allow:

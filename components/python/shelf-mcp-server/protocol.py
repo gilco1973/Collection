@@ -45,10 +45,12 @@ def error(id, err: RpcError) -> dict:
 def parse(text: str) -> dict:
     try:
         msg = json.loads(text)
-    except ValueError:
+    except (ValueError, RecursionError):
         raise RpcError(PARSE_ERROR, "parse error")
     if not isinstance(msg, dict) or msg.get("jsonrpc") != "2.0":
         raise RpcError(INVALID_REQUEST, "invalid request: not a JSON-RPC 2.0 message")
+    if "params" in msg and msg["params"] is not None and not isinstance(msg["params"], dict):
+        raise RpcError(INVALID_REQUEST, "invalid request: params must be an object")
     if "method" in msg and not isinstance(msg["method"], str):
         raise RpcError(INVALID_REQUEST, "invalid request: method must be a string")
     if "method" not in msg and "result" not in msg and "error" not in msg:

@@ -72,6 +72,29 @@ class SerialConnection(sqlite3.Connection):
             super().rollback()
 
 
+RECORD_SCHEMA = 1  # the agent record's schema version (SQLite user_version): a newer record refuses to open under this build
+
+
+class RecordError(Exception):
+    pass
+
+
+def open_record(path: str, factory=None, readonly: bool = False):
+    """The record's connection, with its version checked: a record written by a newer build is refused with a
+    named error instead of being read wrong; a new record is stamped with this build's version."""
+    if readonly:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False)
+    else:
+        conn = sqlite3.connect(path, check_same_thread=False, factory=factory) if factory else sqlite3.connect(path, check_same_thread=False)
+    v = int(conn.execute("PRAGMA user_version").fetchone()[0])
+    if v > RECORD_SCHEMA:
+        conn.close()
+        raise RecordError(f"the record is at schema version {v}; this build knows {RECORD_SCHEMA}. Restore the record or roll the build forward")
+    if v < RECORD_SCHEMA and not readonly:
+        conn.execute(f"PRAGMA user_version = {RECORD_SCHEMA}"); conn.commit()
+    return conn
+
+
 class UrllibHttp:
     def __init__(self, timeout: float = 30.0):
         self.timeout = timeout
@@ -121,7 +144,7 @@ def build(s, *, aws=None, fetch=None, http=None, model_complete=None) -> Wired:
     """`aws`, `fetch`, `http`, `model_complete` are injection points for tests; production takes the real ones."""
     s.require_valid()
     tpl = load_template(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "TEMPLATE.md"))
-    conn = sqlite3.connect(s.db_path, check_same_thread=False, factory=SerialConnection)  # one connection, one thread at a time
+    conn = open_record(s.db_path, factory=SerialConnection)  # one connection, one thread at a time; the version checked first
     http = http or __import__("httpclient").Http(timeout=15.0)
     aws_factory = lambda: aws or __import__("sigv4").AwsJson(UrllibHttp(15.0), s.bedrock_region or os.environ.get("AWS_REGION", ""))
     secrets = secrets_for(s, aws_factory)

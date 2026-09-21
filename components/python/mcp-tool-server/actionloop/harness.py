@@ -57,7 +57,7 @@ class Budget:
 
     def to_json(self):
         return {"tokens": {"limit": self.tokens, "used": self.used_tokens}, "tool_calls": {"limit": self.tool_calls, "used": self.used_tool_calls},
-                "time_s": {"limit": self.time_s, "used": int(time.time() - self.started)}, "money": {"limit": self.money, "used": self.used_money}}
+                "time_s": {"limit": self.time_s, "used": int(time.time() - self.started)}, "money": {"limit": self.money, "used": self.used_money}, "started": self.started}
 
 
 class Stop(Exception):
@@ -80,6 +80,9 @@ class Session:
     tainted: bool = False
     taint_sources: list = field(default_factory=list)
     pending: dict | None = None
+    confirmations: dict = field(default_factory=dict)   # W1 refs minted by confirm(): ref -> the hash they are bound to; consumed by the call
+    approvals: dict = field(default_factory=dict)       # W2 refs minted by approve(): ref -> {hash, by}; the approver is never caller-supplied
+    ended: str | None = None                            # the stop reason once end() ran: no call and no resume after it
     seq: int = 0
     runtime_session_id: str = field(default_factory=lambda: "rts_" + uuid.uuid4().hex[:12])
     trace_id: str = field(default_factory=lambda: "trace_" + uuid.uuid4().hex[:16])
@@ -89,6 +92,7 @@ class Session:
         return {"v": 2, "id": self.id, "consumer": self.consumer, "chain": self.chain.tags(), "board": self.board, "ticket_key": self.ticket_key,
                 "catalog_hash": self.catalog_hash, "bundle_version": self.bundle_version, "ladder": self.ladder,
                 "taint": {"tainted": self.tainted, "sources": self.taint_sources}, "budget": self.budget.to_json(), "pending": self.pending,
+                "confirmations": dict(self.confirmations), "approvals": dict(self.approvals), "ended": self.ended,
                 "last_seq": self.seq, "runtime_session_id": self.runtime_session_id, "trace_id": self.trace_id, "run_id": self.run_id}
 
 
@@ -106,6 +110,14 @@ class SessionStore:
     def load_json(self, sid: str) -> dict | None:
         r = self.conn.execute("SELECT body FROM session WHERE id=?", (sid,)).fetchone()
         return json.loads(r[0]) if r else None
+
+    def consume_pending(self, sid: str, expected_hash: str) -> bool:
+        """Clears the parked call in the record, only if it is still parked with that hash: two confirmations of
+        one parked call race here, and exactly one wins."""
+        cur = self.conn.execute("UPDATE session SET body = json_set(body, '$.pending', json('null')), updated = ? WHERE id = ? AND json_extract(body, '$.pending.hash') = ?",
+                                (time.time(), sid, expected_hash))
+        self.conn.commit()
+        return cur.rowcount == 1
 
 
 @dataclass(frozen=True)
@@ -135,6 +147,8 @@ class Harness:
     # ---------------- admit ----------------
     def admit(self, token: str, board: str, ticket_key: str | None, budget: Budget, ladder: str | None = None) -> Session:
         chain = self.identity.resolve(token, self.consumer)
+        if ladder is not None and (ladder not in P.LADDER_RANK or P.LADDER_RANK[ladder] > P.LADDER_RANK.get(chain.agent.ladder, -1)):
+            raise HarnessError(f"ladder {ladder!r} is unknown or above the agent's {chain.agent.ladder}")
         s = Session(id="ses_" + uuid.uuid4().hex[:12], consumer=self.consumer, chain=chain, board=board, ticket_key=ticket_key,
                     catalog_hash=self.catalog.hash, bundle_version=self.bundle.version, ladder=ladder or chain.agent.ladder, budget=budget)
         scope = self.kills.state(self.consumer, board, s.run_id)
@@ -147,11 +161,15 @@ class Harness:
 
     # ---------------- act ----------------
     def call(self, s: Session, name: str, args: dict, refs: dict | None = None, phase: str = "execute") -> dict:
-        """One tool call through the fixed hook order. Returns the guarded result or raises Stop."""
+        """One tool call through the fixed hook order. Returns the guarded result or raises Stop. A W1 or W2 reference
+        counts only when the harness minted it for this exact tool and arguments (see `_verified_refs`)."""
         self._hook_order = []
+        if s.ended:
+            raise HarnessError(f"session ended ({s.ended})")
         s.budget.check_time()
         traceparent = f"00-{s.trace_id}-{uuid.uuid4().hex[:16]}-01"
-        ctx, verdict, decision = self._before_call(s, name, args, refs or {}, traceparent)
+        verified = self._verified_refs(s, name, args, refs or {})
+        ctx, verdict, decision = self._before_call(s, name, args, verified, traceparent)
         if verdict == Deny:
             self._record(ctx, "decision", decision, None)
             if decision.deny_code and decision.deny_code.startswith("kill."):
@@ -168,6 +186,8 @@ class Harness:
             raise Stop("needs.input", f"{ctx.tier} confirmation for {name}")
         if ctx.tier != "R":
             self._record(ctx, "intent", decision, None)  # W tiers: no dispatch without an Intent record
+            s.confirmations.pop(verified.get("confirmation", ""), None); s.approvals.pop(verified.get("approval", ""), None)  # one reference, one dispatch
+            self.sessions.save(s)
         s.budget.spend_call()
         ref = self.identity.mint_reference(s.chain, audience=ctx.tool["target"], run_id=s.run_id)
         try:
@@ -185,6 +205,20 @@ class Harness:
         self._record(ctx, "decision", decision, guarded, span=gw.span_id)
         self.sessions.save(s)
         return guarded
+
+    def _verified_refs(self, s: Session, name: str, args: dict, refs: dict) -> dict:
+        """Only references this harness minted, for this tool and these arguments, reach the policy: a string a
+        caller typed is not a confirmation, and the approver's name comes from the approval record."""
+        out: dict = {}
+        h = signing.sha256({"tool": name, "args": args})
+        c = refs.get("confirmation")
+        if c and s.confirmations.get(c) == h:
+            out["confirmation"] = c
+        a = refs.get("approval")
+        rec = s.approvals.get(a) if a else None
+        if rec and rec.get("hash") == h:
+            out["approval"] = a; out["approver"] = rec["by"]
+        return out
 
     # ---------------- the three hooks: private, fixed composition ----------------
     def _before_call(self, s: Session, name: str, args: dict, refs: dict, traceparent: str):
@@ -243,9 +277,25 @@ class Harness:
             raise HarnessError("no pending request with that hash")
         if by_human != s.chain.human.id:
             raise HarnessError("a W1 confirmation must come from the acting person")
+        if not self.sessions.consume_pending(s.id, expected_hash):
+            raise HarnessError("that request was already confirmed")
         ref = "conf_" + uuid.uuid4().hex[:12]
+        s.confirmations[ref] = expected_hash
         self._rec(s, "confirmation", by=by_human, hash=expected_hash, ref=ref)
         s.pending = None; self.sessions.save(s)
+        return ref
+
+    def approve(self, s: Session, approver_token: str, name: str, args: dict) -> str:
+        """W2 approval by another person with the approver role, bound to the exact tool and arguments; the harness
+        records who approved and puts that name, never the caller's, in front of the policy."""
+        chain = self.identity.resolve(approver_token, self.consumer)
+        if "approver" not in chain.human.roles:
+            raise HarnessError("a W2 approval needs the approver role")
+        if chain.human.id == s.chain.human.id:
+            raise HarnessError("a W2 approval must come from another person")
+        h = signing.sha256({"tool": name, "args": args}); ref = "appr_" + uuid.uuid4().hex[:12]
+        s.approvals[ref] = {"hash": h, "by": chain.human.id}
+        self._rec(s, "approval", by=chain.human.id, hash=h, ref=ref, tool=name); self.sessions.save(s)
         return ref
 
     def clear_taint_by_confirmation(self, s: Session, by_human: str, segment_hash: str):
@@ -257,6 +307,7 @@ class Harness:
 
     def end(self, s: Session, reason: str, detail: str = ""):
         if reason not in STOPS: raise HarnessError("unknown stop reason")
+        s.ended = reason; s.pending = None
         self._rec(s, "stop", reason=reason, detail=detail); self.sessions.save(s)
 
     def resume(self, sid: str, token: str) -> Session:
@@ -266,11 +317,15 @@ class Harness:
         chain = self.identity.resolve(token, self.consumer)
         if chain.human.id != j["chain"]["human"]:
             raise HarnessError("a session resumes only for the person it was admitted for")
+        if j.get("ended"):
+            raise HarnessError(f"session ended ({j['ended']})")
         b = j["budget"]
-        budget = Budget(b["tokens"]["limit"], b["tool_calls"]["limit"], b["time_s"]["limit"], b["money"]["limit"], b["tokens"]["used"], b["tool_calls"]["used"])
+        budget = Budget(b["tokens"]["limit"], b["tool_calls"]["limit"], b["time_s"]["limit"], b["money"]["limit"], b["tokens"]["used"], b["tool_calls"]["used"],
+                        started=b.get("started", time.time()), used_money=b["money"].get("used", 0.0))
         s = Session(id=j["id"], consumer=j["consumer"], chain=chain, board=j["board"], ticket_key=j["ticket_key"], catalog_hash=j["catalog_hash"],
                     bundle_version=j["bundle_version"], ladder=j["ladder"], budget=budget, tainted=j["taint"]["tainted"], taint_sources=j["taint"]["sources"],
-                    pending=j["pending"], seq=j["last_seq"], runtime_session_id=j["runtime_session_id"], trace_id=j["trace_id"], run_id=j["run_id"])
+                    pending=j["pending"], confirmations=dict(j.get("confirmations") or {}), approvals=dict(j.get("approvals") or {}),
+                    seq=j["last_seq"], runtime_session_id=j["runtime_session_id"], trace_id=j["trace_id"], run_id=j["run_id"])
         if s.catalog_hash != self.catalog.hash:
             raise HarnessError("catalog changed under the session; refuse")
         self._rec(s, "resume")

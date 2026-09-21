@@ -248,7 +248,7 @@ def brief(story):
                      "Confirm the champions programme's cadence and the first cohort."]),
               H1("The next ninety days"),
               P("Weeks one to three: the open items closed and the staging deployment up; the first components used for real and signed. Weeks four to eight: the first cohort's briefs filed and two initiatives built on paved roads; the agent reading real incidents in staging. Weeks nine to thirteen: production for the hub and the read-only agent; the first write step proposed with its demonstration; the readiness page updated with measured numbers rather than estimates."),
-              P("We'd rather you saw it than read about it. The walkthrough video is eight minutes, and a live demonstration with a poisoned ticket takes ten.", "callout")]
+              P("We'd rather you saw it than read about it. The walkthrough video is just under nine minutes, and a live demonstration with a poisoned ticket takes ten.", "callout")]
 
 
 if __name__ == "__main__":

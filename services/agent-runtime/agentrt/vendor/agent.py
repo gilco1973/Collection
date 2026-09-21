@@ -54,9 +54,13 @@ class FirstReadAgent:
         t = ticket["data"]
         ctx.add("ticket", ticket_key, f"{t.get('summary') or t.get('title') or ''}: {t.get('description') or t.get('body') or ''}", "tickets")
         deploy = self.harness.call(s, "deploys___recent", {"service": service})["data"]
-        minutes = int(deploy.get("minutes_before_trigger", 10 ** 6))
-        ctx.add("deploy", str(deploy.get("run_id")), f"deploy #{deploy.get('run_id')} of {deploy.get('service')} finished {minutes} minutes before the trigger"
-                + (" (recent)" if minutes <= 30 else "") + f". {deploy.get('notes', '')}", "deploys")
+        m = deploy.get("minutes_before_trigger")
+        minutes = int(m) if m is not None else None
+        if minutes is None:
+            ctx.add("deploy", "none", f"no finished deploy of {deploy.get('service')} is on record. {deploy.get('notes', '')}", "deploys")
+        else:
+            ctx.add("deploy", str(deploy.get("run_id")), f"deploy #{deploy.get('run_id')} of {deploy.get('service')} finished {minutes} minutes before the trigger"
+                    + (" (recent)" if minutes <= 30 else "") + f". {deploy.get('notes', '')}", "deploys")
         first = self.engine.answer("first-read", ctx)
         proposal = self.engine.answer("propose", ctx) if "propose" in self.template["stages"] else None
         body = self.render(first, proposal)

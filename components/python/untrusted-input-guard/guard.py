@@ -12,16 +12,16 @@ Standard library only. The injection score is a marker heuristic: a floor, not t
 caller does with `tainted`.
 """
 from __future__ import annotations
-import re
+import html, re
 from dataclasses import dataclass, field
 
 THRESHOLD = 0.34
 
-PII_PATTERNS = {
+PII_PATTERNS = {  # the most specific shapes first: a social security number is not a phone number
     "email": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
+    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
     "account": re.compile(r"\b\d{8,17}\b"),
     "phone": re.compile(r"\+?\d[\d\s().-]{8,}\d"),
-    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
 }
 
 # Generic instruction-like markers (from the data guard) plus the ones found in incident text and code.
@@ -52,10 +52,15 @@ def code_injection_score(text: str) -> float:
     return injection_score(" ".join(parts) if parts else text, CODE_MARKERS)
 
 
+KEEP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?|\b\d{8}\.\d+\b")  # ISO dates and yyyymmdd.r run names: evidence, not PII
+
+
 def mask(text: str, audience: str) -> tuple[str, list]:
-    """Mask PII for the audience. model: class tokens; log: stubs; human: keep the last four characters."""
+    """Mask PII for the audience. model: class tokens; log: stubs; human: keep the last four characters.
+    Timestamps and pipeline run names are kept: they are the evidence an answer is about."""
     found: list = []
-    out = text
+    kept: list[str] = []
+    out = KEEP.sub(lambda m: (kept.append(m.group(0)), f"\x00{len(kept) - 1}\x00")[1], text)
     for cls, pat in PII_PATTERNS.items():
         def rep(m):
             found.append(cls)
@@ -64,6 +69,7 @@ def mask(text: str, audience: str) -> tuple[str, list]:
             if audience == "log": return f"[{cls}:***]"
             return f"[{cls}:…{v[-4:]}]"
         out = pat.sub(rep, out)
+    out = re.sub(r"\x00(\d+)\x00", lambda m: kept[int(m.group(1))], out)
     return out, found
 
 
@@ -114,7 +120,8 @@ class Context:
         for s in self.sources:
             body, classes = mask(s.text, audience)
             self.pii_classes = sorted(set(self.pii_classes) | set(classes))
-            parts.append(f'<source id="{s.id}" kind="{s.kind}" ref="{s.ref}" origin="{s.origin}" suspicious="{str(s.suspicious).lower()}">\n{body}\n</source>')
+            e = lambda v: html.escape(str(v), quote=True)  # noqa: E731 - a source cannot close the fence or forge another
+            parts.append(f'<source id="{e(s.id)}" kind="{e(s.kind)}" ref="{e(s.ref)}" origin="{e(s.origin)}" suspicious="{str(s.suspicious).lower()}">\n{e(body)}\n</source>')
         return "\n".join(parts)
 
     def ids(self) -> set:

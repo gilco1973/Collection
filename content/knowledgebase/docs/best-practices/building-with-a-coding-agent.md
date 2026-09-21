@@ -22,7 +22,7 @@ the controls in the process rather than in the person's attention.
 
 ## Rules for the agent
 
-- The repository's `CLAUDE.md` is the contract: layout, gates, what never changes, what to run before "done".
+- The repository's agent instructions file is the contract: layout, gates, what never changes, what to run before "done".
 - Files stay short (the knowledge base enforces 200 lines); one concern per module.
 - No secret, real id, hostname or customer data in the repository; placeholders look like placeholders.
 - The agent never weakens a gate to get past a missing account; a missing account is escalated by name.

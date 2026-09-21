@@ -131,7 +131,7 @@ class _HttpConnection:
 
     def request(self, method: str, params: dict) -> dict:
         self.n += 1; rid = f"{self.session.id}:{uuid.uuid4().hex[:8]}"
-        ev = threading.Event(); slot = {"event": ev, "response": None}
+        ev = threading.Event(); slot = {"event": ev, "response": None, "session": self.session}
         with self.lock:
             self.pending[rid] = slot
         self.event(P.request(rid, method, params))
@@ -240,11 +240,13 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
                 msg = P.parse(raw)
             except P.RpcError as e:
                 return self._json(400, P.error(None, e))
-            if P.is_response(msg):  # the client answering an elicitation
+            if P.is_response(msg):  # the client answering an elicitation: only the person the question went to may answer it
                 with lock:
-                    slot = pending.pop(str(msg.get("id")), None)
-                if not slot:
+                    slot = pending.get(str(msg.get("id")))
+                if not slot or not same_person(token, slot["session"]):
                     return self._json(404, {"error": "no request is waiting for that answer"})
+                with lock:
+                    pending.pop(str(msg.get("id")), None)
                 slot["response"] = msg; slot["event"].set()
                 self.send_response(202); self.end_headers(); return
             sid = self.headers.get("Mcp-Session-Id"); now = time.time()

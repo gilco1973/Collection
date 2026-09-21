@@ -155,3 +155,51 @@ class HttpSessions(unittest.TestCase):
             self.assertEqual(self.post(self.LIST, "junk-bearer", sid)[0], 404, "nothing was kept for a refused initialize")
         s, body, _ = self.post(json.dumps({**self.INIT, "params": {"pad": "x" * 3000}}).encode(), self.w.token("u_dana", ("operator",)))
         self.assertEqual(s, 413)
+
+
+class HostileMessages(unittest.TestCase):
+    def setUp(self):
+        self.w = X.build(); self.httpd = serve_http(self.w.server, max_body_bytes=2_000_000)
+        self.base = f"http://127.0.0.1:{self.httpd.server_address[1]}"
+
+    def tearDown(self):
+        self.httpd.shutdown()
+
+    def post(self, raw: bytes, token, sid=None):
+        h = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
+        if sid: h["Mcp-Session-Id"] = sid
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(self.base + "/mcp", data=raw, headers=h, method="POST"), timeout=5)
+            return r.status, json.loads(r.read() or b"{}"), r.headers.get("Mcp-Session-Id")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}"), e.headers.get("Mcp-Session-Id")
+
+    def test_params_that_are_not_an_object_and_deep_nesting_are_answered_not_fatal(self):
+        dana = self.w.token("u_dana", ("operator",))
+        s, body, sid = self.post(json.dumps(HttpSessions.INIT).encode(), dana); self.assertEqual(s, 200)
+        s, body, _ = self.post(json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": [1, 2]}).encode(), dana, sid)
+        self.assertEqual((s, body["error"]["code"]), (400, P.INVALID_REQUEST))
+        s, body, _ = self.post(b"[" * 100_000, dana, sid)
+        self.assertEqual((s, body["error"]["code"]), (400, P.PARSE_ERROR))
+        s, body, _ = self.post(json.dumps({"jsonrpc": "2.0", "id": 6, "method": "ping"}).encode(), dana, sid)
+        self.assertEqual((s, body["result"]), (200, {}), "the server is still serving")
+
+    def test_only_the_person_asked_may_answer_an_elicitation(self):
+        import http.client
+        dana, sam = self.w.token("u_dana", ("operator",)), self.w.token("u_sam", ("operator",))
+        init = {**HttpSessions.INIT, "params": {**HttpSessions.INIT["params"], "capabilities": {"elicitation": {}}}}
+        s, body, sid = self.post(json.dumps(init).encode(), dana); self.assertEqual(s, 200)
+        host, port = self.base.replace("http://", "").split(":")
+        c = http.client.HTTPConnection(host, int(port), timeout=10)
+        c.request("POST", "/mcp", body=json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "tickets___comment", "arguments": {"key": "T-1", "body": "hi"}}}),
+                  headers={"Content-Type": "application/json", "Authorization": f"Bearer {dana}", "Mcp-Session-Id": sid})
+        r = c.getresponse(); self.assertEqual(r.status, 200); self.assertIn("text/event-stream", r.getheader("Content-Type"))
+        line = b""
+        while not line.startswith(b"data:"):
+            line = r.readline()
+        rid = json.loads(line[5:])["id"]
+        answer = {"jsonrpc": "2.0", "id": rid, "result": {"action": "accept", "content": {"confirm": True}}}
+        self.assertEqual(self.post(json.dumps(answer).encode(), sam, sid)[0], 404, "another person's bearer cannot confirm for the person asked")
+        self.assertEqual(self.post(json.dumps(answer).encode(), dana, sid)[0], 202)
+        rest = r.read().decode()
+        self.assertIn('"id": "c1"', rest.replace('"id":"c1"', '"id": "c1"')); self.assertEqual(len(self.w.tickets.comments), 1)

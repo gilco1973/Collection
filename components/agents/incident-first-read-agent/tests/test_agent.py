@@ -70,3 +70,12 @@ class Run(unittest.TestCase):
     def test_the_chain_records_every_step_and_verifies(self):
         r = self.w.agent.run(self.s, "INC-7", "checkout"); self.w.agent.post(self.s, "u_dana", r["parked"]); self.w.harness.end(self.s, "turn.complete")
         self.assertGreaterEqual(self.w.audit.verify(), 6)
+
+
+class NoFinishedDeploy(unittest.TestCase):
+    def test_a_service_without_a_finished_run_gets_a_first_read_not_a_crash(self):
+        w = X.build()
+        w.harness.gateway.register_target("deploys", {"recent": lambda args, credential: {"run_id": None, "service": args["service"], "minutes_before_trigger": None, "notes": "no finished run"}})
+        s = w.harness.admit(w.token("u_dana"), board="checkout", ticket_key="INC-7", budget=X.budget_from(w.template))
+        r = w.agent.run(s, "INC-7", "checkout")
+        self.assertTrue(r["first_read"]); self.assertIn("no finished deploy", " ".join(str(x) for x in r["first_read"].values()).lower() + " ")

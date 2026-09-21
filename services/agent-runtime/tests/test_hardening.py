@@ -92,3 +92,56 @@ class Export(unittest.TestCase):
         self.assertTrue(out["object"].startswith("s3://b/p/a/"))
         for h in seen:
             self.assertEqual(h["x-amz-server-side-encryption"], cond["s3:x-amz-server-side-encryption"])
+
+
+class Record(unittest.TestCase):
+    def test_a_newer_record_is_refused_by_name_and_backup_never_creates_or_migrates(self):
+        import sqlite3, subprocess, sys
+        from agentrt.__main__ import main
+        with tempfile.TemporaryDirectory() as d:
+            newer = os.path.join(d, "newer.db"); c = sqlite3.connect(newer); c.execute("PRAGMA user_version = 99"); c.commit(); c.close()
+            saved = dict(os.environ); os.environ["AGENT_DB"] = newer
+            try:
+                import io, contextlib
+                for cmd in (["verify-record"], ["backup", os.path.join(d, "copy.db")], ["serve"]):
+                    out = io.StringIO()
+                    with contextlib.redirect_stdout(out):
+                        rc = main(cmd)
+                    self.assertEqual(rc, 2, cmd); self.assertTrue(out.getvalue().startswith("record: the record is at schema version 99"), out.getvalue())
+                os.environ["AGENT_DB"] = os.path.join(d, "typo.db")
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    rc = main(["backup", os.path.join(d, "copy2.db")])
+                self.assertEqual(rc, 2); self.assertIn("does not exist", out.getvalue()); self.assertFalse(os.path.exists(os.path.join(d, "typo.db")), "a backup never creates a record")
+                # A fresh record is stamped with this build's version and backed up read-only.
+                os.environ["AGENT_DB"] = os.path.join(d, "fresh.db")
+                w = build(Settings(db_path=os.environ["AGENT_DB"])); w.conn.close()
+                self.assertEqual(sqlite3.connect(os.environ["AGENT_DB"]).execute("PRAGMA user_version").fetchone()[0], 1)
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(main(["backup", os.path.join(d, "copy3.db")]), 0)
+                self.assertTrue(os.path.exists(os.path.join(d, "copy3.db")))
+            finally:
+                os.environ.clear(); os.environ.update(saved)
+
+    def test_stop_and_resume_are_commands_that_name_the_person(self):
+        import contextlib, io
+        from agentrt.__main__ import main
+        with tempfile.TemporaryDirectory() as d:
+            saved = dict(os.environ); os.environ["AGENT_DB"] = os.path.join(d, "r.db")
+            try:
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(main(["stop", "board", "incidents", "--by", "u_ops"]), 0)
+                self.assertIn("board incidents: stopped", out.getvalue())
+                w = build(Settings(db_path=os.environ["AGENT_DB"]))
+                self.assertEqual(w.kills.state("agent:incident-first-read", "incidents", "run_x"), "board")
+                self.assertTrue(any(r["event"] == "kill.actuation" and r["actor"] == "u_ops" for r in w.audit.query(event="kill.actuation")))
+                w.conn.close()
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(main(["resume", "board", "incidents", "--by", "u_ops"]), 0)
+                self.assertIn("board incidents: running", out.getvalue())
+                self.assertEqual(main(["stop", "board"]), 2)
+            finally:
+                os.environ.clear(); os.environ.update(saved)

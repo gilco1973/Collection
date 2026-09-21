@@ -82,6 +82,8 @@ class McpToolServer:
             raise P.RpcError(P.METHOD_NOT_FOUND, f"method not found: {method}")
         except P.RpcError as e:
             return P.error(mid, e)
+        except Exception as e:  # noqa: BLE001 - a defect answers as an error, by class; the server keeps serving
+            return P.error(mid, P.RpcError(P.INTERNAL_ERROR, f"internal error: {type(e).__name__}"))
 
     def initialize(self, params: dict, conn) -> dict:
         if not conn.token:

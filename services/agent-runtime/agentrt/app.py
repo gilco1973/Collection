@@ -113,7 +113,15 @@ def make_handler(w, resource: str, max_runs: int = 2000):
             return super().do_GET()
 
         def _body(self):
-            length = int(self.headers.get("Content-Length") or 0)
+            if self.headers.get("Transfer-Encoding"):
+                self.close_connection = True
+                self._json(411, {"title": "Length required", "detail": "send Content-Length, not Transfer-Encoding"}, {"Connection": "close"}); return None
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                if length < 0: raise ValueError(length)
+            except ValueError:
+                self.close_connection = True
+                self._json(400, {"title": "Bad request", "detail": "Content-Length must be a non-negative integer"}, {"Connection": "close"}); return None
             if length > w.settings.max_body_bytes:
                 remaining = min(length, 8 * w.settings.max_body_bytes)
                 while remaining > 0:
