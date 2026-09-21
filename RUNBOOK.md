@@ -17,6 +17,14 @@ templates, never content.
 The entrypoint prints `config: <variable>: <problem>` lines and exits 2. Fix the variable; the value is never
 printed. `AGENT_*`: `verify-record` exits 1 on a broken chain; do not start over it, see "The record is broken".
 
+## A person cannot sign in
+
+`401` from `/api/me` with a real token: the response's `detail` names the check (`aud`, `iss`, expiry, key). `403`
+with `groups.overage`: the directory left the groups out of the token; the identity team filters the claim or emits
+app roles, the hub never guesses. Every reload returning to sign-in: silent renew is refused, see the hub's browser
+console; `offline_access` in `HUB_WEB_OIDC_SCOPE` switches renew to a refresh token. `scripts/smoke-oidc.sh`
+reproduces the whole path against a stand-in provider on any machine with a Chromium.
+
 ## Common operations
 
 | Situation | What to do |

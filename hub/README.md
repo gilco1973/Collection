@@ -126,6 +126,7 @@ pnpm dev                 # http://127.0.0.1:5173, mock API and mock sign-in
 pnpm verify              # typecheck, lint, unit tests, build
 pnpm build && pnpm preview
 pnpm verify:shoot && pnpm verify:diff    # pixel guard (needs Chromium; CHROMIUM_PATH=… if not registered)
+../scripts/smoke-oidc.sh                 # the real sign-in path against a stand-in OpenID Connect provider (needs Chromium and hub/dist)
 pnpm verify:e2e          # nav, intake, discover/listing/workspace, assistant, settings flows
 pnpm build:artifact      # static-host bundle (HashRouter, relative assets) in dist-artifact/
 ```

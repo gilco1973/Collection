@@ -27,5 +27,8 @@ if [ "$what" = all ] || [ "$what" = typescript ]; then
 fi
 if [ "$what" = all ] || [ "$what" = hub ]; then
   gate "hub: typecheck, lint, tests, build";                    (cd hub && pnpm install --frozen-lockfile --prefer-offline >/dev/null && pnpm verify)
+  if [ -n "${CHROMIUM_PATH:-}" ] || [ -d "${PLAYWRIGHT_BROWSERS_PATH:-/nonexistent}" ]; then
+    gate "hub + hub-api: real sign-in end to end (OIDC, PKCE, JWKS, silent renew, refusals)"; scripts/smoke-oidc.sh >/dev/null
+  fi
 fi
 printf 'ok: every gate passed (%s)\n' "$what"

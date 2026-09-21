@@ -138,7 +138,7 @@ record do not change.
 
 | System | Protocol as implemented | Adapter |
 | --- | --- | --- |
-| Identity provider | OIDC discovery, JWKS, RS256; `aud`, `iss`, `exp`, `nbf` checked; `groups` claim to roles | `services/hub-api/hubapi/auth.py`, `actionloop/identity.py` (`JwksIdP`) |
+| Identity provider | OIDC discovery, JWKS, RS256; `aud`, `iss`, `exp`, `nbf` checked; `groups` claim to roles; groups overage refused; proven end to end in a browser by `scripts/smoke-oidc.sh` | `services/hub-api/hubapi/auth.py`, `actionloop/identity.py` (`JwksIdP`), `scripts/fake_idp.py`, `hub/tools/oidctest.cjs` |
 | Secrets | AWS Secrets Manager (`GetSecretValue` over SigV4), a mounted JSON file, or the environment (sandbox only) | `secretsbyname.py` |
 | Signing | AWS KMS `Sign`/`Verify` (asymmetric), or a local key (sandbox only) | `actionloop/signing.py` (`KmsKey`) |
 | Model | Bedrock Converse through the bank's VPC endpoint; the rules engine in the sandbox | `bedrock.py`, `engine.py` |
@@ -158,7 +158,9 @@ platform team that wants to serve the hub from its own runtime has the contract 
 | --- | --- |
 | The container exits with `config: <VARIABLE>: <problem>` lines | The variable named; the value is never printed. `check-config` in §2 reproduces it outside the container |
 | `/api/ready` answers 503 | The body names the check: `identity` means the JWKS is unreachable from the task; `record` means the volume is not writable |
-| `401` on `/api/me` with a real token | `aud` does not match `HUB_IDP_AUDIENCE`, or the issuer differs from `HUB_IDP_ISSUER`; the response's `detail` says which |
+| `401` on `/api/me` with a real token | `aud` does not match `HUB_IDP_AUDIENCE`, or the issuer differs from `HUB_IDP_ISSUER`; the response's `detail` says which. On a provider that binds tokens to a scope, `HUB_WEB_OIDC_SCOPE` must name the API's scope; `check-config` prints the note |
+| `403 groups.overage` on `/api/me` ("Groups not in the token") | The directory left the `groups` claim out because the person is in too many groups. Filter the claim to the hub's groups on the app registration, or emit app roles; the hub never downgrades such a person to an employee |
+| Every reload sends the person back to sign in | Silent renew is failing: the browser console shows the provider refusing `prompt=none` in a frame, or a Content-Security-Policy line. Add `offline_access` to `HUB_WEB_OIDC_SCOPE` to renew by refresh token instead, or allow framing on the provider's side |
 | A person sees no components or the wrong `youMaySign` | Their groups in `identity-map.json`, and `HUB_AI_SECURITY_GROUP` |
 | The agent refuses every write | Intended until a person confirms; a `403` naming `taint` means the ticket text read as an instruction |
 | The hub page loads blank | The browser console will show a Content-Security-Policy violation: something is being served from another origin. The hub and its API are one origin by design |

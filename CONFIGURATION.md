@@ -52,10 +52,27 @@ from the same process, so a deployable is one container. Fonts are served from t
 leaves the bank's network for the page itself. `hub/.env.production.example` remains for a hub served by a
 static host without hub-api, where the values are baked in at build time instead.
 
+## What the identity provider must emit
+
+The proof of the real path is `scripts/smoke-oidc.sh`: a stand-in OpenID Connect provider over TLS, hub-api with
+`HUB_AUTH=oidc`, and a browser doing Authorization Code with PKCE, silent renew, sign-out and the refusals. It
+runs in `scripts/verify.sh hub` when a Chromium is present. What it asserts is what the bank's provider must meet:
+
+| The hub needs | From the provider | Notes |
+| --- | --- | --- |
+| Discovery, JWKS, RS256 | `<issuer>/.well-known/openid-configuration` reachable from the task and the browser | `/api/ready` reports `identity` from the JWKS fetch |
+| An access token for the API | `aud` equal to `HUB_IDP_AUDIENCE`, `iss` equal to `HUB_IDP_ISSUER` | Providers that bind tokens to a scope need the API's scope in `HUB_WEB_OIDC_SCOPE` (`api://<client id>/.default` on Entra); `check-config` prints a note when it is missing |
+| Who the person is | `oid` or `sub` (the principal id), `name` or `preferred_username` or `upn`, `email` or `preferred_username` or `upn` | The owner sign-off matches the email's local part to the manifest's `owner` |
+| What they may do | `groups` on the access token, the ids mapped in `HUB_IDENTITY_MAP` and `HUB_AI_SECURITY_GROUP` | A token whose groups were left out for length (`_claim_names`, `hasgroups`) is refused with `groups.overage`, never downgraded to an employee: filter the claim to the hub's groups or emit app roles |
+| Session renew | `prompt=none` on the authorization endpoint from a hidden frame, or a refresh token with `offline_access` in the scope | The served pages allow the hub to frame itself and the provider (`frame-src`, `frame-ancestors 'self'`) and to connect to the provider (`connect-src`), nothing else |
+| Sign-out | `end_session_endpoint` in discovery | The hub sends the person there and back to `HUB_WEB_OIDC_POST_LOGOUT_URI` |
+
 ## What to check before the first deployment
 
 1. `python3 -m hubapi check-config` (and the agent's) exit 0 with the production values.
-2. A token from the bank's identity provider resolves to the expected principal: `GET /api/me` with a real bearer.
+2. A token from the bank's identity provider resolves to the expected principal: `GET /api/me` with a real bearer;
+   then the browser path with a real account: sign in, reload (silent renew), sign out, as `scripts/smoke-oidc.sh` does
+   against the stand-in provider.
 3. `GET /api/shelf` shows the components and the right `youMaySign` for an owner and for an AI security engineer.
 4. The record's volume survives a task restart: a brief saved before is there after.
 5. The audit export lands in the bucket with a verifying head.

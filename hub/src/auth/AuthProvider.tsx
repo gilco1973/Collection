@@ -36,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (authClient.isCallbackUrl()) {
           const { snapshot: s, returnTo } = await authClient.completeSignIn();
           if (cancelled) return;
+          // A silent-renew frame: the client has handed the result to the page that opened it; render nothing here.
+          if (window.self !== window.top) return;
           setSnapshot(s);
           navigate(returnTo ?? "/", { replace: true });
           track("auth.signed_in", { mode: "redirect" });

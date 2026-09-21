@@ -313,6 +313,7 @@ class HubApi:
 # ---------------- the server ----------------
 
 def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
+    csp = csp_for(api.s)
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
         server_version = "hub-api/1.0"
@@ -332,6 +333,12 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self.wfile.write(body)
 
         def _dispatch(self):
+            try:
+                self._dispatch_one()
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # the browser navigated away mid-response; nothing to log and nothing to answer
+
+        def _dispatch_one(self):
             t0 = time.time()
             path = self.path
             request_id(self.headers.get("X-Request-Id"))
@@ -383,8 +390,8 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             data = open(full, "rb").read()
             cache = "public, max-age=31536000, immutable" if "/assets/" in full else "no-cache"
             self.send_response(200); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(data))); self.send_header("Cache-Control", cache)
-            self.send_header("X-Content-Type-Options", "nosniff"); self.send_header("X-Frame-Options", "DENY"); self.send_header("Referrer-Policy", "no-referrer")
-            self.send_header("Content-Security-Policy", CSP)
+            self.send_header("X-Content-Type-Options", "nosniff"); self.send_header("X-Frame-Options", "SAMEORIGIN"); self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Content-Security-Policy", csp)
             if api.s.public_url.startswith("https://"):
                 self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
             self.end_headers()
@@ -397,7 +404,20 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
 
 # The hub is one origin: its scripts, styles, fonts and API all come from here. Inline styles are React's style
 # attributes; inline scripts are not allowed, so an injected page cannot run code even if it got into a response.
-CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+
+def csp_for(settings) -> str:
+    """The base policy, plus the identity provider's origin where the browser must reach it: its discovery document,
+    keys, token and userinfo endpoints (connect-src) and the silent-renew and session frames (frame-src). The frame
+    also comes back to the hub's own callback, so frame-src names the hub too and frame-ancestors is 'self' (the hub
+    may frame itself, nobody else may frame the hub); without both the browser refuses the renew and every reload
+    signs the person out."""
+    authority = getattr(settings, "web_oidc_authority", "") if getattr(settings, "auth", "") == "oidc" else ""
+    if not authority:
+        return CSP
+    u = urllib.parse.urlsplit(authority); origin = f"{u.scheme}://{u.netloc}"
+    return CSP.replace("connect-src 'self'", f"connect-src 'self' {origin}") + f"; frame-src 'self' {origin}"
 
 
 def serve(api: HubApi, host: str, port: int, static_dir: str = "") -> ThreadingHTTPServer:

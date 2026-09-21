@@ -58,6 +58,12 @@ class IdentityMap:
         return cls(json.load(open(path, encoding="utf-8")))
 
     def principal(self, claims: dict, ai_security_group: str = "") -> Principal:
+        # A directory that has too many groups to put in the token says so instead of listing them; treating that as
+        # "no groups" would sign a lead in as a plain employee. It is refused with the fix named (a groups filter or
+        # app roles on the registration), never guessed.
+        names = claims.get("_claim_names") or {}
+        if "groups" in names or claims.get("hasgroups"):
+            raise AuthError(403, "Groups not in the token", "The identity provider left the groups out of this token (too many to list). Ask the identity team to filter the groups claim to the hub's groups, or to emit them as app roles.", "groups.overage")
         groups = list(dict.fromkeys(claims.get("groups") or []))  # the token's order, deduplicated: the first group's team is the primary one
         roles, entitlements, teams, ladder, cost = list(self.default.get("roles", [])), list(self.default.get("entitlements", [])), [], self.default.get("ladder", "L0"), self.default.get("costCentre", "")
         for gid in groups:
@@ -70,10 +76,11 @@ class IdentityMap:
             if g.get("costCentre"): cost = g["costCentre"]
         if ai_security_group and ai_security_group in groups and "ai.security" not in roles:
             roles.append("ai.security")
-        name = claims.get("name") or claims.get("preferred_username") or claims.get("email") or claims.get("sub", "")
-        email = (claims.get("email") or claims.get("preferred_username") or "").lower()
+        name = claims.get("name") or claims.get("preferred_username") or claims.get("upn") or claims.get("email") or claims.get("sub", "")
+        email = (claims.get("email") or claims.get("preferred_username") or claims.get("upn") or "").lower()
         initials = "".join(w[0] for w in name.split()[:2]).upper() or "??"
-        return Principal(id="u_" + str(claims.get("oid") or claims.get("sub", ""))[:24], name=name, email=email, initials=initials, tenant=self.tenant, roles=roles,
+        # The directory's object id where there is one (stable across app registrations), else the subject.
+        return Principal(id="u_" + str(claims.get("oid") or claims.get("sub", "")), name=name, email=email, initials=initials, tenant=self.tenant, roles=roles,
                          ladder=ladder, channel="operator", teams=teams, costCentre=cost, entitlements=entitlements, preferences=dict(DEFAULT_PREFS))
 
 

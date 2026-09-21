@@ -138,6 +138,17 @@ class Settings:
                         "VITE_OIDC_SCOPE": self.web_oidc_scope})
         return cfg
 
+    def advice(self) -> list[str]:
+        """Not problems: things that depend on the identity provider, said once at check-config so they are not found in staging."""
+        a, P = [], self.prefix
+        if self.auth == "oidc" and self.web_oidc_authority:
+            scopes = set(self.web_oidc_scope.split())
+            if not scopes - {"openid", "profile", "email", "offline_access"}:
+                a.append(f"{P}WEB_OIDC_SCOPE names only the standard scopes. A provider that binds access tokens to an API (Entra ID, for one) then issues a token whose aud is not {P}IDP_AUDIENCE and every call is 401: add the API's scope (for example api://HUB_API_CLIENT_ID/.default)")
+            if "offline_access" not in scopes:
+                a.append(f"{P}WEB_OIDC_SCOPE has no offline_access: the hub renews sessions in a hidden frame to the provider, which the provider must allow (many do not); with offline_access it uses a refresh token instead")
+        return a
+
     def diagnostics(self) -> dict:
         """Presence and shape only, never a value."""
         out = {}
@@ -149,9 +160,11 @@ class Settings:
 
 
 def check_config(prefix: str = "HUB_", out=sys.stdout) -> int:
-    problems = Settings.from_env(prefix).validate()
+    s = Settings.from_env(prefix)
+    problems = s.validate()
     if problems:
         for p in problems: print("config:", p, file=out)
         return 2
+    for a in (s.advice() if hasattr(s, "advice") else []): print("note:", a, file=out)
     print("config ok", file=out)
     return 0

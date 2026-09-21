@@ -130,7 +130,7 @@ class OverHttp(unittest.TestCase):
         kinds = [json.loads(l[5:])["view"]["kind"] for l in r.read().decode().splitlines() if l.startswith("data:")]
         self.assertEqual(kinds[0], "tool_call"); self.assertEqual(kinds[-1], "feedback")
         r = self.srv.request("GET", "/discover/tools/audit-chain", token=None); self.assertEqual(r.status, 200); self.assertIn("<title>hub</title>", r.read().decode())
-        r = self.srv.request("GET", "/assets/a.js", token=None); self.assertIn("immutable", r.headers["Cache-Control"]); self.assertEqual(r.headers["X-Frame-Options"], "DENY")
+        r = self.srv.request("GET", "/assets/a.js", token=None); self.assertIn("immutable", r.headers["Cache-Control"]); self.assertEqual(r.headers["X-Frame-Options"], "SAMEORIGIN")
         r = self.srv.request("GET", "/../etc/passwd", token=None); self.assertEqual(r.status, 200)  # the SPA fallback, never a file outside dist
         r = self.srv.request("GET", "/config.js", token=None); js = r.read().decode()
         self.assertEqual(r.headers["Content-Type"], "application/javascript"); self.assertIn('"VITE_API_MODE": "http"', js); self.assertIn('"VITE_AUTH_MODE": "mock"', js); self.assertNotIn("secret", js.lower())

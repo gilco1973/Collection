@@ -67,3 +67,44 @@ class Oidc(unittest.TestCase):
         self.assertEqual((cfg["VITE_AUTH_MODE"], cfg["VITE_OIDC_REDIRECT_URI"], cfg["VITE_OIDC_CLIENT_ID"]), ("oidc", "https://hub.bank.example/auth/callback", "HUB_WEB"))
         self.assertTrue(any("must be https" in p for p in Settings(env="staging", db_path="/x.db", secrets="aws", auth="oidc", idp_issuer="http://idp", idp_audience="a", ai_security_group="g").validate()))
         self.assertNotIn("secret", json.dumps(ok.diagnostics()).lower().replace("secrets", ""))
+
+
+class RealAccounts(unittest.TestCase):
+    """What a production token looks like that the mock personas never do."""
+
+    def setUp(self):
+        self.map = IdentityMap.load(os.path.join(SERVICE, "data", "identity-map.example.json"))
+        self.auth = OidcAuth(ISSUER, AUD, JWKS_URL, fetch, self.map, "GROUP_ID_AI_SECURITY")
+        self.now = int(time.time())
+
+    def base(self, **extra):
+        return {"iss": ISSUER, "aud": AUD, "sub": "s-1", "exp": self.now + 600, "nbf": self.now - 10, "iat": self.now, **extra}
+
+    def test_an_access_token_with_upn_and_a_directory_object_id(self):
+        # An access token for an API often carries upn and oid but no email; the id is the object id, whole.
+        p = self.auth.principal(mint(self.base(oid="11111111-2222-3333-4444-555555555555", name="Dana Ruiz", upn="Dana.Ruiz@bank.example", groups=["GROUP_ID_PLATFORM"])))
+        self.assertEqual((p.id, p.email, p.handle, p.initials), ("u_11111111-2222-3333-4444-555555555555", "dana.ruiz@bank.example", "dana.ruiz", "DR"))
+        self.assertIn("platform.lead", p.roles); self.assertEqual(p.teams[0]["lead"], True)
+
+    def test_a_groups_overage_is_refused_with_the_fix_named(self):
+        with self.assertRaises(AuthError) as cm:
+            self.auth.principal(mint(self.base(name="Many Groups", _claim_names={"groups": "src1"}, _claim_sources={"src1": {"endpoint": "https://graph.example/users/x/getMemberObjects"}})))
+        self.assertEqual((cm.exception.status, cm.exception.code), (403, "groups.overage"))
+        self.assertIn("filter the groups claim", cm.exception.detail)
+        # Over the API the person gets a 403 problem, not an employee's view.
+        api = make_api(auth=self.auth)
+        s, body = Client(api, mint(self.base(hasgroups=True))).call("GET", "/me")
+        self.assertEqual((s, body["code"]), (403, "groups.overage"))
+
+    def test_the_served_hub_admits_the_identity_provider_in_its_policy(self):
+        from hubapi.app import csp_for
+        s = Settings(auth="oidc", web_oidc_authority="https://idp.bank.example/TENANT_ID/v2.0")
+        csp = csp_for(s)
+        self.assertIn("connect-src 'self' https://idp.bank.example", csp); self.assertIn("frame-src 'self' https://idp.bank.example", csp)
+        self.assertNotIn("frame-src", csp_for(Settings()))
+
+    def test_check_config_advises_on_scopes_a_provider_may_need(self):
+        s = Settings(auth="oidc", idp_issuer="https://idp.bank.example", idp_audience="hub-api", ai_security_group="G", web_oidc_authority="https://idp.bank.example", web_oidc_client_id="c", web_oidc_scope="openid profile email")
+        advice = " ".join(s.advice())
+        self.assertIn("api://", advice); self.assertIn("offline_access", advice)
+        self.assertEqual(Settings(auth="oidc", web_oidc_authority="https://idp.bank.example", web_oidc_scope="openid profile offline_access api://x/.default").advice(), [])

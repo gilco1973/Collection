@@ -137,7 +137,7 @@ class ServedHub(unittest.TestCase):
             try:
                 r = srv.request("GET", "/discover", token=None)
                 self.assertEqual(r.status, 200)
-                self.assertIn("script-src 'self'", r.headers["Content-Security-Policy"]); self.assertIn("frame-ancestors 'none'", r.headers["Content-Security-Policy"])
+                self.assertIn("script-src 'self'", r.headers["Content-Security-Policy"]); self.assertIn("frame-ancestors 'self'", r.headers["Content-Security-Policy"])
                 self.assertIn("max-age=31536000", r.headers["Strict-Transport-Security"])
             finally:
                 srv.close()
