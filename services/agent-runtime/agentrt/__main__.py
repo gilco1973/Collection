@@ -42,7 +42,7 @@ def main(argv=None) -> int:
         from .export import S3Put, export_chain
         if not s.audit_export:
             print("AGENT_AUDIT_EXPORT is empty; nothing exported"); return 2
-        print(json.dumps(export_chain(w.audit, w.template["name"], s.audit_export, S3Put(UrllibHttp(30.0), s.bedrock_region or os.environ.get("AWS_REGION", ""))))); return 0
+        print(json.dumps(export_chain(w.audit, w.template["name"], s.audit_export, S3Put(UrllibHttp(30.0), s.bedrock_region or os.environ.get("AWS_REGION", "")), work_dir=work_dir_for(s)))); return 0
     if cmd != "serve":
         print(__doc__); return 2
     httpd = serve(w, s.listen_host, s.listen_port, s.public_url)
@@ -55,7 +55,16 @@ def main(argv=None) -> int:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
+    from .app import drain
+    if not drain(httpd, 25.0):  # the ECS stop timeout is 30 s; a run still going after that is cut by the platform
+        logging.getLogger("agentrt").warning("stopped with a request still in flight")
     return 0
+
+
+def work_dir_for(s) -> str | None:
+    """Scratch space beside the record: the task's root filesystem is read-only and only the record volume is writable."""
+    d = os.path.dirname(os.path.abspath(s.db_path)) if s.db_path and s.db_path != ":memory:" else None
+    return d if d and os.path.isdir(d) and os.access(d, os.W_OK) else None
 
 
 def export_loop(w, s, stop=None, sleep=None, put=None):
@@ -68,7 +77,7 @@ def export_loop(w, s, stop=None, sleep=None, put=None):
         wait(s.audit_export_interval_s)
         if stop and stop.is_set(): break
         try:
-            out = export_chain(w.audit, w.template["name"], s.audit_export, put)
+            out = export_chain(w.audit, w.template["name"], s.audit_export, put, work_dir=work_dir_for(s))
             logging.getLogger("agentrt").info("audit exported records=%s head=%s", out.get("records"), out.get("head"))
         except Exception as e:
             logging.getLogger("agentrt").warning("audit export failed error=%s; the chain stays local until the next interval", type(e).__name__)

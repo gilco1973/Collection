@@ -28,3 +28,27 @@ class Chain(unittest.TestCase):
             out = self.a.export(os.path.join(d, "chain.jsonl"))
             lines = open(out["path"]).read().splitlines()
         self.assertEqual(out["records"], 1); self.assertEqual(out["head"], self.a.head()); self.assertEqual(json.loads(lines[0])["event"], "admit"); self.assertFalse(out["signed"])
+
+
+class Concurrency(unittest.TestCase):
+    def test_threads_appending_at_once_never_share_a_prev(self):
+        import threading
+        with tempfile.TemporaryDirectory() as d:
+            conn = sqlite3.connect(os.path.join(d, "a.db"), check_same_thread=False); a = AuditChain(conn); errors = []
+            def work():
+                try:
+                    for _ in range(40): a.record(consumer="c", event="decision", decision="allow")
+                except Exception as e: errors.append(type(e).__name__)
+            ts = [threading.Thread(target=work) for _ in range(6)]
+            for t in ts: t.start()
+            for t in ts: t.join()
+            self.assertEqual(errors, []); self.assertEqual(a.verify(), 240)
+            self.assertEqual(len({r[0] for r in conn.execute("SELECT prev FROM audit")}), 240, "every record chains a distinct prev")
+
+    def test_export_is_one_consistent_read(self):
+        self.a = AuditChain(sqlite3.connect(":memory:"))
+        self.a.record(consumer="c", event="admit"); self.a.record(consumer="c", event="decision")
+        with tempfile.TemporaryDirectory() as d:
+            out = self.a.export(os.path.join(d, "c.jsonl")); lines = open(out["path"]).read().splitlines()
+        import hashlib
+        self.assertEqual(out["records"], len(lines)); self.assertEqual(out["head"], "sha256:" + hashlib.sha256(lines[-1].encode()).hexdigest())

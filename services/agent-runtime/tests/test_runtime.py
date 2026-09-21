@@ -106,7 +106,7 @@ class Refusals(unittest.TestCase):
         for word in ("fake identity", "local signing", "rules engine", "fakes are refused", "AUDIT_EXPORT"):
             self.assertTrue(any(word in x for x in p), word)
         ok = Settings(env="production", identity="oidc", idp_issuer="https://idp", idp_audience="a", operator_group_id="g", signing="kms", kms_key_id="k", engine="bedrock", bedrock_region="r", bedrock_endpoint="https://e", bedrock_model_id="m",
-                      targets=("tickets", "deploys"), jira_url="https://j", deploys_url="https://d", deploys_project="p", deploys_pipelines={"checkout": "1"}, db_path="/var/x.db", public_url="https://a/mcp", secrets="aws", audit_export="s3://b/p/")
+                      targets=("tickets", "deploys"), jira_url="https://j", jira_user="svc", deploys_url="https://d", deploys_project="p", deploys_pipelines={"checkout": "1"}, db_path="/var/x.db", public_url="https://a/mcp", secrets="aws", audit_export="s3://b/p/")
         self.assertEqual(ok.validate(), [])
         self.assertTrue(any("template does not" in x for x in Settings(targets=("flags",)).validate()))
         from agentrt.settings import template_targets

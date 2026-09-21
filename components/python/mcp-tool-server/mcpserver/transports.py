@@ -7,7 +7,7 @@ client can step up, and publishes RFC 9728 protected-resource metadata. A creden
 read from the request (HTTP) or from the environment variable named at start (stdio), each time.
 """
 from __future__ import annotations
-import json, os, sys, threading, uuid
+import json, os, sys, threading, uuid, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from . import protocol as P
 from .server import ClientSession, McpToolServer
@@ -146,10 +146,34 @@ class _HttpConnection:
 
 
 def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: str = "https://mcp.example.internal/mcp",
-                      authorization_servers: list[str] | None = None, elicitation_timeout_s: float = 120.0):
+                      authorization_servers: list[str] | None = None, elicitation_timeout_s: float = 120.0,
+                      max_body_bytes: int = 1_000_000, session_idle_s: float = 3600.0):
+    """A session is created at `initialize` only once admission succeeded, belongs to the person admitted (every
+    later request, and the DELETE, must carry a bearer that resolves to the same person), and expires after
+    `session_idle_s` without a request. A body above `max_body_bytes` is refused with 413."""
     sessions: dict[str, ClientSession] = {}
     pending: dict[str, dict] = {}
     lock = threading.Lock()
+
+    def same_person(token: str | None, session: ClientSession) -> bool:
+        """The bearer resolves (signature, expiry, issuer, audience) to the person the session was opened for."""
+        if not token or not session.human:
+            return False
+        try:
+            chain = server.harness.identity.resolve(token, server.harness.consumer)
+        except Exception:  # noqa: BLE001 - the identity library's typed refusals: not that person
+            return False
+        return chain.human.id == session.human
+
+    def sweep(now: float) -> None:
+        for sid, s in list(sessions.items()):
+            if now - s.last_seen > session_idle_s:
+                sessions.pop(sid, None)
+                if s.harness_session:
+                    try:
+                        server.harness.end(s.harness_session, "turn.complete", "session expired idle")
+                    except Exception:  # noqa: BLE001 - already ended
+                        pass
     metadata = {"resource": resource, "authorization_servers": authorization_servers or ["https://idp.example.internal"],
                 "bearer_methods_supported": ["header"], "scopes_supported": server.scopes(), "resource_name": server.name}
 
@@ -180,10 +204,16 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
         def do_DELETE(self):
             sid = self.headers.get("Mcp-Session-Id")
             with lock:
-                s = sessions.pop(sid, None)
-            if s and s.harness_session:
+                s = sessions.get(sid or "")
+            if s is None:
+                self.send_response(404); self.end_headers(); return
+            if not same_person(self._bearer(), s):
+                return self._json(401, {"error": "the session belongs to another person"}, {"WWW-Authenticate": "Bearer"})
+            with lock:
+                sessions.pop(sid, None)
+            if s.harness_session:
                 server.harness.end(s.harness_session, "turn.complete", "session deleted by the client")
-            self.send_response(204 if s else 404); self.end_headers()
+            self.send_response(204); self.end_headers()
 
         def do_POST(self):
             if self.path != path:
@@ -191,7 +221,21 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
             token = self._bearer()
             if not token:
                 return self._json(401, {"error": "unauthenticated"}, {"WWW-Authenticate": f'Bearer resource_metadata="{resource.rsplit("/", 1)[0]}/.well-known/oauth-protected-resource"'})
-            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8")
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                if length < 0: raise ValueError(length)
+            except ValueError:
+                self.close_connection = True
+                return self._json(400, {"error": "Content-Length must be a non-negative integer"}, {"Connection": "close"})
+            if length > max_body_bytes:
+                remaining = min(length, 8 * max_body_bytes)
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk: break
+                    remaining -= len(chunk)
+                self.close_connection = True
+                return self._json(413, {"error": f"body too large; at most {max_body_bytes} bytes"}, {"Connection": "close"})
+            raw = self.rfile.read(length).decode("utf-8", "replace")
             try:
                 msg = P.parse(raw)
             except P.RpcError as e:
@@ -203,16 +247,26 @@ def make_http_handler(server: McpToolServer, *, path: str = "/mcp", resource: st
                     return self._json(404, {"error": "no request is waiting for that answer"})
                 slot["response"] = msg; slot["event"].set()
                 self.send_response(202); self.end_headers(); return
-            sid = self.headers.get("Mcp-Session-Id")
+            sid = self.headers.get("Mcp-Session-Id"); now = time.time()
             with lock:
                 if msg.get("method") == "initialize":
-                    session = ClientSession(id="mcp_" + uuid.uuid4().hex[:12]); sessions[session.id] = session
+                    sweep(now)
+                    session = ClientSession(id="mcp_" + uuid.uuid4().hex[:12])  # kept only once admission succeeds
                 else:
                     session = sessions.get(sid or "")
+                    if session is not None and now - session.last_seen > session_idle_s:
+                        sessions.pop(sid, None); session = None
             if session is None:
-                return self._json(404, {"error": "unknown session; initialize first"})
+                return self._json(404, {"error": "unknown or expired session; initialize first"})
+            if msg.get("method") != "initialize" and not same_person(token, session):
+                return self._json(401, {"error": "the bearer does not belong to this session's person"}, {"WWW-Authenticate": "Bearer"})
+            session.last_seen = now
             conn = _HttpConnection(session, token, self, pending, lock, elicitation_timeout_s)
             res = server.handle(msg, conn)
+            if msg.get("method") == "initialize" and res is not None and "error" not in res and session.harness_session is not None:
+                session.human = session.harness_session.chain.human.id
+                with lock:
+                    sessions[session.id] = session
             if res is None:
                 self.send_response(202); self.send_header("Mcp-Session-Id", session.id); self.end_headers(); return
             if conn.streaming:

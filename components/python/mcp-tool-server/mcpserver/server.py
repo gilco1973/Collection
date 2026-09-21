@@ -24,6 +24,8 @@ class ClientSession:
     harness_session: object = None
     initialized: bool = False
     capabilities: dict = field(default_factory=dict)
+    human: str = ""          # the person admitted at initialize; every later request must carry their bearer
+    last_seen: float = 0.0   # idle sessions expire on the HTTP transport
 
     @property
     def can_elicit(self) -> bool:

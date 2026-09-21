@@ -9,7 +9,7 @@ caller's taint ceiling stays the control.
 """
 from __future__ import annotations
 import json, urllib.parse
-from sigv4 import load_credentials, sign_request
+from sigv4 import aws_error, load_credentials, sign_request
 
 
 class BedrockConverseError(Exception):
@@ -18,12 +18,13 @@ class BedrockConverseError(Exception):
 
 class BedrockConverseAdapter:
     def __init__(self, http, region: str, endpoint: str | None = None, anthropic_version: str = "bedrock-2023-05-31",
-                 guardrail_id: str | None = None, guardrail_version: str | None = None, creds_loader=load_credentials):
+                 guardrail_id: str | None = None, guardrail_version: str | None = None, creds_loader=load_credentials, retries: int = 2, backoff_s: float = 0.5, sleep=None):
         self.http, self.region = http, region
         self.endpoint = (endpoint or f"https://bedrock-runtime.{region}.amazonaws.com").rstrip("/")
         self.anthropic_version = anthropic_version
         self.guardrail_id, self.guardrail_version = guardrail_id, guardrail_version
         self._creds_loader, self._creds = creds_loader, None
+        self.retries, self.backoff_s, self.sleep = retries, backoff_s, sleep or __import__("time").sleep
 
     def creds(self):
         if self._creds is None or getattr(self._creds, "expiring", lambda: False)():
@@ -41,8 +42,15 @@ class BedrockConverseAdapter:
         if self.guardrail_id and self.guardrail_version:
             payload["guardrailConfig"] = {"guardrailIdentifier": self.guardrail_id, "guardrailVersion": self.guardrail_version}
         body = json.dumps(payload).encode()
-        headers = sign_request(self.creds(), "POST", url, self.region, "bedrock", {"Content-Type": "application/json"}, body)
-        _, _, data = self.http.request("POST", url, headers, body)
+        for attempt in range(self.retries + 1):
+            headers = sign_request(self.creds(), "POST", url, self.region, "bedrock", {"Content-Type": "application/json"}, body)
+            status, _, data = self.http.request("POST", url, headers, body)
+            err = aws_error(status, data, "bedrock.Converse")
+            if err is None:
+                break
+            if not err.retryable or attempt == self.retries:
+                raise BedrockConverseError(str(err)) from err  # the type and the status; never the model's or the caller's text
+            self.sleep(self.backoff_s * (2 ** attempt))
         try:
             resp = json.loads(data) if data else {}
             text = resp["output"]["message"]["content"][0]["text"]

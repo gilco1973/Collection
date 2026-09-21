@@ -27,3 +27,16 @@ class HttpClient(unittest.TestCase):
         self.assertEqual(slept, [0.5, 1.0])
         self.assertEqual(httpclient.Http(t).form("https://api.example/token", {"grant_type": "client_credentials"})["access_token"], "t")
         self.assertEqual(t.calls[-1]["body"], b"grant_type=client_credentials")
+
+    def test_a_write_is_never_repeated_on_a_5xx(self):
+        calls = {"n": 0}
+        def route(m, u, b):
+            calls["n"] += 1
+            return (503, {"e": 1}) if calls["n"] < 2 else (200, {"id": 1})
+        t = httpclient.RecordingTransport({("POST", "https://api.example/comment"): route, ("PUT", "https://api.example/doc"): route})
+        with self.assertRaises(httpclient.HttpError):
+            httpclient.Http(t, retries=3, sleep=lambda s: None).json("POST", "https://api.example/comment", payload={"x": 1})
+        self.assertEqual(calls["n"], 1, "a POST that failed after taking effect would otherwise run twice")
+        calls["n"] = 0
+        self.assertEqual(httpclient.Http(t, retries=3, sleep=lambda s: None).json("PUT", "https://api.example/doc", payload={}), {"id": 1})
+        self.assertEqual(calls["n"], 2, "an idempotent PUT is retried")

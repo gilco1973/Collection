@@ -5850,7 +5850,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       {
         "label": "Tests",
         "value": "green",
-        "note": "node --check shoot.cjs && python3 -m py_compile diff.py"
+        "note": "if command -v node >/dev/null; then node --check shoot.cjs; "
       },
       {
         "label": "Rules it enforces",
@@ -7754,7 +7754,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
       "tests": true,
       "spec": true
     },
-    "test": "node --check shoot.cjs && python3 -m py_compile diff.py",
+    "test": "if command -v node >/dev/null; then node --check shoot.cjs; else echo \"node absent: shoot.cjs not checked\"; fi && python3 -m py_compile diff.py",
     "exampleRun": "python3 example.py",
     "hubPath": "/discover/knowledge/pixel-parity-screenshots",
     "repoPath": "components/skills/pixel-parity-screenshots"

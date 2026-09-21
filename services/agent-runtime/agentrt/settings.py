@@ -87,29 +87,41 @@ class Settings:
     log_level: str = "INFO"
     build_sha: str = "dev"
     prefix: str = field(default="AGENT_", repr=False)
+    parse_errors: list = field(default_factory=list, repr=False)  # numbers that were not numbers; reported by validate()
 
     @classmethod
     def from_env(cls, prefix: str = "AGENT_") -> "Settings":
         e = lambda k, d=None: _env(prefix + k, d)
         d = cls()
-        return cls(env=e("ENV", d.env), name=e("NAME", d.name), listen_host=e("LISTEN_HOST", d.listen_host), listen_port=int(e("LISTEN_PORT", str(d.listen_port))),
+        errors: list[str] = []
+        def num(k: str, default: int) -> int:
+            raw = e(k, str(default))
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                errors.append(f"{prefix}{k} must be an integer"); return default
+        return cls(env=e("ENV", d.env), name=e("NAME", d.name), listen_host=e("LISTEN_HOST", d.listen_host), listen_port=num("LISTEN_PORT", d.listen_port),
                    public_url=e("PUBLIC_URL", d.public_url), db_path=e("DB", d.db_path), identity=e("IDENTITY", d.identity), idp_issuer=e("IDP_ISSUER", ""), idp_audience=e("IDP_AUDIENCE", ""),
                    idp_jwks_url=e("IDP_JWKS_URL", ""), operator_group_id=e("OPERATOR_GROUP_ID", ""), approver_group_id=e("APPROVER_GROUP_ID", ""), signing=e("SIGNING", d.signing),
-                   kms_key_id=e("KMS_KEY_ID", ""), engine=e("ENGINE", d.engine), bedrock_region=e("BEDROCK_REGION", e("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
-                   bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""), bedrock_max_output_tokens=int(e("BEDROCK_MAX_OUTPUT_TOKENS", "1500")),
+                   kms_key_id=e("KMS_KEY_ID", ""), engine=e("ENGINE", d.engine), bedrock_region=e("BEDROCK_REGION", os.environ.get("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
+                   bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""), bedrock_max_output_tokens=num("BEDROCK_MAX_OUTPUT_TOKENS", d.bedrock_max_output_tokens),
                    targets=_list(e("TARGETS")), jira_url=e("JIRA_URL", ""), jira_token_name=e("JIRA_TOKEN_NAME", d.jira_token_name), jira_user=e("JIRA_USER", ""), jira_auth=e("JIRA_AUTH", "basic"),
                    deploys_url=e("DEPLOYS_URL", ""), deploys_project=e("DEPLOYS_PROJECT", ""), deploys_pat_name=e("DEPLOYS_PAT_NAME", d.deploys_pat_name), deploys_pipelines=_map(e("DEPLOYS_PIPELINES")),
-                   audit_export=e("AUDIT_EXPORT", ""), audit_export_interval_s=int(e("AUDIT_EXPORT_INTERVAL_S", "0")), secrets=e("SECRETS", d.secrets),
-                   max_body_bytes=int(e("MAX_BODY_BYTES", str(d.max_body_bytes))), runs_per_minute=int(e("RUNS_PER_MINUTE", str(d.runs_per_minute))),
-                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix)
+                   audit_export=e("AUDIT_EXPORT", ""), audit_export_interval_s=num("AUDIT_EXPORT_INTERVAL_S", d.audit_export_interval_s), secrets=e("SECRETS", d.secrets),
+                   max_body_bytes=num("MAX_BODY_BYTES", d.max_body_bytes), runs_per_minute=num("RUNS_PER_MINUTE", d.runs_per_minute),
+                   log_level=e("LOG_LEVEL", d.log_level), build_sha=e("BUILD_SHA", d.build_sha), prefix=prefix, parse_errors=errors)
 
     @property
     def live(self) -> bool:
         return self.env in ("staging", "production")
 
     def validate(self) -> list[str]:
-        p, P = [], self.prefix
+        p, P = list(self.parse_errors), self.prefix
         if self.env not in ("sandbox", "staging", "production"): p.append(f"{P}ENV must be sandbox, staging or production")
+        if self.jira_auth not in ("basic", "bearer"): p.append(f"{P}JIRA_AUTH must be basic or bearer")
+        if "tickets" in self.targets and self.jira_auth == "basic" and not self.jira_user: p.append(f"{P}JIRA_USER is required with basic auth (the service account's email)")
+        bad = [f"{k}={v}" for k, v in self.deploys_pipelines.items() if not str(v).isdigit()]
+        if bad: p.append(f"{P}DEPLOYS_PIPELINES values must be pipeline ids (integers): {', '.join(bad)}")
         if self.name not in KNOWN_AGENTS: p.append(f"{P}NAME must be one of {KNOWN_AGENTS}")
         if self.identity not in ("fake", "oidc"): p.append(f"{P}IDENTITY must be fake or oidc")
         if self.signing not in ("local", "kms"): p.append(f"{P}SIGNING must be local or kms")
@@ -159,7 +171,7 @@ class Settings:
     def diagnostics(self) -> dict:
         out = {}
         for f in fields(self):
-            if f.name == "prefix": continue
+            if f.name in ("prefix", "parse_errors"): continue
             v = getattr(self, f.name)
             out[f.name] = v if f.name in ("env", "name", "identity", "signing", "engine", "secrets", "log_level", "listen_port") else ("unset" if v in ("", (), {}, None) else "set")
         return out

@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 
 MAX_BODY = 4 * 1024 * 1024
 RETRY_STATUS = (429, 500, 502, 503, 504)
+RETRY_METHODS = ("GET", "HEAD", "OPTIONS", "PUT", "DELETE")  # a POST that timed out after it took effect would run twice
 
 
 class HttpError(Exception):
@@ -53,8 +54,9 @@ class RecordingTransport:
 
 
 class Http:
-    def __init__(self, transport=None, timeout: float = 15.0, retries: int = 3, backoff_s: float = 0.5, sleep=time.sleep, user_agent: str = "app/1.0"):
+    def __init__(self, transport=None, timeout: float = 15.0, retries: int = 3, backoff_s: float = 0.5, sleep=time.sleep, user_agent: str = "app/1.0", retry_methods: tuple = RETRY_METHODS):
         self.t, self.timeout, self.retries, self.backoff_s, self.sleep, self.ua = transport or UrllibTransport(), timeout, retries, backoff_s, sleep, user_agent
+        self.retry_methods = tuple(m.upper() for m in retry_methods)
 
     def request(self, method: str, url: str, headers: dict | None = None, body: bytes | None = None, expect=(200, 201, 202, 204)):
         h = {"User-Agent": self.ua, "Accept": "application/json", **(headers or {})}
@@ -64,7 +66,7 @@ class Http:
             if status in expect:
                 return status, rh, data
             last = HttpError(status, url, data.decode("utf-8", "replace") if data else "")
-            if status not in RETRY_STATUS or attempt == self.retries:
+            if status not in RETRY_STATUS or attempt == self.retries or method.upper() not in self.retry_methods:
                 raise last
             self.sleep(self.backoff_s * (2 ** attempt))
         raise last  # pragma: no cover

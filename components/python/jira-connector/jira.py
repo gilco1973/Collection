@@ -6,7 +6,7 @@ write carries the acting person's name in its body, so the record in Jira says w
 `http` is injected (`json(method, url, headers, payload=None) -> dict`, the stdlib-http-client's).
 """
 from __future__ import annotations
-import base64, itertools, urllib.parse
+import base64, itertools, re, urllib.parse
 
 
 class JiraError(Exception):
@@ -17,6 +17,16 @@ def require_credential(credential: dict, audience: str) -> str:
     if not credential or credential.get("audience") != audience or not credential.get("on_behalf_of"):
         raise JiraError("no redeemed reference for this audience; the handler will not run")
     return credential["on_behalf_of"]
+
+
+KEY = re.compile(r"^[A-Z][A-Z0-9_]{0,31}-\d{1,9}$")
+
+
+def _key(key: str) -> str:
+    """An issue key is one path segment: `INC-7`, never `INC-7/../../myself`."""
+    if not isinstance(key, str) or not KEY.match(key):
+        raise JiraError("not an issue key")
+    return urllib.parse.quote(key, safe="")
 
 
 class JiraClient:
@@ -42,14 +52,14 @@ class JiraClient:
                 "assignee": (f.get("assignee") or {}).get("accountId") or (f.get("assignee") or {}).get("name"), "labels": list(f.get("labels") or []), "updated": f.get("updated", "")}
 
     def get_issue(self, key: str) -> dict:
-        return self._issue(self.http.json("GET", self._u(f"issue/{urllib.parse.quote(key)}?fields=summary,description,status,assignee,labels,updated"), self._h()))
+        return self._issue(self.http.json("GET", self._u(f"issue/{_key(key)}?fields=summary,description,status,assignee,labels,updated"), self._h()))
 
     def search(self, jql: str, max_results: int = 20) -> list[dict]:
         r = self.http.json("GET", self._u(f"search?jql={urllib.parse.quote(jql)}&maxResults={int(max_results)}&fields=summary,status,assignee,labels,updated"), self._h())
         return [self._issue(x) for x in r.get("issues", [])]
 
     def add_comment(self, key: str, body: str, acting_human: str) -> dict:
-        r = self.http.json("POST", self._u(f"issue/{urllib.parse.quote(key)}/comment"), self._h(), {"body": f"{body}\n\n— on behalf of {acting_human}"})
+        r = self.http.json("POST", self._u(f"issue/{_key(key)}/comment"), self._h(), {"body": f"{body}\n\n— on behalf of {acting_human}"})
         return {"id": str(r.get("id")), "key": key}
 
     def create_issue(self, project: str, summary: str, description: str, labels: list, acting_human: str) -> dict:

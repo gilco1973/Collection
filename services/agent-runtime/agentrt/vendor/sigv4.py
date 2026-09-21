@@ -5,7 +5,7 @@ in that order. No SDK: hmac + hashlib. The signing steps follow the published al
 the canonical request against the AWS documentation's worked example.
 """
 from __future__ import annotations
-import datetime as _dt, hashlib, hmac, json, os, urllib.parse, urllib.request
+import datetime as _dt, hashlib, hmac, json, os, time, urllib.parse, urllib.request
 from dataclasses import dataclass
 
 
@@ -87,11 +87,41 @@ def sign_request(creds: Credentials, method: str, url: str, region: str, service
     return out
 
 
+class AwsError(Exception):
+    """AWS refused or failed: the error type and the status, never the message body (it can carry values)."""
+
+    def __init__(self, status: int, type_: str, target: str = ""):
+        super().__init__(f"{target or 'aws'}: {type_ or 'error'} (status {status})")
+        self.status, self.type, self.target = status, type_, target
+
+    @property
+    def retryable(self) -> bool:
+        return self.status >= 500 or self.status == 429 or any(t in self.type for t in ("Throttl", "TooManyRequests", "ServiceUnavailable", "InternalFailure"))
+
+    @property
+    def expired(self) -> bool:
+        return "ExpiredToken" in self.type or "InvalidSignature" in self.type
+
+
+def aws_error(status: int, data: bytes, target: str = "") -> AwsError | None:
+    """None for a success; the typed error for an error document or a failing status."""
+    if status < 300:
+        return None
+    type_ = ""
+    try:
+        doc = json.loads(data) if data else {}
+        type_ = str(doc.get("__type") or doc.get("code") or doc.get("Code") or "").split("#")[-1]
+    except ValueError:
+        pass
+    return AwsError(status, type_, target)
+
+
 class AwsJson:
     """A JSON-protocol AWS call (CloudWatch Logs, ECS, Secrets Manager) signed per request."""
 
-    def __init__(self, http, region: str, creds_loader=load_credentials):
+    def __init__(self, http, region: str, creds_loader=load_credentials, retries: int = 2, backoff_s: float = 0.5, sleep=time.sleep):
         self.http, self.region, self._creds_loader, self._creds = http, region, creds_loader, None
+        self.retries, self.backoff_s, self.sleep = retries, backoff_s, sleep
 
     def creds(self) -> Credentials:
         if self._creds is None or self._creds.expiring():
@@ -99,11 +129,20 @@ class AwsJson:
         return self._creds
 
     def call(self, service: str, endpoint_prefix: str, target: str, payload: dict, content_type: str = "application/x-amz-json-1.1") -> dict:
+        """One JSON-protocol call. AWS answers an error as a document with `__type` and a status: that is raised
+        as `AwsError` (type and status, never the payload); throttling and 5xx are retried with backoff."""
         url = f"https://{endpoint_prefix}.{self.region}.amazonaws.com/"
         body = json.dumps(payload).encode()
-        headers = sign_request(self.creds(), "POST", url, self.region, service, {"Content-Type": content_type, "X-Amz-Target": target}, body)
-        _, _, data = self.http.request("POST", url, headers, body)
-        return json.loads(data) if data else {}
+        for attempt in range(self.retries + 1):
+            headers = sign_request(self.creds(), "POST", url, self.region, service, {"Content-Type": content_type, "X-Amz-Target": target}, body)
+            status, _, data = self.http.request("POST", url, headers, body)
+            err = aws_error(status, data, target)
+            if err is None:
+                return json.loads(data) if data else {}
+            if not err.retryable or attempt == self.retries:
+                raise err
+            self.sleep(self.backoff_s * (2 ** attempt))
+        raise AssertionError("unreachable")
 
     def query(self, service: str, endpoint_prefix: str, params: dict) -> bytes:
         """The query protocol (CloudWatch metrics): form-encoded body, XML back."""

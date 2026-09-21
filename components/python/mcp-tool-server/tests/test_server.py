@@ -1,5 +1,5 @@
 """The protocol is the wire, the harness is the control: every rule below is one the transport cannot bypass."""
-import json, threading, unittest, urllib.request
+import json, threading, unittest, urllib.error, urllib.request
 from mcpserver import InProcessClient, protocol as P, serve_http
 import example as X
 
@@ -112,3 +112,46 @@ class OverHttp(unittest.TestCase):
         self.assertEqual(e.exception.data["http_status"], 403)
         self.assertEqual(e.exception.data["www_authenticate"], 'Bearer error="insufficient_scope", scope="tickets:write"')
         self.assertEqual(len(self.w.tickets.comments), 1)
+
+
+class HttpSessions(unittest.TestCase):
+    """Over the HTTP transport: a session belongs to the person admitted, is kept only once admitted, and expires idle."""
+
+    def setUp(self):
+        self.w = X.build(); self.httpd = serve_http(self.w.server, session_idle_s=0.5, max_body_bytes=2000)
+        self.base = f"http://127.0.0.1:{self.httpd.server_address[1]}"
+
+    def tearDown(self):
+        self.httpd.shutdown()
+
+    def post(self, body, token, sid=None):
+        h = {"Content-Type": "application/json"}
+        if token: h["Authorization"] = f"Bearer {token}"
+        if sid: h["Mcp-Session-Id"] = sid
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(self.base + "/mcp", data=body if isinstance(body, bytes) else json.dumps(body).encode(), headers=h, method="POST"), timeout=5)
+            return r.status, json.loads(r.read() or b"{}"), r.headers.get("Mcp-Session-Id")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}"), e.headers.get("Mcp-Session-Id")
+
+    INIT = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}}}
+    LIST = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
+
+    def test_the_session_is_bound_to_the_person_and_dies_idle(self):
+        dana, sam = self.w.token("u_dana", ("operator",)), self.w.token("u_sam", ("operator",))
+        s, body, sid = self.post(self.INIT, dana); self.assertEqual(s, 200); self.assertTrue(sid)
+        self.assertEqual(self.post(self.LIST, "not-a-token", sid)[0], 401)
+        self.assertEqual(self.post(self.LIST, sam, sid)[0], 401, "another person's bearer never drives this session")
+        self.assertEqual(self.post(self.LIST, dana, sid)[0], 200)
+        req = urllib.request.Request(self.base + "/mcp", headers={"Mcp-Session-Id": sid}, method="DELETE")
+        with self.assertRaises(urllib.error.HTTPError) as cm: urllib.request.urlopen(req, timeout=5)
+        self.assertEqual(cm.exception.code, 401, "ending a session needs its person's bearer")
+        import time; time.sleep(0.7)
+        self.assertEqual(self.post(self.LIST, dana, sid)[0], 404, "an idle session expires")
+
+    def test_a_refused_initialize_keeps_no_session_and_big_bodies_are_refused(self):
+        for _ in range(5):
+            s, body, sid = self.post(self.INIT, "junk-bearer"); self.assertEqual(s, 403)
+            self.assertEqual(self.post(self.LIST, "junk-bearer", sid)[0], 404, "nothing was kept for a refused initialize")
+        s, body, _ = self.post(json.dumps({**self.INIT, "params": {"pad": "x" * 3000}}).encode(), self.w.token("u_dana", ("operator",)))
+        self.assertEqual(s, 413)

@@ -5,7 +5,7 @@
     POST /mcp, GET /.well-known/...    the MCP server (the template's tools; W1 as elicitation; 403 on taint)
     POST /runs {ticket_key, service}   the agent's first read as one call: read, think, propose, park the write
     POST /runs/{session}/confirm {hash}   the person confirms the exact parked write; it runs once
-    GET  /runs/{session}               the run's record so far
+    GET  /runs/{session}               the run's record so far (the person whose run it is)
 Every route but /health and /ready carries the person's bearer. Logs are ids only, each line with the request id
 the caller sent (or one minted here) so a report and a log line meet. Runs are rate-limited per person.
 """
@@ -20,11 +20,11 @@ from mcpserver.transports import make_http_handler
 log = logging.getLogger("agentrt")
 
 
-def make_handler(w, resource: str):
-    Base = make_http_handler(w.server, resource=resource)
-    runs: collections.OrderedDict[str, dict] = collections.OrderedDict()   # the newest MAX_RUNS; the chain holds every run for good
+def make_handler(w, resource: str, max_runs: int = 2000):
+    Base = make_http_handler(w.server, resource=resource, max_body_bytes=w.settings.max_body_bytes)
+    runs: collections.OrderedDict[str, dict] = collections.OrderedDict()   # the newest max_runs; the record holds every run for good
     lock = threading.Lock()
-    MAX_RUNS = 2000
+    MAX_RUNS = max_runs
     limiter = RateLimiter(getattr(w.settings, "runs_per_minute", 0))
 
     def idp_ready():
@@ -35,7 +35,34 @@ def make_handler(w, resource: str):
         jwks._refresh()
         return None if jwks._keys else "the JWKS has no signing keys"
 
+    def owner_of(sid: str, token: str | None):
+        """The person the bearer resolves to, when it is the person the run belongs to; None otherwise."""
+        if not token: return None
+        try:
+            chain = w.harness.identity.resolve(token, w.harness.consumer)
+        except Exception:  # noqa: BLE001 - not a token of this platform
+            return None
+        j = w.harness.sessions.load_json(sid)
+        return chain.human.id if j and j.get("chain", {}).get("human") == chain.human.id else None
+
+    def rebuild(sid: str):
+        """A run evicted from memory but still pending in the record: what the person may still confirm."""
+        j = w.harness.sessions.load_json(sid)
+        p = (j or {}).get("pending")
+        if not p: return None
+        return {"session": sid, "ticket_key": j.get("ticket_key"), "first_read": None, "proposal": None, "comment": None,
+                "parked": {"hash": p["hash"], "tool": p["tool"], "args": dict(p["args"])}, "blocked": None, "tainted": bool((j.get("taint") or {}).get("tainted")), "posted": None}
+
     class Handler(Base):
+        def handle(self):
+            with self.server.inflight_lock:
+                self.server.inflight += 1
+            try:
+                super().handle()
+            finally:
+                with self.server.inflight_lock:
+                    self.server.inflight -= 1
+
         def parse_request(self):
             ok = super().parse_request()
             if ok: request_id(self.headers.get("X-Request-Id"))
@@ -77,8 +104,11 @@ def make_handler(w, resource: str):
                 return self._json(200 if ok else 503, {"status": "ready" if ok else "not ready", "checks": detail})
             if self.path.startswith("/runs/"):
                 sid = self.path.split("/")[2]
+                if not self._bearer(): return self._json(401, {"title": "Unauthenticated"}, {"WWW-Authenticate": "Bearer"})
+                if not owner_of(sid, self._bearer()): return self._json(404, {"title": "Not found"})  # not yours reads as not there
                 with lock:
                     r = runs.get(sid)
+                r = r or rebuild(sid)
                 return self._json(200, r) if r else self._json(404, {"title": "Not found"})
             return super().do_GET()
 
@@ -123,11 +153,15 @@ def make_handler(w, resource: str):
                 if self._limited(): return
                 sid = self.path.split("/")[2]; body = self._body()
                 if body is None: return
-                with lock:
-                    r = runs.get(sid)
-                if not r: return self._json(404, {"title": "Not found"})
                 token = self._bearer()
                 if not token: return self._json(401, {"title": "Unauthenticated"}, {"WWW-Authenticate": "Bearer"})
+                with lock:
+                    r = runs.get(sid)
+                if not r:
+                    r = rebuild(sid)  # the record of truth outlives the in-memory map
+                    if r:
+                        with lock: runs[sid] = r
+                if not r: return self._json(404, {"title": "Not found"})
                 try:
                     s = w.harness.resume(sid, token)
                     if not r["parked"] or body.get("hash") != r["parked"]["hash"]:
@@ -146,7 +180,20 @@ def make_handler(w, resource: str):
     return Handler
 
 
-def serve(w, host: str, port: int, resource: str) -> ThreadingHTTPServer:
-    httpd = ThreadingHTTPServer((host, port), make_handler(w, resource))
+def serve(w, host: str, port: int, resource: str, max_runs: int = 2000) -> ThreadingHTTPServer:
+    httpd = ThreadingHTTPServer((host, port), make_handler(w, resource, max_runs))
     httpd.daemon_threads = True
+    httpd.inflight, httpd.inflight_lock = 0, threading.Lock()
     return httpd
+
+
+def drain(httpd, timeout_s: float = 25.0, sleep=time.sleep) -> bool:
+    """After `shutdown()`: waits for the requests still being handled (a run mid-flight finishes and is recorded);
+    True when none remain, False when the timeout passed first."""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        with httpd.inflight_lock:
+            if httpd.inflight == 0: return True
+        sleep(0.05)
+    with httpd.inflight_lock:
+        return httpd.inflight == 0

@@ -59,14 +59,12 @@ class RateLimiter:
             t = self.now()
             tokens, at = self._b.get(key, (self.capacity, t))
             tokens = min(self.capacity, tokens + (t - at) * self.rate)
-            if tokens >= cost:
-                self._b[key] = (tokens - cost, t)
-                return 0.0
-            self._b[key] = (tokens, t)
-            if len(self._b) > 10_000:  # forget idle keys rather than grow without bound
+            allowed = tokens >= cost
+            self._b[key] = (tokens - cost if allowed else tokens, t)
+            if len(self._b) > 10_000:  # forget idle keys rather than grow without bound, whichever way this one went
                 cutoff = t - 120
                 self._b = {k: v for k, v in self._b.items() if v[1] >= cutoff}
-            return max(1.0, (cost - tokens) / self.rate)
+            return 0.0 if allowed else max(1.0, (cost - tokens) / self.rate)
 
 
 def readiness(checks: dict) -> tuple[bool, dict]:

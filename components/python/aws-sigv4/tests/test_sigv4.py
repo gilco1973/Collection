@@ -54,3 +54,20 @@ class SigV4(unittest.TestCase):
         aws = sigv4.AwsJson(Http(), "us-east-1", creds_loader=lambda: next(loads))
         aws.call("secretsmanager", "secretsmanager", "x", {}); aws.call("secretsmanager", "secretsmanager", "x", {})
         self.assertEqual(aws.creds().access_key, "A2", "the expiring credentials were replaced on the next call")
+
+    def test_an_error_document_is_an_error_and_throttling_is_retried(self):
+        answers = iter([(400, b'{"__type":"ExpiredTokenException","message":"The security token included in the request is expired"}'),
+                        (429, b'{"__type":"ThrottlingException"}'), (200, b'{"SecretString":"v"}'),
+                        (500, b''), (500, b''), (500, b'')])
+        class Http:
+            def request(self, method, url, headers, body):
+                s, b = next(answers); return s, {}, b
+        slept = []
+        aws = sigv4.AwsJson(Http(), "us-east-1", creds_loader=lambda: sigv4.Credentials("A", "S"), retries=2, sleep=slept.append)
+        with self.assertRaises(sigv4.AwsError) as cm:
+            aws.call("secretsmanager", "secretsmanager", "secretsmanager.GetSecretValue", {"SecretId": "app/key"})
+        self.assertEqual((cm.exception.type, cm.exception.status, cm.exception.expired), ("ExpiredTokenException", 400, True)); self.assertNotIn("security token", str(cm.exception))
+        self.assertEqual(aws.call("secretsmanager", "secretsmanager", "secretsmanager.GetSecretValue", {"SecretId": "app/key"}), {"SecretString": "v"}); self.assertEqual(slept, [0.5])
+        with self.assertRaises(sigv4.AwsError) as cm:
+            aws.call("kms", "kms", "TrentService.Sign", {})
+        self.assertEqual((cm.exception.status, cm.exception.retryable), (500, True)); self.assertEqual(len(slept), 3)

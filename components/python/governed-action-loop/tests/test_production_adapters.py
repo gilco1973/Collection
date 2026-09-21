@@ -60,3 +60,30 @@ class KmsSigning(unittest.TestCase):
         other = signing.KmsKey(kms, "arn:aws:kms:us-east-1:000000000000:key/other")
         with self.assertRaises(signing.SigningError):
             signing.verify(signed, other)
+
+
+class BankTokensAsIssued(unittest.TestCase):
+    def setUp(self):
+        self.idp = JwksIdP(ISSUER, (AUD,), fetch, jwks_url=JWKS, roles_map={"GROUP_OPERATORS": "operator", "GROUP_APPROVERS": "approver"})
+        reg = AgentRegistry(); reg.register(Agent("agent:x", owner="t", road="R2", ladder="L2", channel="operator"))
+        self.lib = IdentityLibrary(self.idp, AuthorizerConfig(ISSUER, (AUD,)), reg)
+        now = int(time.time())
+        self.claims = {"iss": ISSUER, "aud": AUD, "sub": "oid-123", "name": "Dana R", "groups": ["GROUP_OPERATORS"], "exp": now + 300, "nbf": now - 10, "iat": now}
+
+    def test_a_token_naming_several_audiences_is_accepted_when_ours_is_among_them(self):
+        chain = self.lib.resolve(mint({**self.claims, "aud": [AUD, "api://other-app"]}), "agent:x")
+        self.assertEqual(chain.human.roles, ("operator",))
+        with self.assertRaises(IdentityError): self.lib.resolve(mint({**self.claims, "aud": ["api://other-app", "api://third"]}), "agent:x")
+
+    def test_roles_come_from_the_directory_groups_and_never_from_a_roles_claim(self):
+        chain = self.lib.resolve(mint({**self.claims, "groups": [], "roles": ["approver", "operator"]}), "agent:x")
+        self.assertEqual(chain.human.roles, ())
+
+    def test_references_are_single_use_and_forgotten_past_their_deadline(self):
+        chain = self.lib.resolve(mint(self.claims), "agent:x")
+        ref = self.lib.mint_reference(chain, "tickets", "run-1", ttl_s=300)
+        self.lib.redeem(ref, "tickets", "run-1")
+        with self.assertRaises(IdentityError): self.lib.redeem(ref, "tickets", "run-1")
+        for _ in range(300): self.lib.mint_reference(chain, "tickets", "run-2", ttl_s=-1)
+        self.lib.mint_reference(chain, "tickets", "run-3")
+        self.assertLess(len(self.lib._references), 300, "expired references are swept")

@@ -1,34 +1,181 @@
 {
   "family": "agent-incident-first-read",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
   "cpu": "512",
   "memory": "1024",
-  "runtimePlatform": {"operatingSystemFamily": "LINUX", "cpuArchitecture": "X86_64"},
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX",
+    "cpuArchitecture": "X86_64"
+  },
   "executionRoleArn": "arn:aws:iam::ACCOUNT:role/agent-runtime-execution",
   "taskRoleArn": "arn:aws:iam::ACCOUNT:role/agent-incident-first-read-task",
-  "volumes": [{"name": "agent-record", "efsVolumeConfiguration": {"fileSystemId": "fs-AGENTRECORD", "transitEncryption": "ENABLED", "authorizationConfig": {"accessPointId": "fsap-AGENTRECORD", "iam": "ENABLED"}}}],
-  "containerDefinitions": [{
-    "name": "agent",
-    "image": "ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/agent-runtime:GIT_SHA",
-    "essential": true,
-    "readonlyRootFilesystem": true,
-    "user": "10002",
-    "portMappings": [{"containerPort": 8081, "protocol": "tcp"}],
-    "mountPoints": [{"sourceVolume": "agent-record", "containerPath": "/var/agent"}],
-    "environment": [
-      {"name": "AGENT_ENV", "value": "production"}, {"name": "AGENT_NAME", "value": "incident-first-read-agent"}, {"name": "AGENT_SECRETS", "value": "aws"}, {"name": "AWS_REGION", "value": "us-east-1"},
-      {"name": "AGENT_PUBLIC_URL", "value": "https://agents.bank.example/incident-first-read/mcp"},
-      {"name": "AGENT_IDENTITY", "value": "oidc"}, {"name": "AGENT_IDP_ISSUER", "value": "https://idp.bank.example/TENANT_ID/v2.0"}, {"name": "AGENT_IDP_AUDIENCE", "value": "AGENT_CLIENT_ID"},
-      {"name": "AGENT_OPERATOR_GROUP_ID", "value": "GROUP_ID_OPERATORS"}, {"name": "AGENT_APPROVER_GROUP_ID", "value": "GROUP_ID_SERVICE_OWNERS"},
-      {"name": "AGENT_SIGNING", "value": "kms"}, {"name": "AGENT_KMS_KEY_ID", "value": "arn:aws:kms:us-east-1:ACCOUNT:key/KEY_ID"},
-      {"name": "AGENT_ENGINE", "value": "bedrock"}, {"name": "AGENT_BEDROCK_ENDPOINT", "value": "https://bedrock-runtime.us-east-1.amazonaws.com"}, {"name": "AGENT_BEDROCK_INFERENCE_PROFILE_ARN", "value": "arn:aws:bedrock:us-east-1:ACCOUNT:application-inference-profile/incident-first-read"},
-      {"name": "AGENT_TARGETS", "value": "tickets,deploys"}, {"name": "AGENT_JIRA_URL", "value": "https://jira.bank.example"}, {"name": "AGENT_JIRA_USER", "value": "SERVICE_ACCOUNT_EMAIL"},
-      {"name": "AGENT_DEPLOYS_URL", "value": "https://dev.azure.com/ORG"}, {"name": "AGENT_DEPLOYS_PROJECT", "value": "PROJECT"}, {"name": "AGENT_DEPLOYS_PIPELINES", "value": "checkout=PIPELINE_ID"},
-      {"name": "AGENT_AUDIT_EXPORT", "value": "s3://BUCKET/agents/"}, {"name": "AGENT_BUILD_SHA", "value": "GIT_SHA"}, {"name": "AGENT_LOG_LEVEL", "value": "INFO"}
-    ],
-    "logConfiguration": {"logDriver": "awslogs", "options": {"awslogs-group": "/ecs/agent-incident-first-read", "awslogs-region": "us-east-1", "awslogs-stream-prefix": "agent"}},
-    "healthCheck": {"command": ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8081/ready', timeout=2).status==200 else 1)\""], "interval": 30, "timeout": 5, "retries": 3, "startPeriod": 15},
-    "linuxParameters": {"initProcessEnabled": true, "capabilities": {"drop": ["ALL"]}}
-  }]
+  "volumes": [
+    {
+      "name": "agent-record",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-AGENTRECORD",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-AGENTRECORD",
+          "iam": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "scratch"
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "agent",
+      "image": "ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/agent-runtime:GIT_SHA",
+      "essential": true,
+      "readonlyRootFilesystem": true,
+      "user": "10002",
+      "portMappings": [
+        {
+          "containerPort": 8081,
+          "protocol": "tcp"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "agent-record",
+          "containerPath": "/var/agent"
+        },
+        {
+          "sourceVolume": "scratch",
+          "containerPath": "/tmp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "AGENT_ENV",
+          "value": "production"
+        },
+        {
+          "name": "AGENT_NAME",
+          "value": "incident-first-read-agent"
+        },
+        {
+          "name": "AGENT_SECRETS",
+          "value": "aws"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "us-east-1"
+        },
+        {
+          "name": "AGENT_PUBLIC_URL",
+          "value": "https://agents.bank.example/incident-first-read/mcp"
+        },
+        {
+          "name": "AGENT_IDENTITY",
+          "value": "oidc"
+        },
+        {
+          "name": "AGENT_IDP_ISSUER",
+          "value": "https://idp.bank.example/TENANT_ID/v2.0"
+        },
+        {
+          "name": "AGENT_IDP_AUDIENCE",
+          "value": "AGENT_CLIENT_ID"
+        },
+        {
+          "name": "AGENT_OPERATOR_GROUP_ID",
+          "value": "GROUP_ID_OPERATORS"
+        },
+        {
+          "name": "AGENT_APPROVER_GROUP_ID",
+          "value": "GROUP_ID_SERVICE_OWNERS"
+        },
+        {
+          "name": "AGENT_SIGNING",
+          "value": "kms"
+        },
+        {
+          "name": "AGENT_KMS_KEY_ID",
+          "value": "arn:aws:kms:us-east-1:ACCOUNT:key/KEY_ID"
+        },
+        {
+          "name": "AGENT_ENGINE",
+          "value": "bedrock"
+        },
+        {
+          "name": "AGENT_BEDROCK_ENDPOINT",
+          "value": "https://bedrock-runtime.us-east-1.amazonaws.com"
+        },
+        {
+          "name": "AGENT_BEDROCK_INFERENCE_PROFILE_ARN",
+          "value": "arn:aws:bedrock:us-east-1:ACCOUNT:application-inference-profile/incident-first-read"
+        },
+        {
+          "name": "AGENT_TARGETS",
+          "value": "tickets,deploys"
+        },
+        {
+          "name": "AGENT_JIRA_URL",
+          "value": "https://jira.bank.example"
+        },
+        {
+          "name": "AGENT_JIRA_USER",
+          "value": "SERVICE_ACCOUNT_EMAIL"
+        },
+        {
+          "name": "AGENT_DEPLOYS_URL",
+          "value": "https://dev.azure.com/ORG"
+        },
+        {
+          "name": "AGENT_DEPLOYS_PROJECT",
+          "value": "PROJECT"
+        },
+        {
+          "name": "AGENT_DEPLOYS_PIPELINES",
+          "value": "checkout=PIPELINE_ID"
+        },
+        {
+          "name": "AGENT_AUDIT_EXPORT",
+          "value": "s3://BUCKET/agents/"
+        },
+        {
+          "name": "AGENT_BUILD_SHA",
+          "value": "GIT_SHA"
+        },
+        {
+          "name": "AGENT_LOG_LEVEL",
+          "value": "INFO"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/agent-incident-first-read",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "agent"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8081/ready', timeout=2).status==200 else 1)\""
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 15
+      },
+      "linuxParameters": {
+        "initProcessEnabled": true,
+        "capabilities": {
+          "drop": [
+            "ALL"
+          ]
+        }
+      },
+      "stopTimeout": 30
+    }
+  ]
 }

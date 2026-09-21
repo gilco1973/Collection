@@ -6,7 +6,7 @@ signing key (local or KMS), the think step (rules or Bedrock), and each target (
 the hooks and the record are the same objects in both.
 """
 from __future__ import annotations
-import json, os, sqlite3, time, urllib.request
+import json, os, sqlite3, time, urllib.request, threading
 from dataclasses import dataclass
 from . import vendor  # noqa: F401  (puts the vendored files on the path)
 from actionloop import catalog as C, policy as P, signing
@@ -30,6 +30,46 @@ RULES = {"name": "incident.first-read", "version": 1, "rules": [
     {"id": "p.w2.approved_by_another", "effect": "permit", "action": {"tier": "W2"}, "when": [["refs.approver", "exists"], ["refs.approver", "ne", "$principal.human"]]},
     {"id": "f.money", "effect": "forbid", "action": {"tier": "MONEY"}},
 ]}
+
+
+class _Rows:
+    """A cursor's rows, fetched under the connection's lock so no other thread interleaves with the read."""
+
+    def __init__(self, cur):
+        self.rows, self.lastrowid, self.rowcount, self.description = cur.fetchall(), cur.lastrowid, cur.rowcount, cur.description
+
+    def fetchone(self): return self.rows[0] if self.rows else None
+    def fetchall(self): return list(self.rows)
+    def __iter__(self): return iter(self.rows)
+
+
+class SerialConnection(sqlite3.Connection):
+    """The record's one connection, shared by every handler thread and the export loop: the sqlite3 module does no
+    locking of its own with check_same_thread=False, so every statement and its rows go under one lock."""
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+        self._serial = threading.RLock()
+
+    def execute(self, *a, **kw):
+        with self._serial:
+            return _Rows(super().execute(*a, **kw))
+
+    def executemany(self, *a, **kw):
+        with self._serial:
+            return _Rows(super().executemany(*a, **kw))
+
+    def executescript(self, *a, **kw):
+        with self._serial:
+            return super().executescript(*a, **kw)
+
+    def commit(self):
+        with self._serial:
+            super().commit()
+
+    def rollback(self):
+        with self._serial:
+            super().rollback()
 
 
 class UrllibHttp:
@@ -81,7 +121,7 @@ def build(s, *, aws=None, fetch=None, http=None, model_complete=None) -> Wired:
     """`aws`, `fetch`, `http`, `model_complete` are injection points for tests; production takes the real ones."""
     s.require_valid()
     tpl = load_template(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "TEMPLATE.md"))
-    conn = sqlite3.connect(s.db_path, check_same_thread=False)
+    conn = sqlite3.connect(s.db_path, check_same_thread=False, factory=SerialConnection)  # one connection, one thread at a time
     http = http or __import__("httpclient").Http(timeout=15.0)
     aws_factory = lambda: aws or __import__("sigv4").AwsJson(UrllibHttp(15.0), s.bedrock_region or os.environ.get("AWS_REGION", ""))
     secrets = secrets_for(s, aws_factory)

@@ -42,3 +42,13 @@ class Handlers(unittest.TestCase):
         f.down = True
         with self.assertRaises(JiraError):
             h["get"]({"key": "K-1"}, {"audience": "tickets", "on_behalf_of": "u"})
+
+
+class Keys(unittest.TestCase):
+    def test_an_issue_key_is_one_path_segment(self):
+        http = Recording(); c = JiraClient(http, S(), "https://jira.example", "t", user="u")
+        for bad in ("INC-7/../../myself", "INC-7?x=1", "inc-7", "", "INC", "INC-7/transitions"):
+            with self.assertRaises(JiraError): c.get_issue(bad)
+            with self.assertRaises(JiraError): c.add_comment(bad, "hi", "u_dana")
+        self.assertEqual(http.calls, [])
+        c.get_issue("OPS_2-42"); self.assertTrue(http.calls[-1]["url"].startswith("https://jira.example/rest/api/2/issue/OPS_2-42?"))

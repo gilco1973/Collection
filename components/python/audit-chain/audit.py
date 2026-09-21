@@ -5,7 +5,7 @@ traceparent, session, trace and span ids), plus `prev` and `hash`. `verify()` wa
 writes JSON lines with the chain head as the evidence export for an operate report.
 """
 from __future__ import annotations
-import hashlib, json, sqlite3, time
+import hashlib, json, sqlite3, time, threading
 from dataclasses import dataclass
 
 
@@ -18,7 +18,7 @@ GENESIS = "sha256:" + "0" * 64
 
 class AuditChain:
     def __init__(self, conn: sqlite3.Connection):
-        self.conn = conn
+        self.conn = conn; self._lock = threading.RLock()
         conn.execute("""CREATE TABLE IF NOT EXISTS audit (
             seq INTEGER PRIMARY KEY AUTOINCREMENT, prev TEXT NOT NULL, hash TEXT NOT NULL, ts REAL NOT NULL,
             consumer TEXT, env TEXT, event TEXT, tool TEXT, tier TEXT, decision TEXT, deny_code TEXT,
@@ -26,22 +26,29 @@ class AuditChain:
         conn.commit()
 
     def head(self) -> str:
+        with self._lock:
+            return self._head()
+
+    def _head(self) -> str:
         row = self.conn.execute("SELECT hash FROM audit ORDER BY seq DESC LIMIT 1").fetchone()
         return row[0] if row else GENESIS
 
     def record(self, **fields) -> int:
-        """Append one record. Returns its seq. Everything not a column goes into the JSON body."""
-        prev = self.head()
-        body = {k: v for k, v in fields.items()}
-        body["ts"] = time.time()
-        body["prev"] = prev
-        h = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
-        cur = self.conn.execute(
-            "INSERT INTO audit(prev,hash,ts,consumer,env,event,tool,tier,decision,deny_code,body) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (prev, h, body["ts"], fields.get("consumer"), fields.get("env"), fields.get("event"), fields.get("tool"),
-             fields.get("tier"), fields.get("decision"), fields.get("deny_code"), json.dumps(body, sort_keys=True, default=str)))
-        self.conn.commit()
-        return cur.lastrowid
+        """Append one record. Returns its seq. Everything not a column goes into the JSON body. One writer at a
+        time: the head is read and the record inserted under the same lock, or two threads would chain the same
+        prev and break the record for good."""
+        with self._lock:
+            prev = self._head()
+            body = {k: v for k, v in fields.items()}
+            body["ts"] = time.time()
+            body["prev"] = prev
+            h = "sha256:" + hashlib.sha256(json.dumps(body, sort_keys=True, default=str).encode()).hexdigest()
+            cur = self.conn.execute(
+                "INSERT INTO audit(prev,hash,ts,consumer,env,event,tool,tier,decision,deny_code,body) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (prev, h, body["ts"], fields.get("consumer"), fields.get("env"), fields.get("event"), fields.get("tool"),
+                 fields.get("tier"), fields.get("decision"), fields.get("deny_code"), json.dumps(body, sort_keys=True, default=str)))
+            self.conn.commit()
+            return cur.lastrowid
 
     def verify(self) -> int:
         """Walk the chain; raise AuditError on the first broken link; return the number of records."""
@@ -65,8 +72,18 @@ class AuditChain:
         return out
 
     def export(self, path: str) -> dict:
-        n = self.verify()
+        """One read of the chain, verified in memory and written from that same read: the count, the head and the
+        lines agree even while other threads append."""
+        with self._lock:
+            rows = self.conn.execute("SELECT seq, prev, hash, body FROM audit ORDER BY seq").fetchall()
+        prev, n = GENESIS, 0
+        for seq, p, h, body in rows:
+            if p != prev:
+                raise AuditError(f"record {seq}: prev does not match the chain")
+            if "sha256:" + hashlib.sha256(body.encode()).hexdigest() != h:
+                raise AuditError(f"record {seq}: hash does not match its body")
+            prev, n = h, n + 1
         with open(path, "w", encoding="utf-8") as f:
-            for (body,) in self.conn.execute("SELECT body FROM audit ORDER BY seq"):
+            for _, _, _, body in rows:
                 f.write(body + "\n")
-        return {"records": n, "head": self.head(), "path": path, "signed": False, "note": "unsigned evidence export; anchor the head with a KMS signature in production"}
+        return {"records": n, "head": prev, "path": path, "signed": False, "note": "unsigned evidence export; anchor the head with a KMS signature in production"}

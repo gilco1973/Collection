@@ -69,9 +69,11 @@ class JwksIdP:
             raise IdentityError(str(e))
         except Exception as e:  # anything the verifier cannot read is not a token
             raise IdentityError(f"unreadable token ({type(e).__name__})")
+        # Roles come from the directory's groups through the map and from nowhere else: an app role the provider
+        # happens to name `operator` is not the operators' group.
         roles = [self.roles_map[g] for g in (claims.get("groups") or []) if g in self.roles_map]
         aud = claims.get("aud")
-        return {**claims, "aud": aud[0] if isinstance(aud, list) and len(aud) == 1 else aud, "roles": sorted(set(roles + list(claims.get("roles") or []))),
+        return {**claims, "aud": aud[0] if isinstance(aud, list) and len(aud) == 1 else aud, "roles": sorted(set(roles)),
                 "name": claims.get("name") or claims.get("preferred_username") or claims.get("sub")}
 
 
@@ -148,7 +150,8 @@ class IdentityLibrary:
         body = self.idp._check(token)
         if body["iss"] != self.authorizer.issuer:
             raise IdentityError(f"issuer {body['iss']} is not the company IdP")
-        if body["aud"] not in self.authorizer.client_ids:
+        auds = body["aud"] if isinstance(body["aud"], list) else [body["aud"]]  # a token may name several audiences
+        if not any(a in self.authorizer.client_ids for a in auds):
             raise IdentityError("audience is not a platform client id")
         links = self._links.get(body["sub"], {})
         human = Human(body["sub"], body.get("name", body["sub"]), tuple(body.get("roles", [])), links.get("jira_account_id"), links.get("ado_id"))
@@ -157,6 +160,9 @@ class IdentityLibrary:
     # ---- outbound: references, never tokens ----
     def mint_reference(self, chain: PrincipalChain, audience: str, run_id: str, ttl_s: int = 300) -> str:
         ref = "ref_" + uuid.uuid4().hex
+        now = time.time()
+        if len(self._references) > 256:  # references past their deadline are forgotten here, not kept for the life of the process
+            self._references = {k: v for k, v in self._references.items() if v["deadline"] >= now}
         self._references[ref] = {"audience": audience, "run_id": run_id, "human": chain.human.id, "jira": chain.human.jira_account_id, "ado": chain.human.ado_id, "agent": chain.agent.principal, "deadline": time.time() + ttl_s, "redeemed": 0}
         return ref
 
@@ -167,6 +173,8 @@ class IdentityLibrary:
         if r["audience"] != audience or r["run_id"] != run_id:
             raise IdentityError("reference bound to another audience or run")
         if r["deadline"] < time.time():
+            self._references.pop(ref, None)
             raise IdentityError("reference past its deadline")
         r["redeemed"] += 1
+        self._references.pop(ref, None)  # redeemed once, then gone
         return {"on_behalf_of": r["human"], "on_behalf_of_jira": r["jira"], "on_behalf_of_ado": r["ado"], "agent": r["agent"], "audience": audience}

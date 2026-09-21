@@ -80,7 +80,7 @@ class Settings:
                    idp_jwks_url=e("IDP_JWKS_URL", ""), identity_map=e("IDENTITY_MAP", d.identity_map), consumers_file=e("CONSUMERS_FILE", d.consumers_file),
                    collection_file=e("COLLECTION_FILE", d.collection_file), guide_file=e("GUIDE_FILE", d.guide_file), static_dir=e("STATIC_DIR", ""), kb_url=e("KB_URL", d.kb_url),
                    assistant=e("ASSISTANT", d.assistant), assistant_url=e("ASSISTANT_URL", ""), assistant_token_name=e("ASSISTANT_TOKEN_NAME", d.assistant_token_name),
-                   kb_search_url=e("KB_SEARCH_URL", ""), bedrock_region=e("BEDROCK_REGION", e("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
+                   kb_search_url=e("KB_SEARCH_URL", ""), bedrock_region=e("BEDROCK_REGION", os.environ.get("AWS_REGION", "") or ""), bedrock_endpoint=e("BEDROCK_ENDPOINT", ""),
                    bedrock_model_id=e("BEDROCK_MODEL_ID", ""), bedrock_inference_profile_arn=e("BEDROCK_INFERENCE_PROFILE_ARN", ""),
                    bedrock_max_output_tokens=num("BEDROCK_MAX_OUTPUT_TOKENS", d.bedrock_max_output_tokens), secrets=e("SECRETS", d.secrets),
                    ai_security_group=e("AI_SECURITY_GROUP", ""), web_oidc_authority=e("WEB_OIDC_AUTHORITY", ""), web_oidc_client_id=e("WEB_OIDC_CLIENT_ID", ""),
