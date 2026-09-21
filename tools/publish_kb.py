@@ -54,8 +54,11 @@ def with_block(text: str, section: str, block: str) -> str:
 def config_with_section(cfg: str, snippet: str) -> str:
     if re.search(r"^\s+- id: components\s*$", cfg, re.M):
         return cfg
-    i = cfg.index("\nfrontmatter:")
-    return cfg[:i].rstrip("\n") + "\n" + snippet.rstrip("\n") + "\n" + cfg[i:]
+    m = re.search(r"^frontmatter:", cfg, re.M)
+    if not m:
+        print("note: kb.config.yaml has no `frontmatter:` key; the components section goes at the end of the file")
+        return cfg.rstrip("\n") + "\n" + snippet.rstrip("\n") + "\n"
+    return cfg[: m.start()].rstrip("\n") + "\n" + snippet.rstrip("\n") + "\n" + cfg[m.start():]
 
 
 def plan(checkout: str) -> dict:

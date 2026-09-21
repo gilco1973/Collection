@@ -39,8 +39,10 @@ client your auth layer's `getAccessToken` and sign out in `onUnauthorized`. Swap
 
 ## Rules it enforces
 
-Never retries a mutation; never persists a token; never treats a failure body as markup; the request id in an error's
-`supportLine` is the server's when it echoed one.
+Never retries a mutation; never persists a token; never sends the bearer to another origin (an absolute URL off the
+API's origin, such as a `next` link taken from a response body, is refused with `CrossOriginError` before any request
+is made); never treats a failure body as markup; a 2xx with an empty body resolves to `undefined`; the request id in
+an error's `supportLine` is the server's when it echoed one.
 
 ## Where it came from
 

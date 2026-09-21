@@ -17,7 +17,7 @@ rather than re-recorded when the product changes.
 
 ## Inputs
 - A running instance of the product in a fake or sandbox mode, and a script that drives it through one scenario and
-  screenshots each step (`capture_shots.py` in the origin; write yours per product).
+  screenshots each step (`capture_shots.cjs` in the origin; write yours per product).
 - A slide plan in the shape of `example_slides.py`: id, kicker, title, bullets, shot file, narration.
 - The scripts in `components/skills/walkthrough-video/`: `deck.py`, `build_frames.cjs`, `build_narration.py`,
   `build_video.py`. Node with `playwright-core` and a Chromium; Python 3.11; ffmpeg (or `imageio-ffmpeg`).

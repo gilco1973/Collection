@@ -72,3 +72,45 @@ class JwksCache(unittest.TestCase):
         self.assertEqual(self.jwks.key("k1"), (self.n, self.e)); self.assertTrue(self.jwks.stale); self.assertEqual(self.jwks.last_error, "OSError")
         self.jwks._at -= 86_400; self.jwks._tried -= 61
         with self.assertRaises(OSError): self.jwks.key("k1")  # past the maximum age the failure is the answer
+
+
+class Strictness(unittest.TestCase):
+    def setUp(self):
+        self.n, self.e, self.d = keypair()
+        self.doc = {"keys": [{"kty": "RSA", "kid": "k1", "use": "sig", "n": J.b64url_encode(self.n.to_bytes((self.n.bit_length() + 7) // 8, "big")), "e": J.b64url_encode(self.e.to_bytes(3, "big"))}]}
+        self.docs = [self.doc]; self.fetches = 0
+        def fetch(url):
+            self.fetches += 1; return self.docs[-1]
+        self.jwks = J.Jwks(fetch, "https://issuer.example/jwks")
+        self.now = int(time.time())
+
+    def mint(self, payload, header_extra=None):
+        header = {"alg": "RS256", "kid": "k1", **(header_extra or {})}
+        h = J.b64url_encode(json.dumps(header).encode()); p = J.b64url_encode(json.dumps(payload).encode())
+        return h + "." + p + "." + J.b64url_encode(J.rsa_sign_pkcs1_sha256(self.n, self.d, (h + "." + p).encode()))
+
+    def test_crit_headers_and_non_numeric_times_are_refused(self):
+        good = {"iss": "i", "aud": "a", "exp": self.now + 60, "sub": "s"}
+        self.assertEqual(J.verify(self.mint(good), self.jwks, ("i",), ("a",))["sub"], "s")
+        for bad in ({**good, "exp": "soon"}, {**good, "exp": float("nan")}, {**good, "exp": True}, {**good, "nbf": "x"}):
+            with self.assertRaises(J.JwtError): J.verify(self.mint(bad), self.jwks, ("i",), ("a",))
+        with self.assertRaises(J.JwtError): J.verify(self.mint(good, {"crit": ["b64"]}), self.jwks, ("i",), ("a",))
+
+    def test_an_empty_or_malformed_jwks_never_replaces_the_keys_held(self):
+        self.jwks.key("k1")
+        self.docs.append({"keys": []}); self.jwks._at -= 3601; self.jwks._tried -= 61
+        self.assertEqual(self.jwks.key("k1"), (self.n, self.e), "stale keys still serve when the provider answers with nothing usable")
+        self.docs.append({"keys": [{"kty": "RSA", "n": "x", "e": "AQAB"}]}); self.jwks._at -= 3601; self.jwks._tried -= 61
+        self.assertEqual(self.jwks.key("k1"), (self.n, self.e)); self.assertEqual(self.jwks.last_error, "JwtError")
+
+    def test_a_refresh_in_progress_never_stalls_a_known_key(self):
+        import threading
+        self.jwks.key("k1")
+        gate = threading.Event()
+        def slow_fetch(url):
+            gate.wait(2.0); return self.doc
+        self.jwks.fetch = slow_fetch; self.jwks._tried -= 61
+        t = threading.Thread(target=lambda: self.assertRaises(J.JwtError, self.jwks.key, "invented")); t.start()
+        time.sleep(0.05); t0 = time.time(); self.jwks.key("k1"); took = time.time() - t0
+        gate.set(); t.join()
+        self.assertLess(took, 0.5, "a valid token is served from the cache while the stranger's refresh runs")

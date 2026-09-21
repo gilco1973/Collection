@@ -16,4 +16,4 @@ description: {{summary}}
 
 ## Output
 
-## Checks before you are done
+## Checks before finishing

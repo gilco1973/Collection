@@ -15,8 +15,7 @@ Before the first deployment; updated at every increment and after every incident
 is the engineer on duty for the service, at night, who has not read the code.
 
 ## Inputs
-- The health endpoint and what it returns; the gates and their configuration names; the kill-switch scopes; the
-  secrets and their rotation rules; the dependencies and what happens when each is lost; the increment mechanism.
+- The health endpoint and what it returns; the gates and their configuration names; the kill-switch scopes; the secrets and their rotation rules; the dependencies and what happens when each is lost; the increment mechanism.
 - `TEMPLATE.md` in `components/skills/runbook/`.
 
 ## Steps
@@ -24,8 +23,7 @@ is the engineer on duty for the service, at night, who has not read the code.
 2. **The gates.** How to add a person, how to add a team, and the fact that an empty gate refuses everyone.
 3. **Kill switches.** Scopes, the command, how fast a stop lands, and why clearing is a reviewed change.
 4. **Rotation.** Which secrets rotate without a restart, which need one, and what a rotation invalidates.
-5. **Degraded modes.** A table with one row per dependency: what happens when it is lost, what the person does. The
-   last row is the service itself: how the work continues without it and how it catches up when it returns.
+5. **Degraded modes.** A table with one row per dependency: what happens when it is lost, what the person does. The last row is the service itself: how the work continues without it and how it catches up when it returns.
 6. **Raising the increment.** The order, the gate for each step, and the fastest way to remove all write tools.
 7. **Evidence.** The commands that return a turn's trace and verify the record.
 

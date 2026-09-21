@@ -42,7 +42,8 @@ Copy `src/`. Rename the actions in `permits.ts` to yours (keep the set closed). 
 ## Rules it enforces
 
 Tokens never touch storage; the principal is never derived from token claims; `permits` grants nothing to an
-undefined principal; opening a consumer is by entitlement, not role.
+undefined principal; opening a consumer is by entitlement, not role; a sign-in whose redirect fails leaves the
+snapshot in `error` with the message, never stuck on `signing-in`.
 
 ## Where it came from
 

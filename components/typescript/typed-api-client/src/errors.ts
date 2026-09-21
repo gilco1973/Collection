@@ -46,6 +46,18 @@ export class NetworkError extends Error {
   }
 }
 
+/** The client refused to send the request: its URL is on another origin than the API, and the bearer never goes there. */
+export class CrossOriginError extends Error {
+  readonly url: string;
+  readonly expectedOrigin: string;
+  constructor(url: string, expectedOrigin: string) {
+    super(`Refused to call ${url}: the API client only talks to ${expectedOrigin}.`);
+    this.name = "CrossOriginError";
+    this.url = url;
+    this.expectedOrigin = expectedOrigin;
+  }
+}
+
 export class UnauthorizedError extends ApiError {
   constructor(problem?: Problem, requestId?: string) {
     super("Your session has ended. Sign in again to continue.", 401, problem, requestId);

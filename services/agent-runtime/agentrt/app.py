@@ -28,12 +28,14 @@ def make_handler(w, resource: str, max_runs: int = 2000):
     limiter = RateLimiter(getattr(w.settings, "runs_per_minute", 0))
 
     def idp_ready():
-        """The identity provider's keys are cached and fresh, or reachable now; the fake provider has none to fetch."""
+        """The identity provider's keys are held and usable; a stale cache is refreshed at most once a minute (an
+        anonymous readiness probe never becomes a fetch per call), and keys within their maximum age keep the task
+        ready through a provider blip. The fake provider has none to fetch."""
         jwks = getattr(w.idp, "jwks", None)
         if jwks is None: return None
-        if jwks._keys and time.time() - jwks._at < jwks.ttl: return None
-        jwks._refresh()
-        return None if jwks._keys else "the JWKS has no signing keys"
+        jwks.refresh_if_due()
+        if jwks.usable: return None
+        return f"the identity provider's keys are unavailable ({jwks.last_error or 'no keys'})"
 
     def owner_of(sid: str, token: str | None):
         """The person the bearer resolves to, when it is the person the run belongs to; None otherwise."""

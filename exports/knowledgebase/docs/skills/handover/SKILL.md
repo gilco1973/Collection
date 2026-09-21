@@ -21,17 +21,12 @@ author changes. A handover is versioned; a new version adds a row to the history
 
 ## Steps
 1. **Header.** Date, author, branch, folder, the specification version it was built to, what it depends on.
-2. **What this is.** One paragraph a newcomer can read first, then the commands that run it and the numbers from the
-   last run on this machine.
+2. **What this is.** One paragraph a newcomer can read first, then the commands that run it and the numbers from the last run on this machine.
 3. **Since the last handover.** A table: change, where, commit.
-4. **Tickets completed, in the self-contained sense.** One table per epic: ticket, done here (the code and tests that
-   exist), remains on the company's account (the step that closes the ticket). "Done here" never claims an
-   account-bound step.
-5. **Decisions taken while building.** Each with its reversal path, so the next revision of the specification can
-   accept or undo it.
+4. **Tickets completed, in the self-contained sense.** One table per epic: ticket, done here (the code and tests that exist), remains on the company's account (the step that closes the ticket). "Done here" never claims an account-bound step.
+5. **Decisions taken while building.** Each with its reversal path, so the next revision of the specification can accept or undo it.
 6. **Layout.** The folder tree with one line per directory.
-7. **What it does not do.** Honest and specific: what was never exercised, what is a heuristic, what was verified by
-   proxy.
+7. **What it does not do.** Honest and specific: what was never exercised, what is a heuristic, what was verified by proxy.
 8. **Next steps.** The first ticket to pick up and the path to staging.
 
 ## Tools

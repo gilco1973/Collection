@@ -16,21 +16,14 @@ Jira with owners, points, dependencies and a critical path. Also when the specif
 rebuild, re-import. Not for a backlog that lives only in Jira with no specification behind it.
 
 ## Inputs
-- The specification's increments (phases), owners (role codes), epics and tickets with acceptance criteria and
-  references. Internal tier; no customer data belongs in a ticket.
-- `build_backlog.py` and a plan file in the shape of `example_plan.py` (in the collection under
-  `components/skills/use-case-to-backlog/`).
+- The specification's increments (phases), owners (role codes), epics and tickets with acceptance criteria and references. Internal tier; no customer data belongs in a ticket.
+- `build_backlog.py` and a plan file in the shape of `example_plan.py` (in the collection under `components/skills/use-case-to-backlog/`).
 
 ## Steps
-1. Copy `example_plan.py` next to the specification and fill `PHASES`, `OWNERS`, `EPICS` and one `t(...)` per ticket:
-   key, type, epic, phase, weeks, owner code, points, priority, dependencies, summary, description, acceptance
-   criteria as a list, references. Keys are placeholders (`PROJECT-n`) until the Jira project exists.
+1. Copy `example_plan.py` next to the specification and fill `PHASES`, `OWNERS`, `EPICS` and one `t(...)` per ticket: key, type, epic, phase, weeks, owner code, points, priority, dependencies, summary, description, acceptance criteria as a list, references. Keys are placeholders (`PROJECT-n`) until the Jira project exists.
 2. Every ticket names its owner role and at least one acceptance criterion that a demonstration can show.
-3. Run `python3 build_backlog.py plan.py jira/`. It writes one file per epic and per ticket, `README.md` with the
-   totals, the by-phase table, all tickets, the critical path (the longest dependency chain by points) and the owner
-   codes, and `jira-import.csv` for Jira's importer (epics first, tickets with `Epic Link` and `Blocked by`).
-4. Read the critical path. If it does not match the specification's intended order, the dependencies are wrong; fix
-   the plan, not the output.
+3. Run `python3 build_backlog.py plan.py jira/`. It writes one file per epic and per ticket, `README.md` with the totals, the by-phase table, all tickets, the critical path (the longest dependency chain by points) and the owner codes, and `jira-import.csv` for Jira's importer (epics first, tickets with `Epic Link` and `Blocked by`).
+4. Read the critical path. If it does not match the specification's intended order, the dependencies are wrong; fix the plan, not the output.
 5. Commit the plan and the generated folder together; the specification's plan section renders from the same file.
 
 ## Tools

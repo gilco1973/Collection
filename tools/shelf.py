@@ -4,7 +4,7 @@
 "Shelf" and not "catalog": in the platform specification a catalog is a consumer's signed tool catalog (§4.12); the
 components index is the shelf, so champions learn one meaning.
 
-    python3 tools/shelf.py --check          # manifests valid, vendored files identical, every export current (CI)
+    python3 tools/shelf.py --check          # manifests valid, vendored files identical, every export current, KB pages within the product's rules (CI)
     python3 tools/shelf.py --write          # regenerate SHELF.md, the hub's collection.ts and the knowledge-base pages
     python3 tools/shelf.py --test           # run every component's test command (add --only python|typescript|skills)
     python3 tools/shelf.py --list           # one line per component
@@ -55,8 +55,10 @@ CATEGORIES = {
 KINDS = tuple(CATEGORIES)
 LANGUAGES = ("python", "typescript", "markdown", "mixed")
 STATUSES = ("ready", "draft", "deprecated")
-REQUIRED = ("name", "category", "language", "summary", "status", "source", "owner", "tags", "test", "spec", "version", "signoff", "walkthrough", "example")
+REQUIRED = ("name", "category", "language", "summary", "status", "source", "owner", "tags", "test", "spec", "version", "signoff", "walkthrough", "example", "requires")
 SIGNOFF_ROLES = ("owner", "ai_security")
+# The heading every skill keeps its checklist under; CONTRIBUTING.md rule 6 and components/_template/SKILL.md say the same.
+SKILL_CHECKS_HEADING = "## Checks before finishing"
 KIND_LABEL = {k: v["label"] for k, v in CATEGORIES.items()}
 
 
@@ -101,10 +103,14 @@ def validate(m: dict) -> list[str]:
     if m["language"] not in LANGUAGES: p.append(f"language must be one of {LANGUAGES}")
     if m["status"] not in STATUSES: p.append(f"status must be one of {STATUSES}")
     if not isinstance(m["tags"], list) or not m["tags"]: p.append("tags must be a non-empty list")
+    if not isinstance(m["requires"], list) or not all(isinstance(x, str) and x.strip() for x in m["requires"]):
+        p.append("requires must be a list of dependency names (empty when the standard library is enough)")
     if not isinstance(m["source"], dict) or "project" not in m["source"]: p.append("source must be an object with at least `project`")
     if len(m["summary"]) > 160: p.append("summary is longer than 160 characters")
     if not os.path.exists(os.path.join(m["_dir"], "README.md")): p.append("README.md is missing")
     if m["category"] == "skill" and not os.path.exists(os.path.join(m["_dir"], "SKILL.md")): p.append("a skill needs SKILL.md")
+    elif m["category"] == "skill" and f"\n{SKILL_CHECKS_HEADING}\n" not in "\n" + open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read().replace("\r\n", "\n") + "\n":
+        p.append(f'SKILL.md needs its checklist under "{SKILL_CHECKS_HEADING}" (CONTRIBUTING.md, rule 6)')
     if m["category"] == "agent":
         ag = m.get("agent")
         if not isinstance(ag, dict) or not ag.get("template") or not isinstance(ag.get("tools"), list) or not ag.get("tools") or not ag.get("harness"):
@@ -350,7 +356,7 @@ def hub_detail(m: dict, listing: dict) -> dict:
     return {**listing, "crumbs": ["Discover", HUB_CRUMB[listing["kind"]], listing["name"]], "youActAt": "L1", "ladderMax": "L1",
             "headerChips": [{"text": "road R1", "kind": "line"}, {"text": m["language"], "kind": "mono"}, {"text": f"{m['category']} · {m['status']}", "kind": "ok" if m["status"] == "ready" else "warn"},
                             {"text": "spec §" + ", §".join(m["spec"]["sections"]), "kind": "accent"}] + [{"text": t, "kind": "line"} for t in m["tags"]],
-            "tiles": parts + [{"label": "Language", "value": m["language"], "note": "standard library only" if m["language"] == "python" and not m["requires"] else ", ".join(m["requires"]) or "no runtime dependency"},
+            "tiles": parts + [{"label": "Language", "value": m["language"], "note": "standard library only" if m["language"] == "python" and not m.get("requires") else ", ".join(m.get("requires") or []) or "no runtime dependency"},
                       {"label": "Status", "value": m["status"], "note": f"snapshot {m['source'].get('snapshot', '')}"},
                       {"label": "Pairs with", "value": str(len(m.get("pairs_with", []))), "note": ", ".join(m.get("pairs_with", [])) or "stands alone"}],
             "does": does,
@@ -400,9 +406,39 @@ def _plain(text: str) -> str:
     return re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
 
 
+_LIST_ITEM = re.compile(r"^\s*([-*+]|\d+[.)])\s+")
+_BLOCK_START = re.compile(r"^\s*(\||#|>|```|~~~)")
+
+
+def kb_one_line_lists(text: str) -> str:
+    """Every list item on one line, as the knowledge base requires: a wrapped item's continuation lines (indented, or
+    lazy in the CommonMark sense) are joined onto the item with one space. Code fences are left alone; a blank line,
+    a heading, a table, a quote or the next item ends the item."""
+    out: list[str] = []; in_code = False; in_item = False
+    for line in text.splitlines():
+        if line.strip().startswith(("```", "~~~")):
+            in_code = not in_code; in_item = False; out.append(line); continue
+        if in_code:
+            out.append(line); continue
+        if _LIST_ITEM.match(line):
+            in_item = True; out.append(line); continue
+        if in_item and line.strip() and not _BLOCK_START.match(line):
+            out[-1] = out[-1].rstrip() + " " + line.strip(); continue
+        in_item = False; out.append(line)
+    return "\n".join(out) + ("\n" if text.endswith("\n") else "")
+
+
+def skill_owner(m: dict) -> str:
+    """The owner a skill's SKILL.md frontmatter names; the category's default only when it names none."""
+    text = open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read()
+    fm = re.match(r"^---\n(.*?)\n---", text, re.S)
+    o = re.search(r"^owner:\s*(\S.*?)\s*$", fm.group(1), re.M) if fm else None
+    return o.group(1).strip("'\"") if o else KB_OWNER["skill"]
+
+
 def render_kb_component(m: dict) -> str:
     readme = open(os.path.join(m["_dir"], "README.md"), encoding="utf-8").read()
-    body = _plain(readme).replace("\n# ", "\n# ", 1)
+    body = kb_one_line_lists(_plain(readme))
     fm = (f"---\ntitle: {json.dumps(title_of(m))}\nowner: {KB_OWNER[m['category']]}\nstatus: {'active' if m['status'] == 'ready' else ('deprecated' if m['status'] == 'deprecated' else 'draft')}\n"
           f"reviewed: '{m['source'].get('snapshot') or '2026-09-20'}'\ntags: [{', '.join(m['tags'])}]\naudience: [engineer]\n---\n")
     note = (f"\n> A component of the collection: `{m['_rel']}/` in the repository (category {m['category']}, {m['language']}, status {m['status']}). "
@@ -457,7 +493,7 @@ one command, no hidden dependency, no secret. Open a pull request; the shelf too
 
 
 def kb_skill_rows(ms: list[dict]) -> str:
-    return "\n".join(f"| [{m['name']}]({m['name']}/SKILL.md) | {m['summary']} | {KB_OWNER['skill']} |" for m in ms if m["category"] == "skill")
+    return "\n".join(f"| [{m['name']}]({m['name']}/SKILL.md) | {m['summary']} | {skill_owner(m)} |" for m in ms if m["category"] == "skill")
 
 
 def kb_outputs(ms: list[dict]) -> dict:
@@ -469,10 +505,62 @@ def kb_outputs(ms: list[dict]) -> dict:
                                                 "its skills README gains. Apply with `python3 tools/publish_kb.py <checkout>`.\n"}
     for m in ms:
         if m["category"] == "skill":
-            out[os.path.join(docs, "skills", m["name"], "SKILL.md")] = open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read()
+            out[os.path.join(docs, "skills", m["name"], "SKILL.md")] = kb_one_line_lists(open(os.path.join(m["_dir"], "SKILL.md"), encoding="utf-8").read())
         else:
             out[os.path.join(docs, "components", f"{m['name']}.md")] = render_kb_component(m)
     return out
+
+
+KB_FRONTMATTER_KEYS = ("owner", "status", "reviewed", "tags", "audience")
+KB_MAX_LINES = 200
+
+
+def kb_page_problems(path_in_docs: str, text: str) -> list[str]:
+    """What the knowledge base's own check would refuse in one page: the frontmatter keys, tags outside the taxonomy,
+    more than 200 lines, a link that leaves docs/ (a scheme, a site-absolute path, or a relative path above docs/),
+    a list item wrapped over several lines. `path_in_docs` is the page's path relative to docs/, for resolving links."""
+    p: list[str] = []; lines = text.splitlines()
+    if len(lines) > KB_MAX_LINES: p.append(f"{len(lines)} lines; the knowledge base allows {KB_MAX_LINES}")
+    fm = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    if not fm: return p + ["no frontmatter (owner, status, reviewed, tags, audience)"]
+    for k in KB_FRONTMATTER_KEYS:
+        if not re.search(rf"^{k}:\s*\S", fm.group(1), re.M): p.append(f"frontmatter lacks `{k}`")
+    t = re.search(r"^tags:\s*\[(.*)\]\s*$", fm.group(1), re.M)
+    if t:
+        for tag in [x.strip().strip("'\"") for x in t.group(1).split(",") if x.strip()]:
+            if kb_taxonomy() and tag not in kb_taxonomy(): p.append(f"tag `{tag}` is not in the knowledge base's taxonomy")
+    elif re.search(r"^tags:", fm.group(1), re.M): p.append("frontmatter tags must be an inline list [a, b]")
+    body_from = text[:fm.end()].count("\n"); in_code = False; in_item = False
+    for i, line in enumerate(lines, 1):
+        if i <= body_from: continue
+        if line.strip().startswith(("```", "~~~")): in_code = not in_code; in_item = False; continue
+        if in_code: continue
+        for link in re.finditer(r"(?<!!)\[[^\]]*\]\(([^)\s]+)[^)]*\)", line):
+            href = link.group(1)
+            if href.startswith("#"): continue
+            if re.match(r"^[a-z][a-z0-9+.-]*:", href, re.I) or href.startswith("/"):
+                p.append(f"line {i}: link leaves docs/: {href}"); continue
+            target = os.path.normpath(os.path.join(os.path.dirname(path_in_docs), href.split("#")[0])).replace(os.sep, "/")
+            if target == ".." or target.startswith("../"): p.append(f"line {i}: link leaves docs/: {href}")
+        if _LIST_ITEM.match(line): in_item = True; continue
+        if in_item and line.strip() and not _BLOCK_START.match(line): p.append(f"line {i}: list item continues on the next line")
+        else: in_item = False
+    return p
+
+
+def kb_problems(ms: list[dict]) -> list[str]:
+    """Every page the Collection publishes to the knowledge base, authored (content/) or generated (exports/, as
+    --write would write it), against kb_page_problems."""
+    pages: dict[str, tuple[str, str]] = {}
+    authored = os.path.join(ROOT, "content", "knowledgebase", "docs")
+    for dirpath, _, files in os.walk(authored):
+        for f in sorted(files):
+            if f.endswith(".md"):
+                path = os.path.join(dirpath, f); pages[path] = (os.path.relpath(path, authored), open(path, encoding="utf-8").read())
+    generated = os.path.join(KB_EXPORT, "docs")
+    for path, content in kb_outputs(ms).items():
+        if path.startswith(generated + os.sep) and path.endswith(".md"): pages[path] = (os.path.relpath(path, generated), content)
+    return [f"{rel(path)}: {problem}" for path in sorted(pages) for problem in kb_page_problems(*pages[path])]
 
 
 def render_hub_api(ms: list[dict]) -> str:
@@ -604,7 +692,9 @@ def apply_signoffs(ms: list[dict], path: str) -> int:
     if not isinstance(entries, list):
         print("the file must be {\"signoffs\": [...]} as the hub exports it"); return 2
     by_name = {m["name"]: m for m in ms}; failures = 0; applied = 0
-    for e in entries:
+    for n, e in enumerate(entries):
+        if not isinstance(e, dict):
+            print(f"!! signoffs[{n}]: not an object ({type(e).__name__}); the hub exports {{component, role, by, date, version}}"); failures += 1; continue
         m = by_name.get(e.get("component", "")); tag = f"{e.get('component')} · {e.get('role')}"
         if not m:
             print(f"!! {tag}: unknown component"); failures += 1; continue
@@ -677,7 +767,10 @@ def main(argv=None) -> int:
         stale = [rel(p) for p, c in exports(ms).items() if not os.path.exists(p) or open(p, encoding="utf-8").read() != c]
         if stale:
             print("stale exports (run python3 tools/shelf.py --write):\n  " + "\n  ".join(stale)); return 1
-        print(f"ok: {len(ms)} manifests valid, vendored copies identical, every export current")
+        kb = kb_problems(ms)
+        if kb:
+            print("knowledge-base pages the product's check would refuse:\n  " + "\n  ".join(kb)); return 1
+        print(f"ok: {len(ms)} manifests valid, vendored copies identical, every export current, knowledge-base pages within the product's rules")
     if a.test:
         f = run_tests(ms, a.only)
         print(f"{'FAILED' if f else 'ok'}: {f} component test suite(s) failed" if f else "ok: every component test suite passed")

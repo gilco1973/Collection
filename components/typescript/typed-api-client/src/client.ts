@@ -1,4 +1,4 @@
-import { errorFromResponse, isTransient, NetworkError, type Problem } from "./errors";
+import { CrossOriginError, errorFromResponse, isTransient, NetworkError, type Problem } from "./errors";
 
 /**
  * The one HTTP client every feature uses.
@@ -34,12 +34,22 @@ export interface ClientHooks {
 
 const IDEMPOTENT = new Set(["GET", "HEAD", "OPTIONS", "PUT", "DELETE"]);
 
-/** Absolute URL for the request: relative bases resolve against the page (or localhost under Node). */
+/** Absolute URL for the request: relative bases resolve against the page (or localhost under Node). Only a real
+ * `http(s)://` URL is taken as absolute; a relative path that merely starts with "http" joins the base like any other. */
 function absolute(base: string, path: string): string {
-  const joined = path.startsWith("http") ? path : `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
-  if (/^https?:/.test(joined)) return joined;
+  const joined = /^https?:\/\//i.test(path) ? path : `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
   const origin = typeof location !== "undefined" && location.origin && location.origin !== "null" ? location.origin : "http://localhost";
   return new URL(joined, origin).toString();
+}
+
+/** The request URL, refused when its origin is not the API's own: the bearer never travels to another host, so a
+ * `next` link or a problem's `instance` taken from a response body cannot carry the token away. */
+function sameOriginUrl(base: string, path: string): string {
+  const url = absolute(base, path);
+  const expected = new URL(absolute(base, "")).origin;
+  const actual = new URL(url).origin;
+  if (actual !== expected) throw new CrossOriginError(url, expected);
+  return url;
 }
 
 export function newId(): string {
@@ -78,7 +88,7 @@ export class ApiClient {
 
   /** A response left unparsed, for streaming bodies (SSE turn events). */
   async raw(path: string, opts: RequestOptions & { method: string; accept?: string }): Promise<Response> {
-    const url = absolute(this.base, path);
+    const url = sameOriginUrl(this.base, path);
     const requestId = newId();
     const headers: Record<string, string> = {
       Accept: opts.accept ?? "application/json",
@@ -116,7 +126,7 @@ export class ApiClient {
   }
 
   async request<T>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
-    const url = absolute(this.base, path);
+    const url = sameOriginUrl(this.base, path);
     const requestId = newId();
     const headers: Record<string, string> = {
       Accept: "application/json",
@@ -148,7 +158,9 @@ export class ApiClient {
       }
       if (res.ok) {
         if (res.status === 204) return undefined as T;
-        return (await res.json()) as T;
+        // A 200/201/202 may legitimately carry no body; only a non-empty one is parsed.
+        const text = await res.text();
+        return (text.trim() === "" ? undefined : JSON.parse(text)) as T;
       }
       let problem: Problem | undefined;
       const ct = res.headers.get("content-type") ?? "";

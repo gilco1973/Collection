@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ApiClient, type Transport } from "./client";
-import { ConflictError, NetworkError, ServerError, UnauthorizedError, ValidationError, errorFromResponse, isTransient } from "./errors";
+import { ConflictError, CrossOriginError, NetworkError, ServerError, UnauthorizedError, ValidationError, errorFromResponse, isTransient } from "./errors";
 
 const problem = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify({ status, ...body }), { status, headers: { "Content-Type": "application/problem+json", "X-Request-Id": "srv-1" } });
@@ -84,6 +84,51 @@ describe("ApiClient", () => {
   it("returns undefined for 204", async () => {
     const t: Transport = async () => new Response(null, { status: 204 });
     await expect(clientWith(t).post("/conversations/c/feedback", {})).resolves.toBeUndefined();
+  });
+
+  it("returns undefined for a 2xx with an empty body instead of a raw SyntaxError", async () => {
+    for (const status of [200, 201, 202]) {
+      const t: Transport = async () => new Response(null, { status, headers: { "Content-Type": "application/json" } });
+      await expect(clientWith(t).post("/briefs/b1/file", {})).resolves.toBeUndefined();
+    }
+    const t: Transport = async () => new Response("   ", { status: 200 });
+    await expect(clientWith(t).get("/ping")).resolves.toBeUndefined();
+  });
+
+  it("never sends the bearer to another origin: an absolute URL from server data is refused before any request", async () => {
+    const seen: Request[] = [];
+    const t: Transport = async (req) => {
+      seen.push(req);
+      return Response.json({});
+    };
+    const err = (await clientWith(t)
+      .get("https://attacker.example/collect")
+      .catch((e: unknown) => e)) as CrossOriginError;
+    expect(err).toBeInstanceOf(CrossOriginError);
+    expect(err.expectedOrigin).toBe("http://localhost");
+    await expect(clientWith(t).raw("HTTPS://attacker.example/stream", { method: "GET" })).rejects.toBeInstanceOf(CrossOriginError);
+    expect(seen).toHaveLength(0);
+  });
+
+  it("accepts an absolute URL on the API's own origin (a same-origin `next` link)", async () => {
+    const seen: Request[] = [];
+    const t: Transport = async (req) => {
+      seen.push(req);
+      return Response.json({ items: [] });
+    };
+    await clientWith(t).get("http://localhost/api/briefs?page=2");
+    expect(seen[0].url).toBe("http://localhost/api/briefs?page=2");
+    expect(seen[0].headers.get("authorization")).toBe("Bearer tok");
+  });
+
+  it("joins a relative path that merely starts with \"http\" onto the base", async () => {
+    const seen: Request[] = [];
+    const t: Transport = async (req) => {
+      seen.push(req);
+      return Response.json({});
+    };
+    await clientWith(t).get("http-probes");
+    expect(seen[0].url).toBe("http://localhost/api/http-probes");
   });
 });
 

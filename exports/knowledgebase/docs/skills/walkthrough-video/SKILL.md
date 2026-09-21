@@ -16,24 +16,18 @@ leadership review, an onboarding page. The screenshots must be the product's own
 rather than re-recorded when the product changes.
 
 ## Inputs
-- A running instance of the product in a fake or sandbox mode, and a script that drives it through one scenario and
-  screenshots each step (`capture_shots.py` in the origin; write yours per product).
+- A running instance of the product in a fake or sandbox mode, and a script that drives it through one scenario and screenshots each step (`capture_shots.cjs` in the origin; write yours per product).
 - A slide plan in the shape of `example_slides.py`: id, kicker, title, bullets, shot file, narration.
-- The scripts in `components/skills/walkthrough-video/`: `deck.py`, `build_frames.cjs`, `build_narration.py`,
-  `build_video.py`. Node with `playwright-core` and a Chromium; Python 3.11; ffmpeg (or `imageio-ffmpeg`).
-- Optional: an ElevenLabs key or Edge speech for a voice. Without either, `--provider captions` makes a silent,
-  captioned video timed at 2.6 words per second.
+- The scripts in `components/skills/walkthrough-video/`: `deck.py`, `build_frames.cjs`, `build_narration.py`, `build_video.py`. Node with `playwright-core` and a Chromium; Python 3.11; ffmpeg (or `imageio-ffmpeg`).
+- Optional: an ElevenLabs key or Edge speech for a voice. Without either, `--provider captions` makes a silent, captioned video timed at 2.6 words per second.
 
 ## Steps
 1. Capture the shots from the real product into `shots/` (one PNG per step; names referenced by the plan).
-2. Write the plan: one tuple per slide; the narration is the authoritative text, captions derive from it. Fifteen
-   slides is about five minutes.
+2. Write the plan: one tuple per slide; the narration is the authoritative text, captions derive from it. Fifteen slides is about five minutes.
 3. `python3 deck.py plan.py` writes `deck.html`, `narration/slideNN.txt` and `slides.json`.
 4. `node build_frames.cjs` renders each slide to `frames/slide-NN.png` at 2560×1440.
-5. `python3 build_narration.py [--provider elevenlabs|edge|captions] [slide numbers]` writes one audio file per slide
-   and `narration/durations.json`; pass slide numbers to regenerate only the changed ones.
-6. `python3 build_video.py` holds each frame for its narration, burns the captions, writes the MP4, a `.en.vtt` and
-   a no-captions copy under `out/`.
+5. `python3 build_narration.py [--provider elevenlabs|edge|captions] [slide numbers]` writes one audio file per slide and `narration/durations.json`; pass slide numbers to regenerate only the changed ones.
+6. `python3 build_video.py` holds each frame for its narration, burns the captions, writes the MP4, a `.en.vtt` and a no-captions copy under `out/`.
 7. Watch it once end to end before sharing; check every shot is the current build's.
 
 ## Tools

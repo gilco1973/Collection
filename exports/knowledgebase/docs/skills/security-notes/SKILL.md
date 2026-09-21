@@ -16,24 +16,15 @@ source of text the model reads) or its outputs widen (a new write tool, a new au
 Security signs; write it so a reviewer can verify each row against the code.
 
 ## Inputs
-- The service's tool catalog by tier, its rule bundle, the connectors and their credentials, the text sources the
-  model reads, the audiences it writes to. Internal tier.
+- The service's tool catalog by tier, its rule bundle, the connectors and their credentials, the text sources the model reads, the audiences it writes to. Internal tier.
 - `TEMPLATE.md` in `components/skills/security-notes/`.
 
 ## Steps
-1. **Threat model delta.** State what changes against the previous state in two sentences: which inputs are now
-   untrusted, which egress paths exist. Then one row per threat: the threat in plain words, the control that stops
-   it, and the file or function where the control lives. A control without a location is not a control.
-2. Cover at least: instruction injection through each text source; a confirmation replayed or clicked by someone
-   else; self-approval of a mitigation; a person outside the gate; an unauthenticated request; a credential held by
-   a target; free text toward a customer; PII reaching the model or a room; a resumed session under another
-   person; a restart losing state; malformed model output; the model attempting an action; budget exhaustion.
-3. **Data classes.** One row per class of data the service touches (metadata, free text, customer data, credentials,
-   the record) with examples and how each is handled (recorded, masked, never logged, by name only).
-4. **The corpus.** Name the command that runs the injection corpus in CI, the number of classes, the acceptance
-   criterion (zero unauthorized actions per release), and where new patterns get added.
-5. **Known limits.** What is a heuristic, what is interim (a local signing key before the key service), what waits
-   on a decision.
+1. **Threat model delta.** State what changes against the previous state in two sentences: which inputs are now untrusted, which egress paths exist. Then one row per threat: the threat in plain words, the control that stops it, and the file or function where the control lives. A control without a location is not a control.
+2. Cover at least: instruction injection through each text source; a confirmation replayed or clicked by someone else; self-approval of a mitigation; a person outside the gate; an unauthenticated request; a credential held by a target; free text toward a customer; PII reaching the model or a room; a resumed session under another person; a restart losing state; malformed model output; the model attempting an action; budget exhaustion.
+3. **Data classes.** One row per class of data the service touches (metadata, free text, customer data, credentials, the record) with examples and how each is handled (recorded, masked, never logged, by name only).
+4. **The corpus.** Name the command that runs the injection corpus in CI, the number of classes, the acceptance criterion (zero unauthorized actions per release), and where new patterns get added.
+5. **Known limits.** What is a heuristic, what is interim (a local signing key before the key service), what waits on a decision.
 
 ## Tools
 | Tool | Mutating | Notes |

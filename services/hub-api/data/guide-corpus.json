@@ -131,7 +131,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "t, the rules it enforces, where it came from, known limits.\n5. **Self-contained.** Python components use the standard library only unless `requires` says otherwise. A component\n   imports nothing outside its directory. When two components need the same file, one owns it and the other vendors\n   it (`vendored`), so a reader sees exactly what they copy. An agent vendors its harness and its tools.\n6. **Tests that run with one command.** Python: `python3 -m unittest discover -s tests -t .`. TypeScript:\n   `npm ci && npx vitest run`. Skills: a checklist in `SKILL.md` under \"Checks before you are done\". An agent has one\n   test per line of its template's `never`.\n7. **Fakes ship with the real thing.** An integration comes with an in-memory fake behind the same method surface,\n   so a consumer can test without an account.\n8. **No secrets, no real ids.** Placeholders are visibly placeholders. Credentials are names looked up at call time.\n9. **Provenance and the specification.** `source` names the project and snapshot; `spec` names the platform design\n   specification sections and requirement ids the component implements in interim form, and its replacement test;\n   the README's \"Where it came from\" names what was changed during extraction. When the origin evolves, update the\n   copy deliberately, never by re-vendoring blindly."
+   "text": "t, the rules it enforces, where it came from, known limits.\n5. **Self-contained.** Python components use the standard library only unless `requires` says otherwise. A component\n   imports nothing outside its directory. When two components need the same file, one owns it and the other vendors\n   it (`vendored`), so a reader sees exactly what they copy. An agent vendors its harness and its tools.\n6. **Tests that run with one command.** Python: `python3 -m unittest discover -s tests -t .`. TypeScript:\n   `npm ci && npx vitest run`. Skills: a checklist in `SKILL.md` under \"Checks before finishing\". An agent has one\n   test per line of its template's `never`.\n7. **Fakes ship with the real thing.** An integration comes with an in-memory fake behind the same method surface,\n   so a consumer can test without an account.\n8. **No secrets, no real ids.** Placeholders are visibly placeholders. Credentials are names looked up at call time.\n9. **Provenance and the specification.** `source` names the project and snapshot; `spec` names the platform design\n   specification sections and requirement ids the component implements in interim form, and its replacement test;\n   the README's \"Where it came from\" names what was changed during extraction. When the origin evolves, update the\n   copy deliberately, never by re-vendoring blindly."
   },
   {
    "id": "CONTRIBUTING.md#6",
@@ -2412,7 +2412,7 @@
     "engineer"
    ],
    "kind": "component",
-   "text": "Never retries a mutation; never persists a token; never treats a failure body as markup; the request id in an error's\n`supportLine` is the server's when it echoed one."
+   "text": "Never retries a mutation; never persists a token; never sends the bearer to another origin (an absolute URL off the\nAPI's origin, such as a `next` link taken from a response body, is refused with `CrossOriginError` before any request\nis made); never treats a failure body as markup; a 2xx with an empty body resolves to `undefined`; the request id in\nan error's `supportLine` is the server's when it echoed one."
   },
   {
    "id": "components/typescript/typed-api-client/README.md#5",
@@ -2973,7 +2973,7 @@
     "engineer"
    ],
    "kind": "component",
-   "text": "Tokens never touch storage; the principal is never derived from token claims; `permits` grants nothing to an\nundefined principal; opening a consumer is by entitlement, not role."
+   "text": "Tokens never touch storage; the principal is never derived from token claims; `permits` grants nothing to an\nundefined principal; opening a consumer is by entitlement, not role; a sign-in whose redirect fails leaves the\nsnapshot in `error` with the message, never stuck on `signing-in`."
   },
   {
    "id": "components/typescript/oidc-pkce-auth/README.md#5",

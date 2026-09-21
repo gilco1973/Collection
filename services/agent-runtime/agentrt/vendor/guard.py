@@ -12,7 +12,7 @@ Standard library only. The injection score is a marker heuristic: a floor, not t
 caller does with `tainted`.
 """
 from __future__ import annotations
-import html, re
+import html, re, unicodedata
 from dataclasses import dataclass, field
 
 THRESHOLD = 0.34
@@ -40,9 +40,17 @@ _COMMENT_LINE = re.compile(r"(?:^\s*#.*$|^\s*//.*$|/\*.*?\*/)", re.M)
 _STRING_LIT = re.compile(r'(?:"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')', re.M)
 
 
+def normalise(text: str) -> str:
+    """What the markers are matched against: compatibility-normalised (fullwidth letters become letters), with
+    format characters such as zero-width spaces removed, case-folded. A marker hidden by unicode is still a marker."""
+    t = unicodedata.normalize("NFKC", text or "")
+    return "".join(ch for ch in t if unicodedata.category(ch) != "Cf").casefold()
+
+
 def injection_score(text: str, markers: tuple = MARKERS, per: float = 2.0) -> float:
-    """Marker hits over `per`, capped at 1.0. Two hits reach the threshold."""
-    t = (text or "").lower()
+    """Marker hits over `per`, capped at 1.0: with the default `per`, two hits reach the threshold (0.34 needs one
+    hit at per=2.0: callers scoring a person's own question pass a larger `per`)."""
+    t = normalise(text)
     return min(1.0, sum(1 for m in markers if m in t) / per)
 
 

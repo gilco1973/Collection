@@ -55,15 +55,11 @@ Copy it and replace the fakes with your clients.
 
 Copy the `actionloop/` directory into your service and write your own `example.py`:
 
-1. Declare tools with `ToolDecl` (name them `target___tool`), build and sign the catalog. Every tool binds to a
-   recorded contract operation; a W1 tool must be reversible.
+1. Declare tools with `ToolDecl` (name them `target___tool`), build and sign the catalog. Every tool binds to a recorded contract operation; a W1 tool must be reversible.
 2. Write the bundle: who may read, who may confirm a W1, who may approve a W2 (never the requester).
-3. Register handlers on the gateway per target. A handler receives `(args, credential)` where the credential is a
-   redeemed reference; it fetches its own secret by name at call time (`secrets-by-name`).
+3. Register handlers on the gateway per target. A handler receives `(args, credential)` where the credential is a redeemed reference; it fetches its own secret by name at call time (`secrets-by-name`).
 4. Declare a result shape per tool: which fields reach the model, and which are identifiers kept verbatim.
-5. Admit a session with a token from your IdP (`identity.resolve`; pair with `rs256-jwt-verify` for real tokens),
-   call tools, handle `Stop`, render `session.pending` as the confirmation card, call `confirm` with the hash the
-   person saw.
+5. Admit a session with a token from your IdP (`identity.resolve`; pair with `rs256-jwt-verify` for real tokens), call tools, handle `Stop`, render `session.pending` as the confirmation card, call `confirm` with the hash the person saw.
 
 The model never calls `Harness.call` directly. Your think step (see `cited-llm-engine`) proposes; your command layer
 turns proposals into calls; the loop decides.

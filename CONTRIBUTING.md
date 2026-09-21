@@ -59,7 +59,7 @@ can call exactly what the template lists. `components/agents/incident-first-read
    imports nothing outside its directory. When two components need the same file, one owns it and the other vendors
    it (`vendored`), so a reader sees exactly what they copy. An agent vendors its harness and its tools.
 6. **Tests that run with one command.** Python: `python3 -m unittest discover -s tests -t .`. TypeScript:
-   `npm ci && npx vitest run`. Skills: a checklist in `SKILL.md` under "Checks before you are done". An agent has one
+   `npm ci && npx vitest run`. Skills: a checklist in `SKILL.md` under "Checks before finishing". An agent has one
    test per line of its template's `never`.
 7. **Fakes ship with the real thing.** An integration comes with an in-memory fake behind the same method surface,
    so a consumer can test without an account.

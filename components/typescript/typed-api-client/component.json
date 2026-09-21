@@ -1,6 +1,6 @@
 {
   "name": "typed-api-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "category": "tool",
   "language": "typescript",
   "summary": "One browser HTTP client: bearer, request id, traceparent, idempotency key, If-Match, problem+json to typed errors, one retry on idempotent calls; a mock server",

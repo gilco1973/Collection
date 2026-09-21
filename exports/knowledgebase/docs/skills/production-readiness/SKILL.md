@@ -19,14 +19,11 @@ with evidence, WRITTEN (exists, not yet applied), or OPEN with a named owner. It
 - `TEMPLATE.md` in `components/skills/production-readiness/`.
 
 ## Steps
-1. One row per area: functional per increment, security, identity, credentials, data, record, metrics,
-   resilience, delivery, packaging, deployment, CI, model risk, and anything the service adds.
-2. **Status** is one of DONE, WRITTEN, OPEN. DONE means tested and repeatable here; WRITTEN means the artefact exists
-   and has not been applied on an account; OPEN means an account-bound step remains.
+1. One row per area: functional per increment, security, identity, credentials, data, record, metrics, resilience, delivery, packaging, deployment, CI, model risk, and anything the service adds.
+2. **Status** is one of DONE, WRITTEN, OPEN. DONE means tested and repeatable here; WRITTEN means the artefact exists and has not been applied on an account; OPEN means an account-bound step remains.
 3. **Evidence** names the test, the command and the numbers from its last run. Paste numbers, never adjectives.
 4. **Open item** names the step and its owner (a role or a person), never "TBD".
-5. Close with a paragraph on what "production ready" means here: everything without an account is done, and each
-   OPEN item is a step with an owner, not a design gap. Say which increment ships first and how later ones are gated.
+5. Close with a paragraph on what "production ready" means here: everything without an account is done, and each OPEN item is a step with an owner, not a design gap. Say which increment ships first and how later ones are gated.
 
 ## Tools
 | Tool | Mutating | Notes |

@@ -100,7 +100,15 @@ export function AuthProvider({ deps, children }: { deps: AuthDeps; children: Rea
   const signIn = useCallback(
     async (opts?: { returnTo?: string; persona?: string }) => {
       setSnapshot((s) => ({ ...s, status: "signing-in" }));
-      const s = await client.signIn(opts);
+      let s: Awaited<ReturnType<AuthClient["signIn"]>>;
+      try {
+        s = await client.signIn(opts);
+      } catch (e) {
+        // A redirect that never leaves (unreachable discovery document, bad authority) must not leave the app on
+        // "Signing you in…" for ever: record the failure so the sign-in page can show it, then let the caller see it.
+        setSnapshot({ status: "error", error: (e as Error).message });
+        throw e;
+      }
       if (s) {
         setSnapshot(s);
         track("auth.signed_in", { mode: "mock" });

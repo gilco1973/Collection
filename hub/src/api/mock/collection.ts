@@ -354,7 +354,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -585,7 +585,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -3071,7 +3071,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -3254,7 +3254,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -4545,7 +4545,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -4748,7 +4748,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -7286,7 +7286,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "typed-api-client",
     "title": "Typed API client",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "tool",
     "language": "typescript",
     "owner": "gil.klainert",
@@ -7524,7 +7524,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "oidc-pkce-auth",
     "title": "OIDC pkce auth",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "integration",
     "language": "typescript",
     "owner": "gil.klainert",
