@@ -25,7 +25,10 @@ class Readiness(unittest.TestCase):
             return {"keys": [{"kty": "RSA", "kid": "k", "n": "AQAB", "e": "AQAB"}]}
         auth = OidcAuth("https://idp.example", "aud", "https://idp.example/keys", fetch, IdentityMap.load(os.path.join(SERVICE, "data", "identity-map.example.json")), "GROUP_SEC")
         ok, detail = readiness({"identity": auth.ready})
-        self.assertEqual((ok, detail["identity"]), (False, "OSError"))
+        self.assertEqual(ok, False); self.assertIn("OSError", detail["identity"])
+        ok, detail = readiness({"identity": auth.ready})
+        self.assertEqual((ok, len(calls)), (False, 1), "the readiness check refreshes through the verifier's throttle: not a fetch per call")
+        auth.jwks._tried -= 61   # the throttle window has passed
         ok, detail = readiness({"identity": auth.ready})
         self.assertEqual((ok, detail["identity"]), (True, "ok"))
         self.assertEqual(len(calls), 2)

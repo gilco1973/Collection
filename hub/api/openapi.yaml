@@ -260,16 +260,17 @@ paths:
       responses:
         "200": { description: Event stream, content: { text/event-stream: { schema: { type: string } } } }
         "403": { description: "The person's entitlement to this assistant was revoked (`entitlement.missing`); the same on GET, feedback and handoff", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
-        "409": { description: "The conversation has reached 200 turns (`conversation.full`); start a new one", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "409": { description: "The conversation has reached 200 turns (`conversation.full`; a turn adds two records, so the ceiling is never exceeded); start a new one. Or the assistant is still answering the previous message of this conversation (`conversation.busy`): one turn streams at a time, wait for it to finish", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "413": { description: The body is over the 64 KB ceiling for a turn, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations/{id}/feedback:
     post:
       tags: [conversations]
       summary: One answer to the one feedback question of a turn (PLT-TEL-10)
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [seq, answered], properties: { seq: { type: integer }, answered: { type: boolean } } } } } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [seq, answered], properties: { seq: { type: integer, minimum: 1, description: "The `seq` of the feedback view as the stream carried it: a view's position in the conversation, the same after a restart" }, answered: { type: boolean } } } } } }
       responses:
         "204": { description: Recorded }
+        "422": { description: "`seq` is not an integer, or names no stored view of this conversation (`validation`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations/{id}/handoff:
     post:
       tags: [conversations]
@@ -303,6 +304,7 @@ paths:
     post:
       tags: [shelf]
       summary: Record a sign-off; the owner by name (the manifest's owner is their handle, and with HUB_OWNER_DOMAIN only from that email domain), AI security by the ai.security role; every attestation required; one per component, role and version
+      description: "Two sign-offs on one component version are two people (separation of duties): the manifest's owner may not sign for AI security on their own component (403 `shelf.role`, and `youMaySign` leaves it out), and a person who recorded one role at this version is refused the other (409 `shelf.duties`). A role already recorded at this version is 409 `shelf.signed`; a component that is not ready is 409 `shelf.status`."
       parameters: [{ name: name, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [role, attest], properties: { role: { type: string, enum: [owner, ai_security] }, attest: { type: object, required: [testsGreen, exampleRun, walkthroughRead, rulesRead], additionalProperties: { type: boolean } }, usedIn: { type: string, maxLength: 200 }, note: { type: string, maxLength: 2000 } } } } } }
       responses:
@@ -315,7 +317,7 @@ components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
   parameters:
-    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: "Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. The key is claimed before the call runs: a repeat while the first call is still being answered is 409 idempotency.in_progress (wait, then repeat); a call that ends in a problem or a stream leaves nothing to replay and frees the key." }
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string }, description: The etag last seen; a mismatch is 409. }
   responses:
     Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }

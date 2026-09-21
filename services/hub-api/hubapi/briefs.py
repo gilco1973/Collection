@@ -123,17 +123,27 @@ def bump(etag: str) -> str:
     return 'W/"%d"' % n
 
 
+def _section(content, step: str) -> dict:
+    """A section of a draft as sent by the form: only an object counts; anything else is an empty section."""
+    v = content.get(step) if isinstance(content, dict) else None
+    return v if isinstance(v, dict) else {}
+
+
+def _text(section: dict, key: str, default: str) -> str:
+    return section[key] if isinstance(section.get(key), str) else default
+
+
 def estimate(base: dict, content: dict) -> dict:
-    tools = len(((content or {}).get("dataAndTools") or {}).get("tools") or []) or 3
-    need = ((content or {}).get("model") or {}).get("need", "workhorse")
-    factor = {"frontier": 2.4, "utility": 0.4, "none": 0}.get(need, 1)
-    classes = ((content or {}).get("dataAndTools") or {}).get("dataClasses") or []
+    d, m = _section(content, "dataAndTools"), _section(content, "model")
+    tools = (len(d["tools"]) if isinstance(d.get("tools"), list) else 0) or 3
+    factor = {"frontier": 2.4, "utility": 0.4, "none": 0}.get(_text(m, "need", "workhorse"), 1)
+    classes = d["dataClasses"] if isinstance(d.get("dataClasses"), list) else []
     return {**base, "modelSpendMonthly": round(70 * tools * factor), "reviewHours": 6 if "confidential" in classes else 3}
 
 
 def road(base: dict, content: dict) -> dict:
-    ceiling = ((content or {}).get("dataAndTools") or {}).get("tierCeiling", "R")
-    channel = ((content or {}).get("useCase") or {}).get("channel", "operator")
+    ceiling = _text(_section(content, "dataAndTools"), "tierCeiling", "R")
+    channel = _text(_section(content, "useCase"), "channel", "operator")
     if channel in ("customer", "partner"):
         return {**base, "road": "R3", "title": "Customer and partner assistant", "subtitle": "federated identity · entitlements · step-up", "selfService": False,
                 "note": "R3 opens in Phase 5. The platform lead confirms the brief and Compliance reviews the channel templates."}

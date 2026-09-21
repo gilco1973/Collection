@@ -116,6 +116,16 @@ class Store:
             row = self.conn.execute("SELECT status, ctype, body, route FROM idempotency WHERE principal = ? AND key = ?", (principal, key)).fetchone()
         return (row[0], row[1], row[2], row[3]) if row else None
 
+    def reserve(self, key: str, principal: str, route: str = "") -> bool:
+        """Claims a key before its call runs (status 0 marks the answer as pending); False when the key is already held."""
+        with self.lock:
+            return self.conn.execute("INSERT OR IGNORE INTO idempotency (principal, key, route, status, ctype, body, created) VALUES (?, ?, ?, 0, '', X'', ?)", (principal, key, route, time.time())).rowcount == 1
+
+    def forget(self, key: str, principal: str) -> None:
+        """Releases a reserved key whose call produced no answer to replay (a problem, a defect, a stream)."""
+        with self.lock:
+            self.conn.execute("DELETE FROM idempotency WHERE principal = ? AND key = ?", (principal, key))
+
     def remember(self, key: str, principal: str, status: int, ctype: str, body: bytes, route: str = "") -> None:
         with self.lock:
             self.conn.execute("INSERT OR REPLACE INTO idempotency (principal, key, route, status, ctype, body, created) VALUES (?, ?, ?, ?, ?, ?, ?)", (principal, key, route, status, ctype, body, time.time()))

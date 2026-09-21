@@ -106,8 +106,12 @@ class Settings:
         for name, path in (("IDENTITY_MAP", self.identity_map), ("CONSUMERS_FILE", self.consumers_file), ("COLLECTION_FILE", self.collection_file), ("GUIDE_FILE", self.guide_file)):
             if not os.path.isfile(path): p.append(f"{P}{name} does not exist"); continue
             try:
-                with open(path, encoding="utf-8") as f: json.load(f)
-            except (OSError, ValueError): p.append(f"{P}{name} is not readable JSON")
+                with open(path, encoding="utf-8") as f: doc = json.load(f)
+            except (OSError, ValueError): p.append(f"{P}{name} is not readable JSON"); continue
+            if name == "IDENTITY_MAP":   # the same check the mapping applies at load: a typo is named here, not a refusal per call
+                from .auth import IdentityMap, IdentityMapError
+                try: IdentityMap(doc)
+                except IdentityMapError as e: p.append(f"{P}IDENTITY_MAP is not well-formed: {e}")
         if self.secrets.startswith("file:") and not os.path.isfile(self.secrets[5:]): p.append(f"{P}SECRETS names a file that does not exist")
         if self.static_dir and not os.path.isdir(self.static_dir): p.append(f"{P}STATIC_DIR is not a directory")
         if self.auth == "oidc" and (not self.idp_issuer or not self.idp_audience): p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")

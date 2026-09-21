@@ -19,6 +19,7 @@ log = logging.getLogger("hubapi")
 ROUTE_BODY_LIMIT = 64 * 1024      # briefs, preferences and turns: a form or a message, never a megabyte
 MAX_TURNS = 200                   # turns (both sides) in one conversation; past it the person starts a new one
 MAX_USED_IN, MAX_NOTE = 200, 2000
+GONE = (BrokenPipeError, ConnectionResetError, TimeoutError, socket.timeout)   # the client is no longer there to read
 
 
 def _no_constant(name: str):
@@ -59,7 +60,7 @@ class HubApi:
         self.s, self.store, self.catalog, self.auth, self.assistant, self.guide = settings, store, catalog, auth, assistant, guide
         self.catalog.owner_domain = getattr(settings, "owner_domain", "") or ""   # the owner signs from the bank's own directory, never a look-alike domain
         self.routes: list[tuple[str, re.Pattern, list, callable, bool, int]] = []
-        self.seq_lock = threading.Lock(); self.seq = 100
+        self._busy: set[str] = set()   # conversations with a turn streaming (guarded by store.lock): a second turn at once is 409, never a lost update
         self.limiter = RateLimiter(getattr(settings, "rate_per_minute", 0))
         self._register()
 
@@ -67,11 +68,6 @@ class HubApi:
         keys: list[str] = []
         pattern = re.compile("^" + re.sub(r":(\w+)", lambda m: (keys.append(m.group(1)), "([^/]+)")[1], path) + "$")
         self.routes.append((method, pattern, keys, handler, anonymous, max_body))
-
-    def next_seq(self) -> int:
-        with self.seq_lock:
-            self.seq += 1
-            return self.seq
 
     # ---------------- dispatch ----------------
     def handle(self, method: str, path: str, headers, body: bytes):
@@ -97,12 +93,28 @@ class HubApi:
                 return self.problem(Problem(429, "Too many requests", "Slow down; the limit is per person and per minute.", "rate.limited"), {"Retry-After": str(int(wait))})
         key = headers.get("Idempotency-Key")
         route = f"{method} {path}"
+        reserved = False
         if key and principal:
-            hit = self.store.replay(key, principal.id)
-            if hit and hit[3] and hit[3] != route:   # a row migrated from before routes were recorded has route '': it still replays
-                return self.problem(Problem(422, "Key reused", "This Idempotency-Key was used for another call; a key belongs to one request.", "idempotency.reused"))
-            if hit:
-                return hit[0], {"Content-Type": hit[1], "Idempotent-Replayed": "true"}, hit[2]
+            with self.store.lock:   # the lookup and the reservation are one section: two calls with one key cannot both run
+                hit = self.store.replay(key, principal.id)
+                if hit and hit[3] and hit[3] != route:   # a row migrated from before routes were recorded has route '': it still replays
+                    return self.problem(Problem(422, "Key reused", "This Idempotency-Key was used for another call; a key belongs to one request.", "idempotency.reused"))
+                if hit and hit[0] == 0:   # the placeholder: the first call with this key is still running
+                    return self.problem(Problem(409, "Request in progress", "A call with this Idempotency-Key is still being answered; wait for it rather than repeating it.", "idempotency.in_progress"))
+                if hit:
+                    return hit[0], {"Content-Type": hit[1], "Idempotent-Replayed": "true"}, hit[2]
+                reserved = self.store.reserve(key, principal.id, route)
+        kept = False
+        try:
+            res = self._execute(method, path, headers, body, principal, pattern, keys, query, handler, max_body)
+            if reserved and not isinstance(res, Stream) and res[0] < 500 and res[1].get("Content-Type") == "application/json":
+                self.store.remember(key, principal.id, res[0], res[1]["Content-Type"], res[2], route); kept = True
+            return res
+        finally:
+            if reserved and not kept:   # a problem, a defect or a stream: nothing to replay, the key is free again
+                self.store.forget(key, principal.id)
+
+    def _execute(self, method, path, headers, body, principal, pattern, keys, query, handler, max_body):
         m = pattern.match(path)
         params = {k: urllib.parse.unquote(m.group(i + 1)) for i, k in enumerate(keys)}
         if max_body and len(body) > max_body:
@@ -129,10 +141,7 @@ class HubApi:
         except ValueError:  # a number the record holds that JSON cannot carry: a problem, never half a document
             log.exception("%s %s produced a payload that is not JSON", method, path)
             return self.problem(Problem(500, "Internal error", "The answer could not be encoded; the request id identifies it in the log.", "internal"))
-        ctype = "application/json"
-        if key and principal and status < 500:
-            self.store.remember(key, principal.id, status, ctype, raw, route)
-        return status, {"Content-Type": ctype}, raw
+        return status, {"Content-Type": "application/json"}, raw
 
     @staticmethod
     def problem(p: Problem, extra: dict | None = None):
@@ -303,34 +312,58 @@ class HubApi:
         x = {"id": "cnv_" + uuid.uuid4().hex[:6], "title": "New conversation", "assistantId": aid, "assistant": meta, "turns": [], "owner": p.id, "when": "just now"}
         return 201, self.store.put("conversation", x["id"], x, p.id)
 
+    @staticmethod
+    def view_count(x: dict) -> int:
+        """Views stored in a conversation so far: a view's `seq` is its position in this order, the same after a restart."""
+        return sum(len(t.get("views", [])) for t in x.get("turns", []))
+
     def turn(self, c):
-        x = self.load_conversation(c); text = str((c["body"] or {}).get("text", "")).strip()
+        text = str((c["body"] or {}).get("text", "")).strip()
         if not text: raise Problem(422, "Not valid", "text is required", "validation")
-        if len(x["turns"]) >= MAX_TURNS:
-            raise Problem(409, "Conversation full", f"This conversation has reached {MAX_TURNS} turns; start a new conversation.", "conversation.full")
-        at = time.strftime("%H:%M")
-        x["turns"].append({"id": f"t{self.next_seq()}", "role": "user", "at": at, "views": [{"kind": "text", "text": text, "provenance": "system"}]})
-        if x["title"] == "New conversation": x["title"] = text[:45] + "…" if len(text) > 48 else text
-        assistant_turn = {"id": f"t{self.next_seq()}", "role": "assistant", "at": at, "views": []}
-        x["turns"].append(assistant_turn)
+        with self.store.lock:   # the read, the ceiling, the busy check and the claim are one section
+            x = self.load_conversation(c)
+            if len(x["turns"]) + 2 > MAX_TURNS:   # a turn adds two records (the person's and the assistant's); the ceiling is a ceiling
+                raise Problem(409, "Conversation full", f"This conversation has reached {MAX_TURNS} turns; start a new conversation.", "conversation.full")
+            if x["id"] in self._busy:
+                raise Problem(409, "Answer in progress", "The assistant is still answering the previous message in this conversation; wait for it to finish.", "conversation.busy")
+            self._busy.add(x["id"])
+        at = time.strftime("%H:%M"); n = len(x["turns"]); base = self.view_count(x)
+        user_turn = {"id": f"t{n + 1}", "role": "user", "at": at, "views": [{"kind": "text", "text": text, "provenance": "system"}]}
+        assistant_turn = {"id": f"t{n + 2}", "role": "assistant", "at": at, "views": []}
+        x["turns"] += [user_turn, assistant_turn]   # the assistant sees the conversation with this exchange; the record is written by done()
+        title = (text[:45] + "…" if len(text) > 48 else text) if x["title"] == "New conversation" else None
+        if title: x["title"] = title
         api = self
 
         def events():
+            seq = base + 1   # the person's view
             for view in api.assistant.stream(x, text, c["principal"]):
-                seq = api.next_seq()
+                seq += 1
                 if view.get("kind") == "feedback": view = {**view, "seq": seq}
                 assistant_turn["views"].append(view)
                 yield {"seq": seq, "view": view}
 
         def done(aborted: bool):
             if aborted: assistant_turn["views"].append({"kind": "stop", "reason": "human.interrupt", "message": "Stopped."})
-            api.store.put("conversation", x["id"], x, x["owner"])
+            try:
+                with api.store.lock:   # append to the record as it is now, never to the copy read before the stream
+                    fresh = api.store.get("conversation", x["id"]) or {**x, "turns": x["turns"][:n]}
+                    if len(fresh["turns"]) + 2 <= MAX_TURNS:
+                        fresh["turns"] = list(fresh["turns"]) + [user_turn, assistant_turn]
+                    else:
+                        log.warning("conversation.full at write conversation=%s turns=%d", x["id"], len(fresh["turns"]))
+                    if title and fresh.get("title") == "New conversation": fresh["title"] = title
+                    api.store.put("conversation", fresh["id"], fresh, fresh["owner"])
+            finally:
+                with api.store.lock:
+                    api._busy.discard(x["id"])
         return Stream(events(), done)
 
     def feedback(self, c):
         x = self.load_conversation(c); b = c["body"] or {}
         seq = b.get("seq", 0)
-        if not isinstance(seq, int) or isinstance(seq, bool): raise Problem(422, "Not valid", "seq must be an integer.", "validation")
+        if not isinstance(seq, int) or isinstance(seq, bool) or not 0 <= seq < 2**63: raise Problem(422, "Not valid", "seq must be an integer.", "validation")
+        if not 1 <= seq <= self.view_count(x): raise Problem(422, "Not valid", "seq does not name a view of this conversation.", "validation", {"seq": ["unknown view"]})
         self.store.feedback(x["id"], seq, bool(b.get("answered")), c["principal"].id)
         return 204, None
 
@@ -365,6 +398,9 @@ class HubApi:
             recorded = self.store.list("signoff")
             if (r["signoff"].get(role) or {}).get("version") == r["version"] or any(s["component"] == r["name"] and s["role"] == role and s["version"] == r["version"] for s in recorded):
                 raise Problem(409, "Already signed", f"The {'owner' if role == 'owner' else 'AI security'} sign-off at {r['version']} is already recorded.", "shelf.signed")
+            other = "ai_security" if role == "owner" else "owner"   # separation of duties: two sign-offs are two people
+            if any(s["component"] == r["name"] and s["role"] == other and s["version"] == r["version"] and s.get("email", "").lower() == p.email.lower() for s in recorded):
+                raise Problem(409, "Two sign-offs are two people", f"You already recorded the {'AI security' if other == 'ai_security' else 'owner'} sign-off at {r['version']}; the other one is someone else's.", "shelf.duties")
             self.store.put("signoff", rec["id"], rec, p.id)
         log.info("shelf.signed component=%s role=%s by=%s version=%s", r["name"], role, p.id, r["version"])
         return 201, rec
@@ -382,23 +418,18 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
         def log_message(self, fmt, *args):  # ids only, structured
             pass
 
-        def handle(self):
-            """Counts itself in and out so a stop can wait for the requests still being answered (see `drain`)."""
-            lock = getattr(self.server, "inflight_lock", None)
-            if lock is None:
-                return super().handle()
-            with lock:
-                self.server.inflight += 1
-            try:
-                super().handle()
-            finally:
-                with lock:
-                    self.server.inflight -= 1
+        def _stopping(self) -> bool:
+            """The server loop has been asked to stop, or has stopped: keep-alive connections close after their response."""
+            srv = self.server
+            done = getattr(srv, "_BaseServer__is_shut_down", None)
+            return bool(getattr(srv, "_BaseServer__shutdown_request", False) or (done is not None and done.is_set()))
 
         def _send(self, status: int, headers: dict, body: bytes):
             self.send_response(status)
             for k, v in headers.items():
                 self.send_header(k, v)
+            if "Connection" not in headers and self._stopping():
+                self.send_header("Connection", "close")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Request-Id", current_request_id())
@@ -407,6 +438,12 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self.wfile.write(body)
 
         def _dispatch(self):
+            """One parsed request to the end of its response, counted in and out so a stop can wait for the requests
+            still being answered (see `drain`); an idle keep-alive connection is not in flight."""
+            lock = getattr(self.server, "inflight_lock", None)
+            if lock is not None:
+                with lock:
+                    self.server.inflight += 1
             try:
                 self._dispatch_one()
             except (BrokenPipeError, ConnectionResetError):
@@ -420,23 +457,31 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                     self._send(500, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 500, "title": "Internal error", "code": "internal"}).encode())
                 except Exception:  # noqa: BLE001 - headers already sent or the socket gone
                     pass
+            finally:
+                if lock is not None:
+                    with lock:
+                        self.server.inflight -= 1
+                if self._stopping():
+                    self.close_connection = True
 
         def _dispatch_one(self):
             t0 = time.time()
             path = self.path
             request_id(self.headers.get("X-Request-Id"))
+            if self._stopping():   # a request that arrived on a kept-alive connection after the stop began: not started here
+                self.close_connection = True
+                return self._send(503, {"Content-Type": "application/problem+json", "Connection": "close", "Retry-After": "1"}, json.dumps({"status": 503, "title": "Shutting down", "code": "not.ready"}).encode())
             # The body's framing is checked before any branch answers: a body sent to a page, an asset or /config.js
             # that nobody reads would be parsed as the next request on the connection (request smuggling).
             if self.headers.get("Transfer-Encoding"):
                 # Bodies arrive with a length here; a chunked body would otherwise be read as the next request.
                 self.close_connection = True
                 return self._send(411, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 411, "title": "Length required", "detail": "send Content-Length, not Transfer-Encoding"}).encode())
-            try:
-                length = int(self.headers.get("Content-Length") or 0)
-                if length < 0: raise ValueError(length)
-            except ValueError:
+            lengths = {v.strip() for v in (self.headers.get_all("Content-Length") or [])}
+            if len(lengths) > 1 or any(not re.fullmatch(r"[0-9]{1,18}", v) for v in lengths):   # ASCII digits only: no sign, no underscore, no other script's digits, no second value
                 self.close_connection = True
-                return self._send(400, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 400, "title": "Bad request", "detail": "Content-Length must be a non-negative integer"}).encode())
+                return self._send(400, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 400, "title": "Bad request", "detail": "Content-Length must be one non-negative integer"}).encode())
+            length = int(lengths.pop()) if lengths else 0
             if not path.startswith(api_prefix + "/") and path != api_prefix:
                 if length:
                     # Pages and assets take no body. A small one is drained so the refusal reaches the client; the connection closes either way.
@@ -464,24 +509,25 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             body = self.rfile.read(length) if length else b""
             res = api.handle(self.command, path[len(api_prefix):] or "/", self.headers, body)
             if isinstance(res, Stream):
-                self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.send_header("Cache-Control", "no-cache"); self.send_header("Connection", "close"); self.send_header("X-Request-Id", current_request_id()); self.end_headers()
                 aborted = False
                 try:
+                    self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.send_header("Cache-Control", "no-cache"); self.send_header("Connection", "close"); self.send_header("X-Request-Id", current_request_id()); self.end_headers()
                     for ev in res.events:
                         self.wfile.write(f"event: view\ndata: {json.dumps(ev, ensure_ascii=False, allow_nan=False)}\n\n".encode("utf-8")); self.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError):
+                except GONE:   # the browser navigated away, or stopped reading (a write that times out): the answer stops here
                     aborted = True
                 except Exception:  # noqa: BLE001 - the adapter failed mid-stream: the person sees why the answer stopped
                     log.exception("stream failed")
                     try:
                         stop = {"kind": "stop", "reason": "upstream.error", "message": "The assistant stopped answering; try again in a moment."}
                         self.wfile.write(f"event: view\ndata: {json.dumps(stop)}\n\n".encode("utf-8")); self.wfile.flush()
-                    except (BrokenPipeError, ConnectionResetError):
+                    except GONE:
                         aborted = True
                 finally:
+                    getattr(res.events, "close", lambda: None)()   # the adapter's generator releases whatever it holds upstream
                     if res.done: res.done(aborted)
                     self.close_connection = True
-                log.info("%s %s 200 stream %dms", self.command, path, int((time.time() - t0) * 1000))
+                log.info("%s %s 200 stream%s %dms", self.command, urllib.parse.urlparse(path).path, " aborted" if aborted else "", int((time.time() - t0) * 1000))
                 return
             status, headers, out = res
             self._send(status, headers, out)

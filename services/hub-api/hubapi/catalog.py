@@ -78,7 +78,8 @@ class Catalog:
             if self.owner_domain and domain != self.owner_domain.lower():
                 return False
             return bool(r.get("owner")) and r["owner"].lower() == p.handle
-        return role == "ai_security" and "ai.security" in p.roles
+        # Separation of duties: the owner never signs for AI security on their own component, whatever roles they hold.
+        return role == "ai_security" and "ai.security" in p.roles and (r.get("owner") or "").lower() != p.handle
 
     def shelf_entry(self, r: dict, p: Principal, recorded: list[dict]) -> dict:
         rec = {s["role"]: s for s in recorded if s["component"] == r["name"] and s["version"] == r["version"]}

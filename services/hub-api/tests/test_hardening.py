@@ -136,7 +136,8 @@ class IdentityHardening(unittest.TestCase):
             if state["fail"]: raise OSError("blip")
             return fetch(url)
         auth = OidcAuth(ISSUER, AUD, JWKS_URL, flaky, m, "G")
-        self.assertIsNone(auth.ready()); state["fail"] = True; auth.jwks._at -= 3601
+        self.assertIsNone(auth.ready()); state["fail"] = True; auth.jwks._at -= 3601; auth.jwks._tried -= 61
         self.assertIsNone(auth.ready(), "stale keys within their maximum age keep the task ready")
-        auth.jwks._at -= 86_400
-        with self.assertRaises(OSError): auth.ready()
+        auth.jwks._at -= 86_400; auth.jwks._tried -= 61
+        not_ready = auth.ready()
+        self.assertIsNotNone(not_ready); self.assertIn("OSError", not_ready, "keys past their maximum age and a provider that cannot be reached: not ready, with the failure named")
