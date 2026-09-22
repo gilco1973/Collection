@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import re
 
-from .probes import Attempt, Result, refused
+from .probes import Attempt, Result, control_attempt, refused
 
 EXPECT_KEYS = {"contains", "contains_any", "not_contains", "regex", "not_regex", "cites", "refuses", "calls_tool", "calls_no_tool",
                "max_latency_ms", "json", "error"}
@@ -28,6 +28,7 @@ LIST_KEYS = ("contains", "contains_any", "not_contains")
 REGEX_KEYS = ("regex", "not_regex", "calls_tool")
 BOOL_KEYS = ("cites", "refuses", "calls_no_tool", "json", "error")
 NOT_A_REFUSAL = (401, 404, 407, 408, 429)   # unauthorised, not found, proxy, timeout, rate limited: the service did not decide
+UNJUDGED_CASE = "refused both the case and a harmless request of the same shape: nothing was judged"
 SOURCE_MARK = re.compile(r"\[(?:doc|source|src|ref)\s*:|§", re.I)   # a citation, not the word "source"
 
 
@@ -190,10 +191,19 @@ def check(expect: dict, reply) -> list:
     return missed
 
 
+def refusal_unproven(expect: dict, adapter, attempt: Attempt) -> bool:
+    """A `refuses: true` case answered with a deciding 4xx counts as refused only when the same solution answers a
+    harmless request of the same size and characters (the probes' control, `probes.control_attempt`); otherwise the
+    4xx may be an input limit, a firewall rule on punctuation, or a broken template: nothing was judged."""
+    if expect.get("refuses") is not True or not service_refused(attempt.reply) or not adapter.chat:
+        return False
+    return control_attempt(adapter, attempt).reply.error is not None
+
+
 def run_case(case: dict, adapter, suite_name: str) -> Result:
     n = int(case.get("repeat", 1))
     need = float(case.get("pass_rate", 1.0))
-    attempts, failures = [], []
+    attempts, failures, unjudged = [], [], []
     for _ in range(n):
         if "tool" in case:
             reply = adapter.call_tool(case["tool"], case.get("arguments", {})) if adapter.tool_server else None
@@ -208,16 +218,25 @@ def run_case(case: dict, adapter, suite_name: str) -> Result:
             reply = adapter.ask(case["prompt"], system=case.get("system", ""), context=case.get("context", ""))
             a = Attempt(case["prompt"], reply, case.get("system", ""), case.get("context", ""))
         attempts.append(a)
-        failures.append(check(case["expect"], reply))
+        if refusal_unproven(case["expect"], adapter, a):
+            unjudged.append(a)
+            failures.append([f"{UNJUDGED_CASE} (HTTP {reply.status}, then {control_attempt(adapter, a).reply.error})"])
+        else:
+            failures.append(check(case["expect"], reply))
     passed = sum(1 for f in failures if not f)
     rate = passed / n
     expect = case["expect"]
-    errors = sum(1 for a in attempts if a.reply.error and expect.get("error") is not True and not (expect.get("refuses") is True and service_refused(a.reply)))
+    errors = sum(1 for a in attempts if a.reply.error and expect.get("error") is not True
+                 and (any(a is u for u in unjudged) or not (expect.get("refuses") is True and service_refused(a.reply))))
     metrics = {"attempts": n, "passed": passed, "pass_rate": round(rate, 2), "required": need,
                "p50_ms": sorted(a.reply.latency_ms for a in attempts)[n // 2]}
     title = case.get("title", case["id"])
     rid = f"{suite_name}/{case['id']}"
     if errors == n:
+        if unjudged:
+            controls = [control_attempt(adapter, a) for a in unjudged[:1]]   # cached: asks nothing new
+            return Result(rid, title, "EVAL", case.get("severity", "medium"), "error", next(f[0] for a, f in zip(attempts, failures) if a is unjudged[0]),
+                          attempts[:3] + controls, case.get("recommendation", ""), suite_name, metrics)
         return Result(rid, title, "EVAL", case.get("severity", "medium"), "error", f"every attempt failed: {attempts[0].reply.error}",
                       attempts[:3], case.get("recommendation", ""), suite_name, metrics)
     if rate + 1e-9 >= need:
