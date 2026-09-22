@@ -786,7 +786,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "One JSON file per solution. `python3 -m aiplayground init my-targets/` copies the examples to start from.\n\n| Kind | Reaches | Example |\n| --- | --- | --- |\n| `http` | A chat API. `preset` is `openai-chat`, `anthropic-messages` or `simple-json`, or give `body` (a template with `{{prompt}}`, `{{context}}`, `{{system}}`, `{{messages}}`, `{{model}}`) and `response` (where the answer, tool calls and citations are) | `examples/openai-chat.json`, `examples/simple-json.json` |\n| `python` | A function in the candidate's directory, called in a fresh interpreter per question | `examples/python-function.json` |\n| `command` | A program that reads `{\"prompt\",\"system\",\"context\"}` on stdin and prints the answer | |\n| `mcp-stdio` | An MCP server started as a command | `examples/mcp-stdio.json` |\n| `mcp-http` | An MCP server over Streamable HTTP | `examples/mcp-http.json` |\n| `demo` | The bundled demo assistants, `safe` or `vulnerable` | `examples/demo-safe.json` |\n\n`capabilities` lists what the solution claims: `cites-sources` turns on the grounding probes, `masks-pii` makes a\nleaked card number a failure instead of a review. `timeout_s`, `concurrency` and `max_response_bytes` bound every\ncall."
+   "text": "One JSON file per solution. `python3 -m aiplayground init my-targets/` copies the examples to start from, with\nthe demo tool server and the sample component they point at; a file already there is left alone.\n\n| Kind | Reaches | Example |\n| --- | --- | --- |\n| `http` | A chat API. `preset` is `openai-chat`, `anthropic-messages` or `simple-json`, or give `body` (a template with `{{prompt}}`, `{{context}}`, `{{system}}`, `{{messages}}`, `{{model}}`) and `response` (where the answer, tool calls and citations are) | `examples/openai-chat.json`, `examples/simple-json.json` |\n| `python` | A function in the candidate's directory, called in a fresh interpreter per question | `examples/python-function.json` |\n| `command` | A program that reads `{\"prompt\",\"system\",\"context\"}` on stdin and prints the answer | |\n| `mcp-stdio` | An MCP server started as a command | `examples/mcp-stdio.json` |\n| `mcp-http` | An MCP server over Streamable HTTP | `examples/mcp-http.json` |\n| `demo` | The bundled demo assistants, `safe` or `vulnerable` | `examples/demo-safe.json` |\n\n`capabilities` lists what the solution claims: `cites-sources` turns on the grounding probes, `masks-pii` makes a\nleaked card number a failure instead of a review. `timeout_s`, `concurrency` and `max_response_bytes` bound every\ncall."
   },
   {
    "id": "playground/README.md#8",
@@ -797,10 +797,21 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "- **Never production.** `environment` must be `sandbox`, `dev`, `test` or `staging`; probes are adversarial by design.\n- **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).\n- **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is\n  sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.\n- **The candidate's code runs in a copy.** Its tests and example run in a temporary directory with a minimal\n  environment (only what the target's `env` names) and a time limit.\n- **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)\n  with a reason. A critical or high risk is accepted by someone other than the tester.\n- **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.\n- **The web interface is local.** It listens on loopback only, every API call needs the token printed at start,\n  the Host header must be the loopback address, and the page shows a solution's answers as text, never as HTML."
+   "text": "- **Never production.** `environment` must be `sandbox`, `dev`, `test` or `staging`; probes are adversarial by design.\n- **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).\n- **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is\n  sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.\n- **The candidate's code runs in a throwaway copy, not a sandbox.** Its tests and example run in a temporary copy\n  of the directory, as your own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG\n  directories inside the temporary directory) and a time limit; its whole process group is killed at the limit and\n  when the command ends. Hostile code can still read and write anything your user can, so for code you do not trust,\n  run the playground in a container (`playground/deploy/Dockerfile`).\n- **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)\n  with a reason. A critical or high finding is accepted as a risk or called a false positive only by someone other\n  than the tester (compared by address, ignoring case and spacing), and only on a run that names its tester.\n- **A report is sealed.** Its id is a hash of what the run recorded (the tester and rol"
   },
   {
    "id": "playground/README.md#9",
+   "source": "playground/README.md",
+   "title": "The AI Playground",
+   "section": "Rules it enforces",
+   "audience": [
+    "engineer"
+   ],
+   "kind": "page",
+   "text": "e, the results, a random\n  nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited\n  since it was written; the verdict is always recomputed from the results and the triage.\n- **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.\n- **The web interface is local.** It listens on loopback only (`127.0.0.1`, or `--host ::1`), every API call needs\n  the token printed at start, the Host header must be the loopback address, and the page shows a solution's answers\n  as text, never as HTML."
+  },
+  {
+   "id": "playground/README.md#10",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "Verdicts and exit codes",
@@ -808,10 +819,10 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "| Verdict | When | `run` exits |\n| --- | --- | --- |\n| `clear` | Everything that applies held, or was triaged by a named person | 0 |\n| `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |\n| `blocked` | A critical or high finding failed and nobody has triaged it | 2 |\n| `incomplete` | The solution could not be reached | 2 |\n\nA wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`."
+   "text": "| Verdict | When | `run` exits |\n| --- | --- | --- |\n| `clear` | Everything that applies held, or was triaged by a named person | 0 |\n| `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |\n| `blocked` | A critical or high finding failed and nobody has triaged it | 2 |\n| `incomplete` | The solution could not be reached, or nothing that applies was checked (every probe and case was skipped) | 2 |\n\nA wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`."
   },
   {
-   "id": "playground/README.md#10",
+   "id": "playground/README.md#11",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "What is inside",
@@ -822,7 +833,7 @@
    "text": "| Path | What |\n| --- | --- |\n| `aiplayground/config.py` | The target file: kinds, presets, environments, the host allow-list, `${env:NAME}` |\n| `aiplayground/targets.py` | One adapter per kind; every failure becomes a reply with `error` set |\n| `aiplayground/probes.py` | The probe library and how probes are chosen |\n| `aiplayground/suites.py` | Your cases and their expectations |\n| `aiplayground/component.py` | The collection's contract on a directory |\n| `aiplayground/runner.py` | One run: contract, probes, suites, into one report |\n| `aiplayground/report.py` | Verdicts, triage, and the JSON, Markdown and HTML reports |\n| `aiplayground/store.py`, `server.py`, `static/` | The browser interface and its record (`~/.aiplayground` by default) |\n| `aiplayground/demo.py` | The safe and vulnerable demos, as a chat API and an MCP server |\n| `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |\n| `tests/` | `python3 -m unittest discover -s tests -t .` |\n| `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |"
   },
   {
-   "id": "playground/README.md#11",
+   "id": "playground/README.md#12",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "Known limits",
@@ -874,10 +885,21 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "1. **Read the engineer's report first.** The verdict line, then \"For the sign-off\", then every finding with its\n   evidence.\n\n2. **Run every probe yourself**, against the same target file:\n\n   ```sh\n   python3 -m aiplayground run --target their-target.json --component ../components/python/their-thing \\\n     --role ai-security --by \"Your Name <you@example.com>\"\n   ```\n\n   `--role ai-security` selects every probe, including the tool-server set.\n\n3. **Triage what needs a person.** For each `fail`, `review` or `error`:\n\n   ```sh\n   python3 -m aiplayground triage playground-reports/<id>.json --result leak-pii-context \\\n     --decision accepted-risk --by \"Your Name <you@example.com>\" \\\n     --reason \"Records reach it already masked by the data guard; the probe's record is unmasked on purpose.\"\n   ```\n\n   `accepted-risk` needs a reason, and a critical or high risk is accepted by someone other than the tester.\n   `false-positive` says the probe was wrong. `fixed-retest` reopens a finding after a fix. An accepted risk is\n   listed under \"Known limits to add\": the owner copies it into the component's README.\n\n4. **Sign, outside the playground.** The report's \"Cite as\" line goes in the sign-off note:\n\n   ```sh\n   python3 tools/shelf.py --sign <component> --role ai-security --by \"Your Name <you@example.com>\"\n   ```"
+   "text": "1. **Read the engineer's report first.** The verdict line, then \"For the sign-off\", then every finding with its\n   evidence.\n\n2. **Run every probe yourself**, against the same target file:\n\n   ```sh\n   python3 -m aiplayground run --target their-target.json --component ../components/python/their-thing \\\n     --role ai-security --by \"Your Name <you@example.com>\"\n   ```\n\n   `--role ai-security` selects every probe, including the tool-server set.\n\n3. **Triage what needs a person.** For each `fail`, `review` or `error`:\n\n   ```sh\n   python3 -m aiplayground triage playground-reports/<id>.json --result leak-pii-context \\\n     --decision accepted-risk --by \"Your Name <you@example.com>\" \\\n     --reason \"Records reach it already masked by the data guard; the probe's record is unmasked on purpose.\"\n   ```\n\n   Every decision needs a reason. On a critical or high finding, `accepted-risk` and `false-positive` are taken\n   by someone other than the tester (the same address in another spelling is the same person), and only on a run\n   that names its tester (`--by`). `false-positive` says the probe was wrong. `fixed-retest` reopens a finding\n   after a fix. An accepted risk is listed under \"Known limits to add\": the owner copies it into the component's\n   README. A report edited by hand after it was written is refused.\n\n4. **Sign, outside the playground.** The report's \"Cite as\" line goes in th"
   },
   {
    "id": "playground/WALKTHROUGH.md#4",
+   "source": "playground/WALKTHROUGH.md",
+   "title": "Onboarding a solution with the AI Playground",
+   "section": "The AI security engineer",
+   "audience": [
+    "engineer"
+   ],
+   "kind": "page",
+   "text": "e sign-off note:\n\n   ```sh\n   python3 tools/shelf.py --sign <component> --role ai-security --by \"Your Name <you@example.com>\"\n   ```"
+  },
+  {
+   "id": "playground/WALKTHROUGH.md#5",
    "source": "playground/WALKTHROUGH.md",
    "title": "Onboarding a solution with the AI Playground",
    "section": "In a pipeline",
@@ -888,7 +910,7 @@
    "text": "```sh\npython3 -m aiplayground run --target ci-target.json --component . --suite cases.json --fail-on needs-review --out reports/\n```\n\nExit 0 is clear, 1 needs review (only with `--fail-on needs-review`), 2 blocked or unreachable, 3 a wrong command.\nKeep `reports/` as the build's artefact."
   },
   {
-   "id": "playground/WALKTHROUGH.md#5",
+   "id": "playground/WALKTHROUGH.md#6",
    "source": "playground/WALKTHROUGH.md",
    "title": "Onboarding a solution with the AI Playground",
    "section": "In a browser",
@@ -896,7 +918,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "```sh\npython3 -m aiplayground serve            # prints http://127.0.0.1:8765/#token=...\n```\n\nSet your name and role at the top right; they are recorded on runs and triage. Solutions, Try it, Run checks,\nReports (with compare), and the Probe library are the same functions as the commands above. Runs, reports and\ntarget files are kept in `~/.aiplayground` (`--data` to change it)."
+   "text": "```sh\npython3 -m aiplayground serve            # prints http://127.0.0.1:8765/#token=...\n```\n\nSet your name and role at the top right; they are recorded on runs and triage. Solutions, Try it, Run checks,\nReports (with compare: of the two runs you tick, the older is \"before\"), and the Probe library are the same\nfunctions as the commands above. Runs, reports and target files are kept in `~/.aiplayground` (`--data` to\nchange it)."
   },
   {
    "id": "content/knowledgebase/docs/best-practices/action-tiers-and-confirmation.md#0",

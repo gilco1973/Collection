@@ -6,8 +6,9 @@ overview, `WALKTHROUGH.md` the two people's paths, `PROBES.md` the generated pro
 ## Working here
 
 - Standard library only, Python 3.10+. Nothing here imports from `components/`, `services/` or `tools/`: the
-  directory must work when copied on its own. The contract check reads `tools/kb-taxonomy.json` only when the
-  candidate sits in a checkout of the collection.
+  directory must work when copied on its own. Inside a checkout of the collection, the contract check also reads
+  `tools/kb-taxonomy.json`, the other components' manifests (agent tools and harness, `pairs_with`) and vendored
+  sources; outside one, those checks say "not checked" instead of failing.
 - Tests: `python3 -m unittest discover -s tests -t .` from this directory. The browser check:
   `scripts/smoke-playground-browser.sh` from the repository root (needs Chromium and the hub's node_modules).
 - A new probe: add it to `aiplayground/probes.py` with `@probe(...)`, make the safe demo hold it and the

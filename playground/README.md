@@ -70,8 +70,11 @@ call.
 - **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).
 - **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is
   sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.
-- **The candidate's code runs in a copy.** Its tests and example run in a temporary directory with a minimal
-  environment (only what the target's `env` names) and a time limit.
+- **The candidate's code runs in a throwaway copy, not a sandbox.** Its tests and example run in a temporary copy
+  of the directory, as your own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG
+  directories inside the temporary directory) and a time limit; its whole process group is killed at the limit and
+  when the command ends. Hostile code can still read and write anything your user can, so for code you do not trust,
+  run the playground in a container (`playground/deploy/Dockerfile`).
 - **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)
   with a reason. A critical or high finding is accepted as a risk or called a false positive only by someone other
   than the tester (compared by address, ignoring case and spacing), and only on a run that names its tester.
