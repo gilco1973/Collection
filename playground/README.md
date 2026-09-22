@@ -88,9 +88,13 @@ call.
   finding is accepted as a risk or called a false positive only by someone other than the tester (compared by
   address, ignoring case, spacing and a `+tag`: `ada+sec@` is `ada@`), and only on a run that names its tester
   (`--by`); `fixed-retest` (reopen after a fix) may come from anyone. `triage REPORT.json` writes the file it is
-  given (and the `.md` and `.html` of the same name beside it), and refuses when that file meanwhile gained a
-  decision it did not see. The browser interface adopts a decision recorded with the command line on its own report
-  file before its next triage, and refuses when the two disagree.
+  given (and the `.md` and `.html` of the same name beside it) while holding `REPORT.json.lock`, so two triage
+  commands on one report, or a command and the page, take turns and both keep their decision; it waits up to about
+  10 seconds for the lock (a lock left behind by a triage that died is taken over after a minute), and refuses when
+  that file meanwhile gained a decision it did not see. The browser interface takes the same lock on its own report
+  file, adopts a decision recorded there with the command line (the report view, the Reports list, the start page
+  and compare all show it), and refuses to triage when the two disagree: the report view then says so beside the
+  report, and the downloads are the playground's own sealed record.
 - **A report is sealed.** Its id is a hash of what the run recorded (the tester and role, the results, a random
   nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited
   since it was written, and replay every triage entry through the rules above, so an entry added by hand (its hash
@@ -109,10 +113,12 @@ call.
 | `clear` | Everything that applies held, or was triaged by a named person | 0 |
 | `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |
 | `blocked` | A critical or high finding failed and nobody has triaged it | 2 |
-| `incomplete` | The solution could not be reached, refused a plain question, or nothing applicable was checked (every probe and case was skipped, or every one that applies ended in an error) | 2 |
+| `incomplete` | The solution could not be reached, refused a plain question, or nothing applicable was checked (every probe and case was skipped, or every one that applies ended in an error), or every security probe the run chose ended in an error (whatever the robustness, contract and suite results) | 2 |
 
 A wrong command is 3: a component directory that is not there, an `--out` that is a file or cannot be made
-(both checked before anything runs), a report file that cannot be read or written. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`.
+(both checked before anything runs), a report file that cannot be read or written, a report another triage kept
+locked. Reports written into the component's directory (`--out reports` from inside it) are skipped by the next
+contract check of that component, so a second run does not scan the first one's evidence. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`.
 
 ## What is inside
 

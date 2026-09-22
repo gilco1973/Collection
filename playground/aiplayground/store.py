@@ -5,10 +5,12 @@
     <data>/reports/<id>.{json,md,html}
 
 SQLite from the standard library; one writer at a time through a lock, so the web server's threads share it. A
-triage holds the lock from reading the run to writing it back, so two people triaging at once both keep their
-decision. A decision recorded on `<data>/reports/<id>.json` with the command line is adopted before the page's
-next triage (when the file's verified log extends the database's); when the two logs disagree, the page refuses
-instead of overwriting either.
+triage holds that lock and the report's lock file (`<data>/reports/<id>.json.lock`, the one the command line's
+`triage` takes) from reading the run to writing it back, so two people triaging at once, on the page or with the
+command line, both keep their decision. A decision recorded on `<data>/reports/<id>.json` with the command line is
+adopted (when the file's verified log extends the database's) and written back to the database the next time the
+run is read, so the report view, the lists and compare agree; when the two logs disagree, the page refuses instead
+of overwriting either.
 """
 from __future__ import annotations
 
@@ -35,6 +37,7 @@ class Store:
         os.makedirs(os.path.join(self.dir, "targets"), exist_ok=True)
         os.makedirs(os.path.join(self.dir, "reports"), exist_ok=True)
         self.lock = threading.RLock()   # re-entrant: triage holds it across run() and add_run()
+        self._seen: dict = {}            # run id -> (mtime, size) of its report file when last read or written
         self.db = sqlite3.connect(os.path.join(self.dir, "playground.db"), check_same_thread=False)
         self.db.executescript(SCHEMA)
 
@@ -85,13 +88,35 @@ class Store:
     def add_run(self, rep: dict) -> dict:
         with self.lock:
             paths = Rp.save(rep, os.path.join(self.dir, "reports"))
-            self.db.execute("INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?)",
-                            (rep["id"], rep["started"], (rep.get("target") or {}).get("name"), (rep.get("component") or {}).get("name"),
-                             rep["verdict"], rep["tester"].get("by"), rep["tester"].get("role"), json.dumps(rep)))
-            self.db.commit()
+            self._record(rep)
+            self._seen[rep["id"]] = self._stat(rep["id"])
         return paths
 
+    def _record(self, rep: dict) -> None:
+        """The database row for a report (the caller holds the lock)."""
+        self.db.execute("INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?)",
+                        (rep["id"], rep["started"], (rep.get("target") or {}).get("name"), (rep.get("component") or {}).get("name"),
+                         rep["verdict"], rep["tester"].get("by"), rep["tester"].get("role"), json.dumps(rep)))
+        self.db.commit()
+
+    def _stat(self, rid: str):
+        try:
+            st = os.stat(self.report_path(rid))
+        except OSError:
+            return None
+        return (st.st_mtime_ns, st.st_size)
+
     def runs(self, limit: int = 100) -> list:
+        with self.lock:
+            ids = [r[0] for r in self.db.execute("SELECT id FROM runs ORDER BY started DESC LIMIT ?", (limit,)).fetchall()]
+        for rid in ids:   # a report file the command line triaged since it was last read: adopt its decisions first
+            st = self._stat(rid)
+            if st is not None and st != self._seen.get(rid):
+                try:
+                    self.current(rid)
+                except ValueError:
+                    pass   # the two disagree: the list shows the playground's record; the report view says why
+                self._seen[rid] = st
         with self.lock:
             rows = self.db.execute("SELECT id, started, target, component, verdict, by, role, report FROM runs ORDER BY started DESC LIMIT ?", (limit,)).fetchall()
         out = []
@@ -101,6 +126,7 @@ class Store:
         return out
 
     def run(self, rid: str) -> dict | None:
+        """The run as the database has it (the sealed report as it was last written here)."""
         with self.lock:
             row = self.db.execute("SELECT report FROM runs WHERE id = ?", (rid,)).fetchone()
         return json.loads(row[0]) if row else None
@@ -108,31 +134,48 @@ class Store:
     def report_path(self, rid: str) -> str:
         return os.path.join(self.dir, "reports", os.path.basename(rid) + ".json")
 
+    def _current(self, rid: str) -> tuple:
+        """(the run, True when it is the file's version with decisions the database has not seen); the caller holds
+        the lock. ValueError when the two logs disagree, or the file no longer verifies."""
+        rep = self.run(rid)
+        path = self.report_path(rid)
+        if rep is None or not os.path.exists(path):
+            return rep, False
+        try:
+            on_file = Rp.load(path)
+        except ValueError as e:
+            raise ValueError(f"the report file does not verify ({e}); move it aside to triage from the playground's own record") from None
+        if on_file.get("id") != rep["id"]:
+            raise ValueError(f"the report file {path} holds another report; move it aside to triage from the playground's own record")
+        if Rp.extends(rep.get("triage"), on_file.get("triage")):
+            # the file's log is the database's plus decisions recorded on the file (or the same log)
+            return on_file, len(on_file.get("triage") or []) > len(rep.get("triage") or [])
+        if Rp.extends(on_file.get("triage"), rep.get("triage")):
+            return rep, False   # the file is behind: it is rewritten from the database at the next triage
+        raise ValueError(f"the triage recorded on {path} and in the playground's record disagree; "
+                         "nothing was written. Decide which one stands and move the other aside")
+
     def current(self, rid: str) -> dict | None:
         """The run as the database has it, or as its report file has it when a decision was recorded on the file
-        (with the command line) that the database has not seen. ValueError when the two logs disagree, or the file no
-        longer verifies: neither is overwritten."""
+        (with the command line) that the database has not seen; that version is written back to the database, so
+        the lists and compare show it too. ValueError when the two logs disagree, or the file no longer verifies:
+        neither is overwritten."""
         with self.lock:
-            rep = self.run(rid)
-            path = self.report_path(rid)
-            if rep is None or not os.path.exists(path):
+            rep, adopted = self._current(rid)
+            if not adopted:
                 return rep
-            try:
-                on_file = Rp.load(path)
-            except ValueError as e:
-                raise ValueError(f"the report file does not verify ({e}); move it aside to triage from the playground's own record") from None
-            if on_file.get("id") != rep["id"]:
-                raise ValueError(f"the report file {path} holds another report; move it aside to triage from the playground's own record")
-            if Rp.extends(rep.get("triage"), on_file.get("triage")):
-                return on_file   # the file's log is the database's plus decisions recorded on the file
-            if Rp.extends(on_file.get("triage"), rep.get("triage")):
-                return rep       # the file is behind: it is rewritten from the database
-            raise ValueError(f"the triage recorded on {path} and in the playground's record disagree; "
-                             "nothing was written. Decide which one stands and move the other aside")
+            with Rp.locked(self.report_path(rid)):   # no command-line triage is half-way through the file
+                rep, adopted = self._current(rid)
+                if adopted:
+                    self._record(rep)
+            self._seen[rid] = self._stat(rid)
+            return rep
 
     def triage(self, rid: str, result_id: str, decision: str, by: str, reason: str) -> dict:
-        with self.lock:   # read, decide and write as one step: a decision recorded meanwhile is never overwritten
-            rep = self.current(rid)
+        # read, decide and write as one step, with the page's other threads (self.lock) and with the command line
+        # (the lock file beside the report): a decision recorded meanwhile is never overwritten
+        with self.lock, Rp.locked(self.report_path(rid)):
+            rep, _ = self._current(rid)
             if rep is None:
                 raise KeyError(rid)
             Rp.triage(rep, result_id, decision, by, reason)

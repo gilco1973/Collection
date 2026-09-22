@@ -18,12 +18,16 @@ Exit codes of `run` and `check-component`: 0 clear, 1 needs review, 2 blocked or
 was wrong (a component directory that is not there, an `--out` that cannot be a directory, a file that cannot be
 read or written). `--fail-on needs-review` makes 1 a failure in CI; the default fails only on blocked.
 
-`triage REPORT.json` rewrites the file it is given (and the .md and .html beside it, same name), and refuses when
-that file meanwhile carries a decision this command did not see.
+`triage REPORT.json` rewrites the file it is given (and the .md and .html beside it, same name) while holding
+REPORT.json.lock, so two triage commands (or a command and the page) on one report take turns instead of one losing
+its decision; it waits up to about 10 s for the lock, and refuses when that file meanwhile carries a decision this
+command did not see. Reports written with `--out` inside the component's directory are left out of that component's
+contract check.
 """
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
 import shutil
@@ -194,6 +198,25 @@ def tester(a) -> str:
     return by
 
 
+def exclude_out(component: str | None, out: str) -> dict:
+    """`component_exclude=[out]` for runner.run when the reports go inside the component's directory (so the next
+    contract check does not scan them), and runner.run takes that keyword; otherwise nothing."""
+    if not component:
+        return {}
+    comp, out = os.path.realpath(component), os.path.realpath(out)
+    try:
+        inside = out != comp and os.path.commonpath([comp, out]) == comp
+    except ValueError:   # two drives
+        inside = False
+    if not inside:
+        return {}   # outside the component, or the component's own top directory (which cannot be left out whole)
+    try:
+        takes = "component_exclude" in inspect.signature(runner.run).parameters
+    except (TypeError, ValueError):
+        takes = False
+    return {"component_exclude": [out]} if takes else {}
+
+
 def cmd_run(a):
     by = tester(a)
     if a.component:
@@ -201,7 +224,7 @@ def cmd_run(a):
     usable_out(out_dir(a))
     t = C.load(a.target) if a.target else None
     rep = runner.run(t, probes=a.probes, suites=a.suite or [], component_dir=a.component, run_component=not a.no_run,
-                     by=by, role=a.role, progress=progress)
+                     by=by, role=a.role, progress=progress, **exclude_out(a.component, out_dir(a)))
     return finish(rep, a)
 
 
@@ -209,7 +232,7 @@ def cmd_check_component(a):
     by = tester(a)
     usable_component(a.dir)
     usable_out(out_dir(a))
-    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=by, role=a.role)
+    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=by, role=a.role, **exclude_out(a.dir, out_dir(a)))
     return finish(rep, a)
 
 
@@ -220,12 +243,13 @@ def cmd_triage(a):
     path = os.path.abspath(a.report)
     if os.path.isdir(path):
         raise UsageError(f"{a.report} is a directory; name the report's .json file")
-    rep = Rp.load(path)
-    Rp.triage(rep, a.result, a.decision, a.by, a.reason)
-    current = Rp.load(path)   # again, just before writing: another triage may have landed meanwhile
-    if current["id"] != rep["id"] or not Rp.extends(current.get("triage"), rep["triage"]):
-        raise UsageError(f"{a.report} was triaged by someone else meanwhile; nothing was written. Run the command again")
-    paths = Rp.save_as(rep, path)
+    with Rp.locked(path):   # <report>.lock: another triage (a command, the page) waits until this one is written
+        rep = Rp.load(path)
+        Rp.triage(rep, a.result, a.decision, a.by, a.reason)
+        current = Rp.load(path)   # again, just before writing: a writer that ignores the lock may have landed meanwhile
+        if current["id"] != rep["id"] or not Rp.extends(current.get("triage"), rep["triage"]):
+            raise UsageError(f"{a.report} was triaged by someone else meanwhile; nothing was written. Run the command again")
+        paths = Rp.save_as(rep, path)
     say(f"recorded: {a.decision} on {a.result} by {rep['triage'][-1]['by']}; verdict now {rep['verdict']}")
     say(f"report: {paths['html']}")
     return 0

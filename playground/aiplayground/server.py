@@ -35,6 +35,7 @@ MAX_BODY = 1_000_000
 DRAIN_MAX = 16 * MAX_BODY   # a refused body up to this size is read and dropped; a larger one closes the connection
 CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 LENGTH = re.compile(r"[0-9]+")   # ASCII digits only: str.isdigit() also takes "²", which int() refuses
+CONFLICT_HEADER = "X-Playground-Conflict"   # percent-encoded UTF-8: why a report view is the playground's own record
 REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 
 
@@ -95,6 +96,13 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
         if not isinstance(value, dict):
             raise ValueError("the body is a JSON object")
         return value
+
+    def viewed(rid: str):
+        """A run as the report view shows it: the file's decisions adopted, or the playground's record on a conflict."""
+        try:
+            return store.current(rid)
+        except ValueError:
+            return store.run(rid)
 
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -272,16 +280,18 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 j = jobs.get(parts[1])
                 return self.json(200, j) if j else self.problem(404, "no such job")
             if len(parts) >= 2 and parts[0] == "runs":
+                conflict = None
                 try:
                     rep = store.current(parts[1])   # a decision recorded on the report file by the command line shows here too
                 except ValueError as e:
-                    rep = store.run(parts[1])
-                    if rep is not None:
-                        rep = dict(rep, conflict=str(e))
+                    rep = store.run(parts[1])       # the playground's own record, sealed as it was written
+                    conflict = str(e)
                 if rep is None:
                     return self.problem(404, "no such run")
                 if len(parts) == 2 and method == "GET":
-                    return self.json(200, rep)
+                    # the body is the sealed report, always; why the view is the playground's record goes beside it
+                    extra = {CONFLICT_HEADER: urllib.parse.quote(conflict, safe=" /:;,.()'")} if conflict else None
+                    return self.send(200, json.dumps(rep).encode("utf-8"), "application/json", extra)
                 if len(parts) == 3 and parts[2] == "triage" and method == "POST":
                     b = self.body()
                     rep = store.triage(parts[1], str(b.get("result_id", "")), str(b.get("decision", "")), str(b.get("by", "")), str(b.get("reason", "")))
@@ -297,7 +307,7 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                                      {"Content-Disposition": f'attachment; filename="{rep["id"]}.json"'})
             if parts == ["compare"] and method == "GET":
                 q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-                a, b = store.run((q.get("a") or [""])[0]), store.run((q.get("b") or [""])[0])
+                a, b = viewed((q.get("a") or [""])[0]), viewed((q.get("b") or [""])[0])
                 if not a or not b:
                     return self.problem(404, "name two runs: ?a=<id>&b=<id>")
                 return self.json(200, {"before": {"id": a["id"], "verdict": a["verdict"]}, "after": {"id": b["id"], "verdict": b["verdict"]}, "changes": Rp.compare(a, b)})

@@ -65,6 +65,12 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   await page.waitForSelector("h2:has-text('For the sign-off')", { timeout: 60000 });
   check(await page.isVisible(".verdict .chip.blocked"), "the vulnerable demo's report is blocked");
   await shot("04-report-blocked");
+  // the report file as it is now, before any decision: the command line triages it later (see below)
+  const fs = require("fs"), { execFileSync } = require("child_process");
+  const rid = (await page.locator("h1 code").innerText()).trim();
+  const dataDir = await page.evaluate(async (t) => (await (await fetch("/api/meta", { headers: { "X-Playground-Token": t } })).json()).data, token);
+  const reportFile = path.join(dataDir, "reports", rid + ".json");
+  const beforeTriage = fs.readFileSync(reportFile);
 
   const finding = page.locator(".finding.fail").first();
   await finding.locator("summary:has-text('Triage this finding')").click();
@@ -84,6 +90,22 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   check(true, "someone else's decision is recorded under their name");
   await page.fill("#by", "Ada Placeholder <ada@example.com>");
   await page.press("#by", "Tab");
+
+  // the file loses the page's decision (restored from a copy) and gets another one with the command line: the two
+  // records disagree. The view says so beside the report; the download is still the sealed record, with no note in it
+  fs.writeFileSync(reportFile, beforeTriage);
+  const failed = JSON.parse(beforeTriage.toString()).results.find((x) => x.status === "fail").id;
+  execFileSync("python3", ["-m", "aiplayground", "triage", reportFile, "--result", failed, "--decision", "fixed-retest",
+    "--by", "Carol Placeholder <carol@example.com>", "--reason", "Retest after the fix, recorded from the command line."],
+    { cwd: path.join(__dirname, ".."), stdio: "pipe" });
+  await page.click("nav >> text=Reports");
+  await page.waitForSelector("h1:has-text('Reports')");
+  await page.click(`tr.click:has(input[aria-label='Select ${rid}']) td:nth-child(2)`);
+  await page.waitForSelector("text=This view is the playground's own record");
+  check(await page.isVisible("text=disagree"), "a report whose file disagrees with the playground's record says so");
+  const downloaded = await page.evaluate(async ([t, id]) => (await (await fetch("/api/runs/" + id + "/report.json", { headers: { "X-Playground-Token": t } })).json()), [token, rid]);
+  check(!("conflict" in downloaded) && downloaded.triage.length === 1 && downloaded.triage[0].by.startsWith("Bob Placeholder"),
+    "the JSON download is the playground's sealed record, with nothing added to it");
 
   await page.click("nav >> text=Run checks");
   await page.waitForSelector("h1:has-text('Run checks')");

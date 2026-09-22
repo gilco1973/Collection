@@ -22,7 +22,7 @@ function pref(key, value) {
   return value;
 }
 
-async function api(method, path, body) {
+async function apiResponse(method, path, body) {
   const opts = { method, headers: { "X-Playground-Token": token() } };
   if (body !== undefined) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
   const r = await fetch("/api/" + path, opts);
@@ -30,7 +30,18 @@ async function api(method, path, body) {
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch (e) { data = { error: text }; }
   if (!r.ok) throw new Error((data && data.error) || ("HTTP " + r.status));
-  return data;
+  return { data, headers: r.headers };
+}
+
+async function api(method, path, body) {
+  return (await apiResponse(method, path, body)).data;
+}
+
+// Why a report view is the playground's own record (the report file disagrees): sent beside the report, never in it.
+function conflictOf(headers) {
+  const v = headers.get("X-Playground-Conflict");
+  if (!v) return "";
+  try { return decodeURIComponent(v); } catch (e) { return v; }
 }
 
 async function download(path, name) {
@@ -320,8 +331,11 @@ async function viewCompare(ids) {
 }
 
 async function viewReport(id) {
-  let rep;
-  try { rep = await api("GET", "runs/" + id); } catch (e) { return show("runs", errorBox(e)); }
+  let rep, conflict;
+  try {
+    const got = await apiResponse("GET", "runs/" + id);
+    rep = got.data; conflict = conflictOf(got.headers);
+  } catch (e) { return show("runs", errorBox(e)); }
   state.report = rep;
   const s = rep.summary;
   const tri = {};
@@ -335,7 +349,7 @@ async function viewReport(id) {
     h("h1", {}, "Report ", h("code", {}, rep.id)),
     h("div", { class: "muted small" }, (rep.target ? "Solution " + rep.target.name + " (" + rep.target.kind + ", " + rep.target.environment + ")" : "") +
       (rep.component ? (rep.target ? " · " : "") + "component " + rep.component.name + " " + (rep.component.version || "") : "") + " · " + (rep.tester.by || "unnamed") + " as " + rep.tester.role + " · " + rep.started),
-    rep.conflict ? h("div", { class: "err card" }, "This view is the playground's own record. " + rep.conflict) : null,
+    conflict ? h("div", { class: "err card" }, "This view is the playground's own record. " + conflict) : null,
     h("div", { class: "card verdict" }, chip(rep.verdict, rep.verdict), h("span", {}, rep.verdict_reason)),
     h("div", { class: "stats" }, Object.entries(s.by_status).map(([k, v]) => h("div", {}, h("b", {}, v), h("span", { class: "muted small" }, k))),
       s.latency && s.latency.answers ? h("div", {}, h("b", {}, s.latency.p95_ms + " ms"), h("span", { class: "muted small" }, "p95 latency")) : null),

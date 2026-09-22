@@ -9,8 +9,9 @@ Verdicts:
   blocked       a critical or high finding failed and nobody has triaged it
   needs-review  a finding needs a person: a medium or low failure, a `review` result, or a probe that could not run
   clear         everything that applies held (or was triaged by a named person)
-  incomplete    the solution could not be reached, refused a plain question, nothing that applies was checked, or
-                every check that applies ended in an error, so nothing was judged
+  incomplete    the solution could not be reached, refused a plain question, nothing that applies was checked,
+                every check that applies ended in an error, so nothing was judged, or every security probe the run
+                chose ended in an error (whatever the robustness, contract or suite results say)
 
 Integrity: a report's id is a hash of everything the run recorded (with a random nonce, so two identical runs never
 share an id), and every triage entry carries the hash of the one before it (the first, the report's id). `load`
@@ -28,6 +29,9 @@ import json
 import os
 import re
 import secrets as _secrets
+import socket
+import time
+from contextlib import contextmanager
 
 from . import __version__
 
@@ -38,6 +42,10 @@ PERSON = re.compile(r"[^<>@\n]{2,80}<[^<>@\s]+@[^<>@\s]+>\Z")
 ADDRESS = re.compile(r"<([^<>]*)>")
 NOTHING_CHECKED = "nothing applicable was checked: choose probes or cases that apply to this solution"
 NOTHING_JUDGED = "nothing was judged: every check that applies ended in an error"
+NO_SECURITY_JUDGED = ("no security probe was judged: every one ended in an error; the robustness results alone do "
+                      "not make a verdict")
+LOCK_WAIT = 10.0    # seconds a triage waits for another one on the same report
+LOCK_STALE = 60.0   # a lock older than this, whose owner is not known to be alive, is taken over
 LISTED = 6   # ids named in a verdict's reason; the rest are counted
 NO_TESTER = "the run names no tester; a critical or high finding is triaged on a run with a named tester"
 SELF_TRIAGE = ("a critical or high finding is accepted as a risk or called a false positive by someone other than "
@@ -125,6 +133,11 @@ def verdict(report: dict) -> tuple:
     if applicable and all(r["status"] == "error" for r in applicable):
         # an error judges nothing: a service that refused every probe's harmless control too was never tested
         return "incomplete", NOTHING_JUDGED
+    security = [r for r in applicable if r.get("suite") == "security"]
+    if security and all(r["status"] == "error" for r in security):
+        # the security probes are what the run is for: robustness failures on a solution that errored on every one
+        # of them (a service that died after the smoke question) are not a security review
+        return "incomplete", NO_SECURITY_JUDGED
     waiting = [r for r in open_ if r["status"] in ("fail", "review", "error")]
     if waiting:
         return "needs-review", f"{len(waiting)} finding(s) wait for a person: " + listed(waiting)
@@ -476,6 +489,104 @@ def write_atomic(path: str, data: bytes) -> None:
         except OSError:
             pass
         raise
+
+
+class LockBusy(ValueError):
+    """Another triage held the report's lock for longer than a triage takes."""
+
+
+def _lock_owner_alive(text: str) -> bool | None:
+    """True or False when the lock's owner (``pid host token``) is on this machine and can be asked; None when not."""
+    parts = text.split()
+    if len(parts) < 2 or not parts[0].isdigit() or parts[1] != socket.gethostname() or os.name != "posix":
+        return None   # another machine, an empty lock being written, or a system where os.kill(pid, 0) is not a probe
+    try:
+        os.kill(int(parts[0]), 0)
+    except ProcessLookupError:
+        return False
+    except (PermissionError, OverflowError, OSError):
+        return True
+    return True
+
+
+def _read_lock(lock: str) -> str | None:
+    try:
+        with open(lock, encoding="utf-8", errors="replace") as f:
+            return f.read(200)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        return ""
+
+
+def _take_over(lock: str, seen: str) -> None:
+    """Move a stale lock aside, but only the one that was judged stale: if another waiter replaced it meanwhile, put
+    that one back."""
+    aside = f"{lock}.{_secrets.token_hex(6)}.stale"
+    try:
+        os.rename(lock, aside)
+    except OSError:
+        return
+    if _read_lock(aside) == seen:
+        try:
+            os.unlink(aside)
+        except OSError:
+            pass
+        return
+    try:
+        os.link(aside, lock)   # a fresh lock of someone else's: restore it, unless a third one is there already
+    except OSError:
+        pass
+    try:
+        os.unlink(aside)
+    except OSError:
+        pass
+
+
+@contextmanager
+def locked(path: str, wait: float | None = None, stale: float | None = None):
+    """Hold ``<path>.lock`` (made with O_CREAT|O_EXCL) for a load-check-write of the report at ``path``: two triage
+    commands, or the command line and the page, never both write from the same old version. Waits up to ``wait``
+    seconds with backoff; a lock older than ``stale`` seconds whose owner is not known to be alive is taken over.
+    LockBusy when the lock stays taken."""
+    wait = LOCK_WAIT if wait is None else wait
+    stale = LOCK_STALE if stale is None else stale
+    lock = os.path.abspath(path) + ".lock"
+    mine = f"{os.getpid()} {socket.gethostname()} {_secrets.token_hex(8)}\n"
+    deadline = time.monotonic() + wait
+    delay = 0.01
+    while True:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+        except FileExistsError:
+            seen = _read_lock(lock)
+            if seen is not None:
+                try:
+                    age = time.time() - os.stat(lock).st_mtime
+                except OSError:
+                    age = 0.0
+                if age > stale and _lock_owner_alive(seen) is not True:
+                    _take_over(lock, seen)
+                    continue
+            if time.monotonic() >= deadline:
+                raise LockBusy(f"another triage is recording a decision on this report ({lock} is held); run the "
+                               f"command again. If no triage is running, the lock is taken over after {int(stale)} s") from None
+            time.sleep(delay)
+            delay = min(delay * 2, 0.25)
+            continue
+        try:
+            os.write(fd, mine.encode("utf-8"))
+        finally:
+            os.close(fd)
+        break
+    try:
+        yield lock
+    finally:
+        if _read_lock(lock) == mine:   # never remove a lock another process took over meanwhile
+            try:
+                os.unlink(lock)
+            except OSError:
+                pass
 
 
 def save_as(rep: dict, json_path: str) -> dict:

@@ -78,10 +78,12 @@ Every command runs from the `playground/` directory.
    that names its tester (`--by`). `false-positive` says the probe was wrong. `fixed-retest` reopens a finding
    after a fix, and anyone may record it. An accepted risk is listed under "Known limits to add": the owner copies
    it into the component's README. The decision is written into the file you name (a renamed download included),
-   never into another file beside it; if someone else triaged that file meanwhile, nothing is written and you run
-   the command again. A report edited by hand after it was written is refused, and so is one whose triage log
-   breaks these rules. A decision recorded this way on a report in the browser interface's data directory is
-   picked up by the page before its next triage.
+   never into another file beside it. While it writes, the command holds `<id>.json.lock` beside the report, so two
+   people triaging the same report at once (with the command or the page) take turns and both decisions are kept;
+   if the lock stays taken for about 10 seconds, or someone else triaged that file in a way this command did not
+   see, nothing is written and you run the command again. A report edited by hand after it was written is refused,
+   and so is one whose triage log breaks these rules. A decision recorded this way on a report in the browser
+   interface's data directory shows in the page's report view, Reports list, start page and compare.
 
 4. **Sign, outside the playground.** The report's "Cite as" line goes in the sign-off note:
 
@@ -96,8 +98,9 @@ python3 -m aiplayground run --target ci-target.json --component . --suite cases.
 ```
 
 Exit 0 is clear, 1 needs review (only with `--fail-on needs-review`), 2 blocked or incomplete (unreachable, refused
-a plain question, or nothing applicable was checked or judged), 3 a wrong command (checked before anything runs). Keep
-`reports/` as the build's artefact.
+a plain question, nothing applicable was checked or judged, or no security probe was judged because every one ended
+in an error), 3 a wrong command (checked before anything runs). Keep `reports/` as the build's artefact; with
+`--component .` it sits inside the component, and the next run's contract check skips it.
 
 In a container, for code you do not trust: build once from the repository root with
 `docker build -f playground/deploy/Dockerfile -t ai-playground .`, then run from the candidate's directory, as your
