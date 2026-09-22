@@ -11,6 +11,7 @@ from __future__ import annotations
 import hmac
 import json
 import os
+import re
 import secrets
 import socket
 import sys
@@ -33,7 +34,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MAX_BODY = 1_000_000
 DRAIN_MAX = 16 * MAX_BODY   # a refused body up to this size is read and dropped; a larger one closes the connection
 CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+LENGTH = re.compile(r"[0-9]+")   # ASCII digits only: str.isdigit() also takes "²", which int() refuses
 REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+
+
+class BadRequest(Exception):
+    """A request the server cannot read (a Content-Length that is not a number): 400."""
 
 
 class ThreadingHTTPServerV6(ThreadingHTTPServer):
@@ -128,8 +134,9 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
             size is read and dropped first, so the client finishes sending and reads the answer."""
             if getattr(self, "body_read", True):
                 return False
-            n = self.headers.get("Content-Length") or "0"
-            if not n.isdigit():
+            n = self.headers.get("Content-Length")
+            n = "0" if n is None else n
+            if not LENGTH.fullmatch(n):
                 return True
             left = int(n)
             if left > DRAIN_MAX:
@@ -144,8 +151,10 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
 
         def body(self) -> dict:
             n = self.headers.get("Content-Length")
-            if n is None or not n.isdigit():
+            if n is None:
                 raise ValueError("Content-Length is required")
+            if not LENGTH.fullmatch(n):
+                raise BadRequest("Content-Length is a number of bytes, in ASCII digits")
             if int(n) > MAX_BODY:
                 raise OverflowError
             data = self.rfile.read(int(n))
@@ -189,6 +198,8 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 return self.api(method, path)
             except OverflowError:
                 return self.problem(413, f"the request is larger than {MAX_BODY} bytes")
+            except BadRequest as e:
+                return self.problem(400, str(e))
             except (C.ConfigError, S.SuiteError, ValueError) as e:
                 return self.problem(422, str(e))
             except KeyError as e:
@@ -261,7 +272,12 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 j = jobs.get(parts[1])
                 return self.json(200, j) if j else self.problem(404, "no such job")
             if len(parts) >= 2 and parts[0] == "runs":
-                rep = store.run(parts[1])
+                try:
+                    rep = store.current(parts[1])   # a decision recorded on the report file by the command line shows here too
+                except ValueError as e:
+                    rep = store.run(parts[1])
+                    if rep is not None:
+                        rep = dict(rep, conflict=str(e))
                 if rep is None:
                     return self.problem(404, "no such run")
                 if len(parts) == 2 and method == "GET":
@@ -273,9 +289,9 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 if len(parts) == 3 and parts[2] in ("report.html", "report.md", "report.json") and method == "GET":
                     kind = parts[2].split(".")[1]
                     if kind == "html":
-                        return self.send(200, Rp.to_html(rep).encode("utf-8"), "text/html; charset=utf-8", {"Content-Security-Policy": REPORT_CSP})
+                        return self.send(200, Rp.to_html(rep).encode("utf-8", errors="replace"), "text/html; charset=utf-8", {"Content-Security-Policy": REPORT_CSP})
                     if kind == "md":
-                        return self.send(200, Rp.to_markdown(rep).encode("utf-8"), "text/markdown; charset=utf-8",
+                        return self.send(200, Rp.to_markdown(rep).encode("utf-8", errors="replace"), "text/markdown; charset=utf-8",
                                          {"Content-Disposition": f'attachment; filename="{rep["id"]}.md"'})
                     return self.send(200, json.dumps(rep, indent=2).encode("utf-8"), "application/json",
                                      {"Content-Disposition": f'attachment; filename="{rep["id"]}.json"'})
@@ -309,9 +325,12 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 raise ValueError("suites is a list of suite files or suites")
             if b.get("probes") is not None and not isinstance(b.get("probes"), (str, list)):
                 raise ValueError("probes is a list of probe ids, or a word such as all or security")
+            if isinstance(b.get("probes"), list) and not all(isinstance(p, str) for p in b["probes"]):
+                raise ValueError("probes is a list of probe ids (strings), or a word such as all or security")
             suites = []
             for s in b.get("suites") or []:
                 suites.append(S.load(s if isinstance(s, dict) else str(s)))
+            S.check_distinct(suites)   # two suites of one name: a 422 now, not a failed job later
             probes = b.get("probes")
             if t is not None:
                 P.select(runner.DEFAULT_PROBES[role] if probes is None else probes, t)   # an unknown probe is a 422 now, not a failed job later

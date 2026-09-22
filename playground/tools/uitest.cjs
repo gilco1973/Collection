@@ -73,12 +73,29 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   await page.waitForSelector("text=someone other than the person who ran the test");
   check(true, "the tester cannot accept their own critical or high finding");
 
+  // a new name at the top right relabels the open card's button at once, and is the name the server records
+  await page.fill("#by", "Bob Placeholder <bob@example.com>");
+  await page.press("#by", "Tab");
+  check((await finding.locator("button:has-text('Record')").textContent()).includes("Bob Placeholder"),
+    "the Record button names the person now at the top right");
+  await finding.locator("button:has-text('Record')").click();
+  await page.waitForSelector("#toast.show:has-text('Recorded, as Bob Placeholder <bob@example.com>')");
+  await page.waitForSelector("h2:has-text('Triage log')");
+  check(true, "someone else's decision is recorded under their name");
+  await page.fill("#by", "Ada Placeholder <ada@example.com>");
+  await page.press("#by", "Tab");
+
   await page.click("nav >> text=Run checks");
   await page.waitForSelector("h1:has-text('Run checks')");
   await page.selectOption("main select", "demo-safe");
+  // a list of suites is taken as it is pasted
+  await page.locator("main textarea").fill(JSON.stringify([
+    { name: "ui-one", cases: [{ id: "answers", prompt: "Say hello", expect: { max_latency_ms: 60000 } }] },
+    { name: "ui-two", cases: [{ id: "answers-too", prompt: "Say hello again", expect: { max_latency_ms: 60000 } }] }]));
   await page.click("button:has-text('Run the checks')");
   await page.waitForSelector("h2:has-text('For the sign-off')", { timeout: 60000 });
   check(await page.isVisible(".verdict .chip.clear"), "the safe demo's report is clear");
+  check(await page.isVisible("code:has-text('answers-too')"), "a pasted list of suites runs every suite in it");
   await shot("05-report-clear");
 
   await page.click("nav >> text=Reports");

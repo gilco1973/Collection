@@ -9,11 +9,14 @@ Verdicts:
   blocked       a critical or high finding failed and nobody has triaged it
   needs-review  a finding needs a person: a medium or low failure, a `review` result, or a probe that could not run
   clear         everything that applies held (or was triaged by a named person)
-  incomplete    the solution could not be reached, or nothing that applies was checked, so nothing was judged
+  incomplete    the solution could not be reached, refused a plain question, nothing that applies was checked, or
+                every check that applies ended in an error, so nothing was judged
 
 Integrity: a report's id is a hash of everything the run recorded (with a random nonce, so two identical runs never
 share an id), and every triage entry carries the hash of the one before it (the first, the report's id). `load`
-refuses a report whose id or triage chain no longer matches. Without a key this detects an edit; it does not stop a
+refuses a report whose id or triage chain no longer matches, and replays every triage entry through the rules
+`triage` applies (a named person, a reason, a finding that needed a person, separation of duties), so an entry
+appended by hand with a recomputed chain is refused too. Without a key this detects an edit; it does not stop a
 determined forger, who is the reason the sign-offs are recorded elsewhere by a named person.
 """
 from __future__ import annotations
@@ -34,6 +37,8 @@ DECISIONS = ("accepted-risk", "false-positive", "fixed-retest")
 PERSON = re.compile(r"[^<>@\n]{2,80}<[^<>@\s]+@[^<>@\s]+>\Z")
 ADDRESS = re.compile(r"<([^<>]*)>")
 NOTHING_CHECKED = "nothing applicable was checked: choose probes or cases that apply to this solution"
+NOTHING_JUDGED = "nothing was judged: every check that applies ended in an error"
+LISTED = 6   # ids named in a verdict's reason; the rest are counted
 NO_TESTER = "the run names no tester; a critical or high finding is triaged on a run with a named tester"
 SELF_TRIAGE = ("a critical or high finding is accepted as a risk or called a false positive by someone other than "
                "the person who ran the test")
@@ -41,6 +46,9 @@ SELF_TRIAGE = ("a critical or high finding is accepted as a risk or called a fal
 # is recomputed from the rest
 UNSEALED = ("id", "triage", "triage_head", "summary", "verdict", "verdict_reason", "onboarding")
 MAX_TEXT = 2000
+SURROGATE = re.compile("[\ud800-\udfff]")
+# what Markdown (and the HTML it may carry) reads as markup inside a line of prose or a table cell
+MD_SPECIAL = re.compile(r"([\\`\[\]()!*_#|~])")
 
 
 def now() -> str:
@@ -48,15 +56,22 @@ def now() -> str:
 
 
 def scrub(value, secrets: list):
-    """Cut long text and replace any credential value with its placeholder, everywhere in the evidence."""
+    """Cut long text, replace any credential value with its placeholder, and replace a lone surrogate (which no
+    file can encode) with U+FFFD, everywhere in the evidence."""
+    secrets = sorted((s for s in secrets if s), key=len, reverse=True)   # never an empty string; the longest first
+    return _scrub(value, secrets)
+
+
+def _scrub(value, secrets: list):
     if isinstance(value, str):
+        value = SURROGATE.sub("\ufffd", value)
         for s in secrets:
             value = value.replace(s, "[secret]")
         return value if len(value) <= MAX_TEXT else value[:MAX_TEXT] + f"… ({len(value)} characters)"
-    if isinstance(value, list):
-        return [scrub(v, secrets) for v in value]
+    if isinstance(value, (list, tuple)):
+        return [_scrub(v, secrets) for v in value]
     if isinstance(value, dict):
-        return {k: scrub(v, secrets) for k, v in value.items()}
+        return {_scrub(k, secrets) if isinstance(k, str) else k: _scrub(v, secrets) for k, v in value.items()}
     return value
 
 
@@ -70,11 +85,15 @@ def is_person(by) -> bool:
 
 
 def identity(by) -> str:
-    """Who a `Name <address>` is, for comparing two of them: the address, lower-cased; '' when there is none."""
+    """Who a `Name <address>` is, for comparing two of them: the address, lower-cased, with a `+tag` in the local
+    part folded away (ada+sec@example.com is ada@example.com); '' when there is none."""
     by = normalise_person(by)
     if not PERSON.match(by):
         return ""
-    return ADDRESS.search(by).group(1).strip().lower()
+    address = ADDRESS.search(by).group(1).strip().lower()
+    local, at, domain = address.rpartition("@")
+    base = local.split("+", 1)[0]
+    return (base or local) + at + domain
 
 
 def resolved_ids(report: dict) -> dict:
@@ -88,6 +107,12 @@ def resolved_ids(report: dict) -> dict:
     return out
 
 
+def listed(results: list) -> str:
+    """The first few ids, and how many more there are."""
+    names = ", ".join(r["id"] for r in results[:LISTED])
+    return names + (f", and {len(results) - LISTED} more" if len(results) > LISTED else "")
+
+
 def verdict(report: dict) -> tuple:
     if report.get("incomplete"):
         return "incomplete", report["incomplete"]
@@ -95,11 +120,15 @@ def verdict(report: dict) -> tuple:
     open_ = [r for r in report["results"] if r["id"] not in done]
     blockers = [r for r in open_ if r["status"] == "fail" and r["severity"] in ("critical", "high")]
     if blockers:
-        return "blocked", f"{len(blockers)} critical or high finding(s) failed: " + ", ".join(r["id"] for r in blockers[:6])
+        return "blocked", f"{len(blockers)} critical or high finding(s) failed: " + listed(blockers)
+    applicable = [r for r in report["results"] if r["status"] != "skipped"]
+    if applicable and all(r["status"] == "error" for r in applicable):
+        # an error judges nothing: a service that refused every probe's harmless control too was never tested
+        return "incomplete", NOTHING_JUDGED
     waiting = [r for r in open_ if r["status"] in ("fail", "review", "error")]
     if waiting:
-        return "needs-review", f"{len(waiting)} finding(s) wait for a person: " + ", ".join(r["id"] for r in waiting[:6])
-    judged = sum(1 for r in report["results"] if r["status"] != "skipped")
+        return "needs-review", f"{len(waiting)} finding(s) wait for a person: " + listed(waiting)
+    judged = len(applicable)
     if not judged:
         return "incomplete", NOTHING_CHECKED
     return "clear", f"all {judged} applicable checks held" + (f"; {len(done)} triaged by a named person" if done else "")
@@ -144,12 +173,31 @@ def verify(rep: dict) -> dict:
         head = triage_hash(t)
     if rep.get("triage_head", rep["id"]) != head:
         raise ValueError("the report's triage log was edited after it was written; its hash chain is broken")
+    replay_triage(rep)
     return rep
+
+
+def replay_triage(rep: dict) -> None:
+    """Every triage entry again through the rules `triage` applies, in order: a chain recomputed by hand still has
+    to name a person, give a reason, decide on a finding that needed a person, and keep separation of duties."""
+    for n, t in enumerate(rep.get("triage") or [], 1):
+        try:
+            if not all(isinstance(t.get(k), str) for k in ("result_id", "decision", "by", "reason", "at")):
+                raise ValueError("an entry names the finding, the decision, the person, the reason and when")
+            by, reason = check_decision(rep, t["result_id"], t["decision"], t["by"], t["reason"])
+            if by != t["by"] or reason != t["reason"]:
+                raise ValueError("the person and the reason are recorded as triage records them")
+        except ValueError as e:
+            raise ValueError(f"the triage log breaks the rules: entry {n} ({str(t.get('result_id'))[:80]}): {e}") from None
 
 
 def build(results: list, *, target: dict | None, component: dict | None, tester: dict, started: str, suites: list,
           probes: list, secrets: list = (), incomplete: str | None = None) -> dict:
-    rep = {
+    """The report of one run. Everything in it goes through `scrub` with the run's credential values, not only the
+    results: the reason a run is incomplete quotes what the solution said, the component's description is the
+    candidate's own text."""
+    secrets = list(secrets)
+    rep = scrub({
         "kind": "ai-playground-report",
         "playground_version": __version__,
         "started": started,
@@ -159,33 +207,37 @@ def build(results: list, *, target: dict | None, component: dict | None, tester:
         "component": component,
         "probes": probes,
         "suites": suites,
-        "results": scrub(sorted((r.to_json() for r in results), key=lambda r: (STATUS_ORDER.index(r["status"]), SEVERITY_ORDER.index(r["severity"]))), list(secrets)),
+        "results": sorted((r.to_json() for r in results), key=lambda r: (STATUS_ORDER.index(r["status"]), SEVERITY_ORDER.index(r["severity"]))),
         "nonce": _secrets.token_hex(16),
         "triage": [],
-    }
+    }, secrets)
     if incomplete:
-        rep["incomplete"] = incomplete
+        rep["incomplete"] = scrub(str(incomplete), secrets)
     rep["id"] = report_id(rep)
     rep["triage_head"] = rep["id"]
-    refresh(rep)
+    refresh(rep, secrets)
     return rep
 
 
-def refresh(rep: dict) -> dict:
+def refresh(rep: dict, secrets: list = ()) -> dict:
+    """The summary, the verdict and the onboarding block, recomputed from what the run recorded and the triage."""
     rep["summary"] = summarise(rep)
     rep["verdict"], rep["verdict_reason"] = verdict(rep)
-    rep["onboarding"] = onboarding(rep)
+    rep["verdict_reason"] = scrub(rep["verdict_reason"], list(secrets))
+    rep["onboarding"] = scrub(onboarding(rep), list(secrets))
     return rep
 
 
-def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> dict:
-    """Record one person's decision on one finding; the verdict is recomputed, the results are untouched."""
+def check_decision(rep: dict, result_id: str, decision: str, by: str, reason: str) -> tuple:
+    """The rules for one triage decision; (the person, the reason) as they are recorded, or ValueError."""
     if decision not in DECISIONS:
         raise ValueError(f"decision is one of {', '.join(DECISIONS)}")
+    by = SURROGATE.sub("\ufffd", by) if isinstance(by, str) else by   # a character no file can hold
+    reason = SURROGATE.sub("\ufffd", reason) if isinstance(reason, str) else reason
     if not is_person(by):
         raise ValueError('by names a person: "Name <address>"')
     by = normalise_person(by)
-    if not reason or len(reason.strip()) < 10:
+    if not isinstance(reason, str) or len(reason.strip()) < 10:
         raise ValueError("reason says why, in a sentence (at least 10 characters)")
     hit = next((r for r in rep["results"] if r["id"] == result_id), None)
     if not hit:
@@ -198,8 +250,14 @@ def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> di
             raise ValueError(NO_TESTER)
         if tester == identity(by):
             raise ValueError(SELF_TRIAGE)
+    return by, reason.strip()
+
+
+def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> dict:
+    """Record one person's decision on one finding; the verdict is recomputed, the results are untouched."""
+    by, reason = check_decision(rep, result_id, decision, by, reason)
     head = rep.get("triage_head") or rep["id"]
-    entry = {"result_id": result_id, "decision": decision, "by": by, "reason": reason.strip(), "at": now(), "prev": head}
+    entry = {"result_id": result_id, "decision": decision, "by": by, "reason": reason, "at": now(), "prev": head}
     rep.setdefault("triage", []).append(entry)
     rep["triage_head"] = triage_hash(entry)
     return refresh(rep)
@@ -207,7 +265,8 @@ def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> di
 
 def onboarding(rep: dict) -> dict:
     """What this report is evidence for, in the words of the sign-off form."""
-    ids = {r["id"]: r for r in rep["results"]}
+    # only the contract check's own results: a suite of cases named "contract" cannot stand in for them
+    ids = {r["id"]: r for r in rep["results"] if r.get("suite") == "contract"}
     def state(i):
         return ids[i]["status"] if i in ids else "not run"
     security = [r for r in rep["results"] if r["suite"] in ("security", "robustness")]
@@ -237,14 +296,30 @@ def md_code(text: str) -> list:
     return ["    " + line for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")]
 
 
+def md_escape(text) -> str:
+    """Untrusted text as literal text on one line: every Markdown metacharacter is backslash-escaped and `<`, `>` and
+    `&` are written as entities, so a link, an image, emphasis, a heading, a table pipe or raw HTML in it is shown,
+    never rendered."""
+    text = " ".join(str(text).split())
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return MD_SPECIAL.sub(r"\\\1", text)
+
+
 def md_cell(text) -> str:
-    """Untrusted text in one Markdown table cell: one line, and a pipe cannot open another cell."""
-    return " ".join(str(text).split()).replace("\\", "\\\\").replace("|", "\\|")
+    """Untrusted text in one Markdown table cell: one line, a pipe cannot open another cell, and nothing renders."""
+    return md_escape(text)
 
 
 def md_line(text) -> str:
-    """Untrusted text inside one line of prose: no line break can start a heading or a block of its own."""
-    return " ".join(str(text).split())
+    """Untrusted text inside one line of prose: no line break can start a heading or a block of its own, and no
+    markup in it (a link, an image, a tag) renders."""
+    return md_escape(text)
+
+
+def md_code_span(text) -> str:
+    """Untrusted text inside a `code span`: one line, and no backtick to end the span early (nothing renders inside
+    one, so nothing else is escaped)."""
+    return " ".join(str(text).split()).replace("`", "'")
 
 
 def to_markdown(rep: dict) -> str:
@@ -254,9 +329,9 @@ def to_markdown(rep: dict) -> str:
              f"**Verdict: {rep['verdict']}.** {md_line(rep['verdict_reason'])}.", ""]
     subject = []
     if t:
-        subject.append(f"target `{t.get('name')}` ({t.get('kind')}, {t.get('environment')})")
+        subject.append(f"target `{md_code_span(t.get('name'))}` ({md_line(t.get('kind'))}, {md_line(t.get('environment'))})")
     if c:
-        subject.append(f"component `{md_line(c.get('name')).replace('`', '')}` {md_line(c.get('version') or '')}")
+        subject.append(f"component `{md_code_span(c.get('name'))}` {md_line(c.get('version') or '')}")
     lines += [f"Tested: {' and '.join(subject) or 'nothing'}. By {md_line(rep['tester'].get('by') or 'an unnamed tester')} as {md_line(rep['tester'].get('role', 'engineer'))}, "
               f"{rep['started']} to {rep['finished']}, playground {rep['playground_version']}.", ""]
     s = rep["summary"]
@@ -277,8 +352,8 @@ def to_markdown(rep: dict) -> str:
         for r in findings:
             tri = done.get(r["id"])
             tag = f" — triaged {tri['decision']} by {md_line(tri['by'])}: {md_line(tri['reason'])}" if tri else ""
-            lines += [f"### {r['status'].upper()} · {r['severity']} · {md_line(r['title'])} (`{r['id']}`){tag}", "",
-                      f"{r['category']} {r['category_name']}. {md_line(r['summary'])}.", ""]
+            lines += [f"### {md_line(r['status'].upper())} · {md_line(r['severity'])} · {md_line(r['title'])} (`{md_code_span(r['id'])}`){tag}", "",
+                      f"{md_line(r['category'])} {md_line(r['category_name'])}. {md_line(r['summary'])}.", ""]
             if r.get("recommendation"):
                 lines += [f"What to do: {md_line(r['recommendation'])}", ""]
             for e in r["evidence"][:2]:
@@ -295,13 +370,13 @@ def to_markdown(rep: dict) -> str:
                     lines += md_code(json.dumps(e, indent=1)[:800]) + [""]
     held = [r for r in rep["results"] if r["status"] == "pass"]
     if held:
-        lines += ["## Held", ""] + [f"- `{r['id']}` {md_line(r['title'])}: {md_line(r['summary'])}" for r in held] + [""]
+        lines += ["## Held", ""] + [f"- `{md_code_span(r['id'])}` {md_line(r['title'])}: {md_line(r['summary'])}" for r in held] + [""]
     skipped = [r for r in rep["results"] if r["status"] == "skipped"]
     if skipped:
-        lines += ["## Not applicable", ""] + [f"- `{r['id']}`: {md_line(r['summary'])}" for r in skipped] + [""]
+        lines += ["## Not applicable", ""] + [f"- `{md_code_span(r['id'])}`: {md_line(r['summary'])}" for r in skipped] + [""]
     if rep.get("triage"):
         lines += ["## Triage log", "", "| Finding | Decision | By | Reason | When |", "| --- | --- | --- | --- | --- |"]
-        lines += [f"| `{md_cell(t['result_id'])}` | {md_cell(t['decision'])} | {md_cell(t['by'])} | {md_cell(t['reason'])} | {md_cell(t['at'])} |" for t in rep["triage"]] + [""]
+        lines += [f"| `{md_code_span(t['result_id']).replace('|', '/')}` | {md_cell(t['decision'])} | {md_cell(t['by'])} | {md_cell(t['reason'])} | {md_cell(t['at'])} |" for t in rep["triage"]] + [""]
     return "\n".join(lines)
 
 
@@ -382,23 +457,58 @@ def to_html(rep: dict) -> str:
     return "".join(parts)
 
 
+def to_json(rep: dict) -> str:
+    """The report as JSON, ASCII only: a character no file can encode (a lone surrogate) is written as an escape."""
+    return json.dumps(rep, indent=2, ensure_ascii=True)
+
+
+def write_atomic(path: str, data: bytes) -> None:
+    """Write to a temporary file beside `path`, then rename it over `path`: a failure never leaves half a file."""
+    d, name = os.path.split(os.path.abspath(path))
+    tmp = os.path.join(d, f".{name}.{_secrets.token_hex(6)}.tmp")
+    try:
+        with open(tmp, "xb") as f:   # a new file of our own, with the usual permissions
+            f.write(data)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def save_as(rep: dict, json_path: str) -> dict:
+    """The three renderings: the JSON at `json_path`, the Markdown and HTML beside it with the same name. Everything
+    is rendered before anything is written, and each file is replaced whole."""
+    base = json_path[:-5] if json_path.lower().endswith(".json") else json_path
+    paths = {"json": json_path, "md": base + ".md", "html": base + ".html"}
+    data = {"json": to_json(rep).encode("ascii"),
+            "md": to_markdown(rep).encode("utf-8", errors="replace"),
+            "html": to_html(rep).encode("utf-8", errors="replace")}
+    for kind in ("md", "html", "json"):   # the JSON, the record the others are made from, last
+        write_atomic(paths[kind], data[kind])
+    return paths
+
+
 def save(rep: dict, out_dir: str) -> dict:
     os.makedirs(out_dir, exist_ok=True)
-    base = os.path.join(out_dir, rep["id"])
-    paths = {"json": base + ".json", "md": base + ".md", "html": base + ".html"}
-    with open(paths["json"], "w", encoding="utf-8") as f:
-        json.dump(rep, f, indent=2, ensure_ascii=False)
-    with open(paths["md"], "w", encoding="utf-8") as f:
-        f.write(to_markdown(rep))
-    with open(paths["html"], "w", encoding="utf-8") as f:
-        f.write(to_html(rep))
-    return paths
+    return save_as(rep, os.path.join(out_dir, rep["id"] + ".json"))
+
+
+def extends(old: list, new: list) -> bool:
+    """True when the triage log `new` is `old` with entries added at the end (or the same log)."""
+    old, new = list(old or []), list(new or [])
+    return len(old) <= len(new) and new[:len(old)] == old
 
 
 def load(path: str) -> dict:
     """A saved report, its id and triage chain checked, and its verdict recomputed from what it recorded."""
     with open(path, encoding="utf-8") as f:
-        rep = json.load(f)
+        try:
+            rep = json.load(f)
+        except ValueError as e:
+            raise ValueError(f"{path} is not a playground report: {e}") from None
     if not isinstance(rep, dict) or rep.get("kind") != "ai-playground-report":
         raise ValueError(f"{path} is not a playground report")
     try:

@@ -37,7 +37,9 @@ marked for review rather than guessed.
 - **Never production.** The target must be a sandbox, development, test or staging environment; probes are adversarial.
 - **Only hosts you name.** Anything beyond the local machine must be listed in the target's allowed hosts.
 - **Credentials are names.** A secret is written as the name of an environment variable; any value that comes back is replaced in the report.
-- **A person decides what a probe cannot.** Triage records a named person, a decision and a reason; a critical or high risk is accepted by someone other than the tester.
+- **A refusal counts only when it is a guard.** A service that turns a probe away is credited only if it answers a harmless question of the same size; otherwise the probe says nothing was judged.
+- **Reports are sealed.** A report edited after it was written, or a triage log that breaks these rules, is refused.
+- **A person decides what a probe cannot.** Triage records a named person, a decision (an accepted risk, a false positive, or fixed and to be tested again) and a reason; a critical or high finding is accepted or called a false positive only by someone other than the tester, and only on a run that names its tester.
 
 ## Reading the verdict
 
@@ -46,7 +48,7 @@ marked for review rather than guessed.
 | clear | Everything that applies held, or was triaged by a named person | Ask for the two sign-offs |
 | needs review | A medium or low failure, a result marked for review, or a probe that could not run | Fix it, or have it triaged, then ask |
 | blocked | A critical or high finding failed and nobody has triaged it | Not signed; fix it and run again |
-| incomplete | The solution could not be reached | Check the target and run again |
+| incomplete | Nothing was judged: the solution could not be reached, refused even a plain question, or nothing that ran applies to it | Check the target (address, credentials, request shape) or choose probes and cases that apply, then run again |
 
 An accepted risk does not disappear: the report lists it under the known limits to add, and the owner copies it
 into the component's README, where the next reader finds it.

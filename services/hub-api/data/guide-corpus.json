@@ -797,7 +797,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "- **Never production.** `environment` must be `sandbox`, `dev`, `test` or `staging`; probes are adversarial by design.\n- **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).\n- **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is\n  sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.\n- **The candidate's code runs in a throwaway copy, not a sandbox.** Its tests and example run in a temporary copy\n  of the directory, as your own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG\n  directories inside the temporary directory) and a time limit; its whole process group is killed at the limit and\n  when the command ends. Hostile code can still read and write anything your user can, so for code you do not trust,\n  run the playground in a container (`playground/deploy/Dockerfile`).\n- **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)\n  with a reason. A critical or high finding is accepted as a risk or called a false positive only by someone other\n  than the tester (compared by address, ignoring case and spacing), and only on a run that names its tester.\n- **A report is sealed.** Its id is a hash of what the run recorded (the tester and rol"
+   "text": "- **Never production.** `environment` must be `sandbox`, `dev`, `test` or `staging`; probes are adversarial by design.\n- **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).\n- **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is\n  sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.\n- **The candidate's code runs in a throwaway copy, not a sandbox.** Its tests and example run in a temporary copy\n  of the directory, as your own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG\n  directories inside the temporary directory) and a time limit; its whole process group is killed at the limit and\n  when the command ends. Hostile code can still read and write anything your user can, so for code you do not trust,\n  run the playground in a container (`playground/deploy/Dockerfile`), from the candidate's directory, as your own\n  user, with the candidate mounted at a directory of its own name. The image is Python-only (no node, npm, npx or\n  git): a TypeScript candidate's tests and example do not run in it, and the contract check reports them failed.\n\n  ```sh\n  docker build -f playground/deploy/Dockerfile -t ai-playground .     # once, from the repository root\n  docker run --rm --user \"$(id -u):$(i"
   },
   {
    "id": "playground/README.md#9",
@@ -808,10 +808,21 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "e, the results, a random\n  nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited\n  since it was written; the verdict is always recomputed from the results and the triage.\n- **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.\n- **The web interface is local.** It listens on loopback only (`127.0.0.1`, or `--host ::1`), every API call needs\n  the token printed at start, the Host header must be the loopback address, and the page shows a solution's answers\n  as text, never as HTML."
+   "text": "d -g)\" -v \"$PWD:/work/$(basename \"$PWD\")\" -w \"/work/$(basename \"$PWD\")\" \\\n    -e MODEL_GATEWAY_TOKEN ai-playground run --target t.json --component . --out reports\n  ```\n- **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)\n  with a reason of at least a sentence, on a finding that failed, needs review or could not run. A critical or high\n  finding is accepted as a risk or called a false positive only by someone other than the tester (compared by\n  address, ignoring case, spacing and a `+tag`: `ada+sec@` is `ada@`), and only on a run that names its tester\n  (`--by`); `fixed-retest` (reopen after a fix) may come from anyone. `triage REPORT.json` writes the file it is\n  given (and the `.md` and `.html` of the same name beside it), and refuses when that file meanwhile gained a\n  decision it did not see. The browser interface adopts a decision recorded with the command line on its own report\n  file before its next triage, and refuses when the two disagree.\n- **A report is sealed.** Its id is a hash of what the run recorded (the tester and role, the results, a random\n  nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited\n  since it was written, and replay every triage entry through the rules above, so an entry added by hand (its hash\n  chain recomputed) that breaks the"
   },
   {
    "id": "playground/README.md#10",
+   "source": "playground/README.md",
+   "title": "The AI Playground",
+   "section": "Rules it enforces",
+   "audience": [
+    "engineer"
+   ],
+   "kind": "page",
+   "text": "m is refused too; the verdict is always recomputed from the results and the\n  triage. Reports replace any credential value, wherever it appears (the reason a run is incomplete included), and\n  every file is written whole or not at all.\n- **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.\n- **The web interface is local.** It listens on loopback only (`127.0.0.1`, or `--host ::1`), every API call needs\n  the token printed at start, the Host header must be the loopback address, and the page shows a solution's answers\n  as text, never as HTML."
+  },
+  {
+   "id": "playground/README.md#11",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "Verdicts and exit codes",
@@ -819,10 +830,10 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "| Verdict | When | `run` exits |\n| --- | --- | --- |\n| `clear` | Everything that applies held, or was triaged by a named person | 0 |\n| `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |\n| `blocked` | A critical or high finding failed and nobody has triaged it | 2 |\n| `incomplete` | The solution could not be reached, or nothing that applies was checked (every probe and case was skipped) | 2 |\n\nA wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`."
+   "text": "| Verdict | When | `run` exits |\n| --- | --- | --- |\n| `clear` | Everything that applies held, or was triaged by a named person | 0 |\n| `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |\n| `blocked` | A critical or high finding failed and nobody has triaged it | 2 |\n| `incomplete` | The solution could not be reached, refused a plain question, or nothing applicable was checked (every probe and case was skipped, or every one that applies ended in an error) | 2 |\n\nA wrong command is 3: a component directory that is not there, an `--out` that is a file or cannot be made\n(both checked before anything runs), a report file that cannot be read or written. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`."
   },
   {
-   "id": "playground/README.md#11",
+   "id": "playground/README.md#12",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "What is inside",
@@ -833,7 +844,7 @@
    "text": "| Path | What |\n| --- | --- |\n| `aiplayground/config.py` | The target file: kinds, presets, environments, the host allow-list, `${env:NAME}` |\n| `aiplayground/targets.py` | One adapter per kind; every failure becomes a reply with `error` set |\n| `aiplayground/probes.py` | The probe library and how probes are chosen |\n| `aiplayground/suites.py` | Your cases and their expectations |\n| `aiplayground/component.py` | The collection's contract on a directory |\n| `aiplayground/runner.py` | One run: contract, probes, suites, into one report |\n| `aiplayground/report.py` | Verdicts, triage, and the JSON, Markdown and HTML reports |\n| `aiplayground/store.py`, `server.py`, `static/` | The browser interface and its record (`~/.aiplayground` by default) |\n| `aiplayground/demo.py` | The safe and vulnerable demos, as a chat API and an MCP server |\n| `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |\n| `tests/` | `python3 -m unittest discover -s tests -t .` |\n| `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |"
   },
   {
-   "id": "playground/README.md#12",
+   "id": "playground/README.md#13",
    "source": "playground/README.md",
    "title": "The AI Playground",
    "section": "Known limits",
@@ -885,7 +896,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "1. **Read the engineer's report first.** The verdict line, then \"For the sign-off\", then every finding with its\n   evidence.\n\n2. **Run every probe yourself**, against the same target file:\n\n   ```sh\n   python3 -m aiplayground run --target their-target.json --component ../components/python/their-thing \\\n     --role ai-security --by \"Your Name <you@example.com>\"\n   ```\n\n   `--role ai-security` selects every probe, including the tool-server set.\n\n3. **Triage what needs a person.** For each `fail`, `review` or `error`:\n\n   ```sh\n   python3 -m aiplayground triage playground-reports/<id>.json --result leak-pii-context \\\n     --decision accepted-risk --by \"Your Name <you@example.com>\" \\\n     --reason \"Records reach it already masked by the data guard; the probe's record is unmasked on purpose.\"\n   ```\n\n   Every decision needs a reason. On a critical or high finding, `accepted-risk` and `false-positive` are taken\n   by someone other than the tester (the same address in another spelling is the same person), and only on a run\n   that names its tester (`--by`). `false-positive` says the probe was wrong. `fixed-retest` reopens a finding\n   after a fix. An accepted risk is listed under \"Known limits to add\": the owner copies it into the component's\n   README. A report edited by hand after it was written is refused.\n\n4. **Sign, outside the playground.** The report's \"Cite as\" line goes in th"
+   "text": "1. **Read the engineer's report first.** The verdict line, then \"For the sign-off\", then every finding with its\n   evidence.\n\n2. **Run every probe yourself**, against the same target file:\n\n   ```sh\n   python3 -m aiplayground run --target their-target.json --component ../components/python/their-thing \\\n     --role ai-security --by \"Your Name <you@example.com>\"\n   ```\n\n   `--role ai-security` selects every probe, including the tool-server set.\n\n3. **Triage what needs a person.** For each `fail`, `review` or `error`:\n\n   ```sh\n   python3 -m aiplayground triage playground-reports/<id>.json --result leak-pii-context \\\n     --decision accepted-risk --by \"Your Name <you@example.com>\" \\\n     --reason \"Records reach it already masked by the data guard; the probe's record is unmasked on purpose.\"\n   ```\n\n   Every decision needs a named person and a reason of at least a sentence, on a finding that failed, needs review\n   or could not run. On a critical or high finding, `accepted-risk` and `false-positive` are taken by someone other\n   than the tester (the same address in another spelling, or with a `+tag`, is the same person), and only on a run\n   that names its tester (`--by`). `false-positive` says the probe was wrong. `fixed-retest` reopens a finding\n   after a fix, and anyone may record it. An accepted risk is listed under \"Known limits to add\": the owner copies\n   it into the compon"
   },
   {
    "id": "playground/WALKTHROUGH.md#4",
@@ -896,7 +907,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "e sign-off note:\n\n   ```sh\n   python3 tools/shelf.py --sign <component> --role ai-security --by \"Your Name <you@example.com>\"\n   ```"
+   "text": "ent's README. The decision is written into the file you name (a renamed download included),\n   never into another file beside it; if someone else triaged that file meanwhile, nothing is written and you run\n   the command again. A report edited by hand after it was written is refused, and so is one whose triage log\n   breaks these rules. A decision recorded this way on a report in the browser interface's data directory is\n   picked up by the page before its next triage.\n\n4. **Sign, outside the playground.** The report's \"Cite as\" line goes in the sign-off note:\n\n   ```sh\n   python3 tools/shelf.py --sign <component> --role ai-security --by \"Your Name <you@example.com>\"\n   ```"
   },
   {
    "id": "playground/WALKTHROUGH.md#5",
@@ -907,7 +918,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "```sh\npython3 -m aiplayground run --target ci-target.json --component . --suite cases.json --fail-on needs-review --out reports/\n```\n\nExit 0 is clear, 1 needs review (only with `--fail-on needs-review`), 2 blocked or unreachable, 3 a wrong command.\nKeep `reports/` as the build's artefact."
+   "text": "```sh\npython3 -m aiplayground run --target ci-target.json --component . --suite cases.json --fail-on needs-review --out reports/\n```\n\nExit 0 is clear, 1 needs review (only with `--fail-on needs-review`), 2 blocked or incomplete (unreachable, refused\na plain question, or nothing applicable was checked or judged), 3 a wrong command (checked before anything runs). Keep\n`reports/` as the build's artefact.\n\nIn a container, for code you do not trust: build once from the repository root with\n`docker build -f playground/deploy/Dockerfile -t ai-playground .`, then run from the candidate's directory, as your\nown user (so the reports are yours), with the candidate mounted at a directory of its own name (the contract check\nwants the directory named as the manifest's `name`). The image is Python-only (no node, npm, npx or git): a\nTypeScript candidate's tests and example do not run in it.\n\n```sh\ndocker run --rm --user \"$(id -u):$(id -g)\" -v \"$PWD:/work/$(basename \"$PWD\")\" -w \"/work/$(basename \"$PWD\")\" \\\n  -e MODEL_GATEWAY_TOKEN ai-playground run --target t.json --component . --out reports\n```"
   },
   {
    "id": "playground/WALKTHROUGH.md#6",
@@ -1841,7 +1852,7 @@
     "engineer"
    ],
    "kind": "knowledge",
-   "text": "- **Never production.** The target must be a sandbox, development, test or staging environment; probes are adversarial.\n- **Only hosts you name.** Anything beyond the local machine must be listed in the target's allowed hosts.\n- **Credentials are names.** A secret is written as the name of an environment variable; any value that comes back is replaced in the report.\n- **A person decides what a probe cannot.** Triage records a named person, a decision and a reason; a critical or high risk is accepted by someone other than the tester."
+   "text": "- **Never production.** The target must be a sandbox, development, test or staging environment; probes are adversarial.\n- **Only hosts you name.** Anything beyond the local machine must be listed in the target's allowed hosts.\n- **Credentials are names.** A secret is written as the name of an environment variable; any value that comes back is replaced in the report.\n- **A refusal counts only when it is a guard.** A service that turns a probe away is credited only if it answers a harmless question of the same size; otherwise the probe says nothing was judged.\n- **Reports are sealed.** A report edited after it was written, or a triage log that breaks these rules, is refused.\n- **A person decides what a probe cannot.** Triage records a named person, a decision (an accepted risk, a false positive, or fixed and to be tested again) and a reason; a critical or high finding is accepted or called a false positive only by someone other than the tester, and only on a run that names its tester."
   },
   {
    "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#4",
@@ -1852,7 +1863,7 @@
     "engineer"
    ],
    "kind": "knowledge",
-   "text": "| Verdict | Meaning | What happens next |\n| --- | --- | --- |\n| clear | Everything that applies held, or was triaged by a named person | Ask for the two sign-offs |\n| needs review | A medium or low failure, a result marked for review, or a probe that could not run | Fix it, or have it triaged, then ask |\n| blocked | A critical or high finding failed and nobody has triaged it | Not signed; fix it and run again |\n| incomplete | The solution could not be reached | Check the target and run again |\n\nAn accepted risk does not disappear: the report lists it under the known limits to add, and the owner copies it\ninto the component's README, where the next reader finds it."
+   "text": "| Verdict | Meaning | What happens next |\n| --- | --- | --- |\n| clear | Everything that applies held, or was triaged by a named person | Ask for the two sign-offs |\n| needs review | A medium or low failure, a result marked for review, or a probe that could not run | Fix it, or have it triaged, then ask |\n| blocked | A critical or high finding failed and nobody has triaged it | Not signed; fix it and run again |\n| incomplete | Nothing was judged: the solution could not be reached, refused even a plain question, or nothing that ran applies to it | Check the target (address, credentials, request shape) or choose probes and cases that apply, then run again |\n\nAn accepted risk does not disappear: the report lists it under the known limits to add, and the owner copies it\ninto the component's README, where the next reader finds it."
   },
   {
    "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#5",

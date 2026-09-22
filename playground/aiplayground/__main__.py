@@ -15,7 +15,11 @@
     python3 -m aiplayground demo-mcp [--vulnerable]
 
 Exit codes of `run` and `check-component`: 0 clear, 1 needs review, 2 blocked or incomplete, 3 the command itself
-was wrong. `--fail-on needs-review` makes 1 a failure in CI; the default fails only on blocked.
+was wrong (a component directory that is not there, an `--out` that cannot be a directory, a file that cannot be
+read or written). `--fail-on needs-review` makes 1 a failure in CI; the default fails only on blocked.
+
+`triage REPORT.json` rewrites the file it is given (and the .md and .html beside it, same name), and refuses when
+that file meanwhile carries a decision this command did not see.
 """
 from __future__ import annotations
 
@@ -126,9 +130,42 @@ def cmd_probes(a):
     return 0
 
 
+class UsageError(Exception):
+    """The command itself is wrong: exit 3 before anything runs."""
+
+
+def out_dir(a) -> str:
+    return a.out or os.path.join(os.getcwd(), "playground-reports")
+
+
+def usable_out(path: str) -> None:
+    """--out is a directory, or one that can be made: checked before the run, so a run is never lost at the end."""
+    path = os.path.abspath(path)
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            raise UsageError(f"--out {path} is not a directory")
+        if not os.access(path, os.W_OK | os.X_OK):
+            raise UsageError(f"--out {path} is not writable")
+        return
+    parent = os.path.dirname(path)
+    while parent and not os.path.exists(parent):
+        up = os.path.dirname(parent)
+        if up == parent:
+            break
+        parent = up
+    if not os.path.isdir(parent):
+        raise UsageError(f"--out {path} cannot be made: {parent} is not a directory")
+    if not os.access(parent, os.W_OK | os.X_OK):
+        raise UsageError(f"--out {path} cannot be made: {parent} is not writable")
+
+
+def usable_component(path: str) -> None:
+    if not os.path.isdir(path):
+        raise UsageError(f"not a directory: {path} (the candidate component's directory)")
+
+
 def finish(rep, a) -> int:
-    out = a.out or os.path.join(os.getcwd(), "playground-reports")
-    paths = Rp.save(rep, out)
+    paths = Rp.save(rep, out_dir(a))
     s = rep["summary"]["by_status"]
     say(f"{rep['verdict'].upper()}: {rep['verdict_reason']}")
     say("  " + ", ".join(f"{k} {v}" for k, v in s.items() if v))
@@ -159,6 +196,9 @@ def tester(a) -> str:
 
 def cmd_run(a):
     by = tester(a)
+    if a.component:
+        usable_component(a.component)
+    usable_out(out_dir(a))
     t = C.load(a.target) if a.target else None
     rep = runner.run(t, probes=a.probes, suites=a.suite or [], component_dir=a.component, run_component=not a.no_run,
                      by=by, role=a.role, progress=progress)
@@ -166,14 +206,26 @@ def cmd_run(a):
 
 
 def cmd_check_component(a):
-    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=tester(a), role=a.role)
+    by = tester(a)
+    usable_component(a.dir)
+    usable_out(out_dir(a))
+    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=by, role=a.role)
     return finish(rep, a)
 
 
 def cmd_triage(a):
-    rep = Rp.load(a.report)
+    """The decision goes into the file named, whatever it is called (a browser's "pg-x (1).json", a copy): never
+    into another file beside it. If that file changed since it was read and carries a decision this one did not
+    see, nothing is written."""
+    path = os.path.abspath(a.report)
+    if os.path.isdir(path):
+        raise UsageError(f"{a.report} is a directory; name the report's .json file")
+    rep = Rp.load(path)
     Rp.triage(rep, a.result, a.decision, a.by, a.reason)
-    paths = Rp.save(rep, os.path.dirname(os.path.abspath(a.report)))
+    current = Rp.load(path)   # again, just before writing: another triage may have landed meanwhile
+    if current["id"] != rep["id"] or not Rp.extends(current.get("triage"), rep["triage"]):
+        raise UsageError(f"{a.report} was triaged by someone else meanwhile; nothing was written. Run the command again")
+    paths = Rp.save_as(rep, path)
     say(f"recorded: {a.decision} on {a.result} by {rep['triage'][-1]['by']}; verdict now {rep['verdict']}")
     say(f"report: {paths['html']}")
     return 0
@@ -283,7 +335,7 @@ def main(argv=None) -> int:
         return 3
     try:
         return a.fn(a)
-    except (C.ConfigError, S.SuiteError, ValueError, FileNotFoundError) as e:
+    except (C.ConfigError, S.SuiteError, ValueError, UsageError) as e:
         print(f"{a.cmd}: {e}", file=sys.stderr)
         return 3
     except RuntimeError as e:
@@ -295,6 +347,10 @@ def main(argv=None) -> int:
         except OSError:
             pass
         return 0
+    except OSError as e:   # a file that cannot be read or written: the command was wrong, and one line says why
+        where = f": {e.filename}" if e.filename else ""
+        print(f"{a.cmd}: {e.strerror or e}{where}", file=sys.stderr)
+        return 3
 
 
 if __name__ == "__main__":

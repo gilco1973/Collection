@@ -235,7 +235,16 @@ async function viewRun(name) {
     const body = { target: pick.value || null, component: comp.value.trim() || null, run_component: runTests.checked, role: pref("role") || "engineer", by: pref("by") || "",
       probes: Object.keys(boxes).filter((k) => boxes[k].checked), suites: [] };
     if (!body.probes.length) body.probes = "none";
-    if (suite.value.trim()) { try { body.suites = [JSON.parse(suite.value)]; } catch (e) { return status.replaceChildren(errorBox("The suite is not JSON: " + e.message)); } }
+    if (suite.value.trim()) {
+      let parsed;
+      try { parsed = JSON.parse(suite.value); } catch (e) { return status.replaceChildren(errorBox("The suite is not JSON: " + e.message)); }
+      // one suite, or a list of suites; each is an object (a file path is not read from the page)
+      const list = Array.isArray(parsed) ? parsed : [parsed];
+      if (!list.length || !list.every((x) => x && typeof x === "object" && !Array.isArray(x))) {
+        return status.replaceChildren(errorBox("Your own cases are one suite object ({\"name\": ..., \"cases\": [...]}) or a list of them."));
+      }
+      body.suites = list;
+    }
     pref("component", comp.value.trim());
     start.disabled = true;
     try { const { job } = await api("POST", "runs", body); track(job, status, start); } catch (e) { status.replaceChildren(errorBox(e)); start.disabled = false; }
@@ -245,8 +254,8 @@ async function viewRun(name) {
     h("div", { class: "card stack" }, h("div", { class: "two" }, h("label", {}, "Solution", pick), h("label", {}, "Component directory", comp)),
       h("label", { class: "row" }, runTests, "Run the component's tests and live example")),
     groups,
-    h("div", { class: "card stack" }, h("label", {}, "Your own cases (a suite, JSON; optional)", suite)),
-    h("div", { class: "row" }, start, h("span", { class: "muted small" }, "Tester: " + (pref("by") || "set your name at the top right"))),
+    h("div", { class: "card stack" }, h("label", {}, "Your own cases (a suite, or a list of suites, JSON; optional)", suite)),
+    h("div", { class: "row" }, start, h("span", { class: "muted small", "data-tester": "Tester: " }, testerLabel("Tester: "))),
     status);
 }
 
@@ -326,6 +335,7 @@ async function viewReport(id) {
     h("h1", {}, "Report ", h("code", {}, rep.id)),
     h("div", { class: "muted small" }, (rep.target ? "Solution " + rep.target.name + " (" + rep.target.kind + ", " + rep.target.environment + ")" : "") +
       (rep.component ? (rep.target ? " · " : "") + "component " + rep.component.name + " " + (rep.component.version || "") : "") + " · " + (rep.tester.by || "unnamed") + " as " + rep.tester.role + " · " + rep.started),
+    rep.conflict ? h("div", { class: "err card" }, "This view is the playground's own record. " + rep.conflict) : null,
     h("div", { class: "card verdict" }, chip(rep.verdict, rep.verdict), h("span", {}, rep.verdict_reason)),
     h("div", { class: "stats" }, Object.entries(s.by_status).map(([k, v]) => h("div", {}, h("b", {}, v), h("span", { class: "muted small" }, k))),
       s.latency && s.latency.answers ? h("div", {}, h("b", {}, s.latency.p95_ms + " ms"), h("span", { class: "muted small" }, "p95 latency")) : null),
@@ -371,11 +381,24 @@ function findingCard(r, t, rep) {
       h("div", { class: "two" }, h("label", {}, "Decision", decision), h("label", {}, "Reason", reason)), err,
       h("div", {}, h("button", { onclick: async () => {
         err.textContent = "";
-        try { await api("POST", "runs/" + rep.id + "/triage", { result_id: r.id, decision: decision.value, by: pref("by"), reason: reason.value }); toast("Recorded"); viewReport(rep.id); }
-        catch (e) { err.textContent = e.message; }
-      } }, "Record, as " + (pref("by") || "(set your name at the top right)"))))));
+        try {
+          // the name is read now, not when the card was drawn; the toast names who the server recorded
+          const saved = await api("POST", "runs/" + rep.id + "/triage", { result_id: r.id, decision: decision.value, by: pref("by"), reason: reason.value });
+          const last = (saved && saved.triage && saved.triage.length) ? saved.triage[saved.triage.length - 1] : null;
+          toast("Recorded" + (last ? ", as " + last.by : ""));
+          viewReport(rep.id);
+        } catch (e) { err.textContent = e.message; }
+      }, "data-tester": "Record, as " }, testerLabel("Record, as "))))));
   }
   return card;
+}
+
+// A label that names the person at the top right; redrawn when that name changes (see boot).
+function testerLabel(prefix) {
+  return prefix + (pref("by") || "(set your name at the top right)");
+}
+function refreshTesterLabels() {
+  document.querySelectorAll("[data-tester]").forEach((el) => { el.textContent = testerLabel(el.getAttribute("data-tester")); });
 }
 
 // --- probe library -------------------------------------------------------------------------------------------------
@@ -408,7 +431,7 @@ async function boot() {
   role.value = pref("role") || "engineer";
   by.value = pref("by");
   role.addEventListener("change", () => { pref("role", role.value); route(); });
-  by.addEventListener("change", () => pref("by", by.value.trim()));
+  by.addEventListener("change", () => { pref("by", by.value.trim()); refreshTesterLabels(); });
   window.addEventListener("popstate", route);
   document.querySelectorAll("#nav a").forEach((a) => a.addEventListener("click", (ev) => { ev.preventDefault(); go(a.dataset.view); }));
   try {

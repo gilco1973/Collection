@@ -116,7 +116,7 @@ class MarkdownInjection(unittest.TestCase):
         md = Rp.to_markdown(r)
         self.assertNotIn("\n## Forged heading", md)
         row = next(l for l in md.splitlines() if l.startswith("| `x`"))
-        self.assertIn("Sandbox only \\| forged cell ## Forged heading \\| a \\| b \\|", row)
+        self.assertIn("Sandbox only \\| forged cell \\#\\# Forged heading \\| a \\| b \\|", row)
         self.assertEqual(row.count(" | "), 4)   # five cells: four separators outside the escaped pipes
 
 

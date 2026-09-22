@@ -6,7 +6,9 @@
 
 SQLite from the standard library; one writer at a time through a lock, so the web server's threads share it. A
 triage holds the lock from reading the run to writing it back, so two people triaging at once both keep their
-decision.
+decision. A decision recorded on `<data>/reports/<id>.json` with the command line is adopted before the page's
+next triage (when the file's verified log extends the database's); when the two logs disagree, the page refuses
+instead of overwriting either.
 """
 from __future__ import annotations
 
@@ -103,9 +105,34 @@ class Store:
             row = self.db.execute("SELECT report FROM runs WHERE id = ?", (rid,)).fetchone()
         return json.loads(row[0]) if row else None
 
+    def report_path(self, rid: str) -> str:
+        return os.path.join(self.dir, "reports", os.path.basename(rid) + ".json")
+
+    def current(self, rid: str) -> dict | None:
+        """The run as the database has it, or as its report file has it when a decision was recorded on the file
+        (with the command line) that the database has not seen. ValueError when the two logs disagree, or the file no
+        longer verifies: neither is overwritten."""
+        with self.lock:
+            rep = self.run(rid)
+            path = self.report_path(rid)
+            if rep is None or not os.path.exists(path):
+                return rep
+            try:
+                on_file = Rp.load(path)
+            except ValueError as e:
+                raise ValueError(f"the report file does not verify ({e}); move it aside to triage from the playground's own record") from None
+            if on_file.get("id") != rep["id"]:
+                raise ValueError(f"the report file {path} holds another report; move it aside to triage from the playground's own record")
+            if Rp.extends(rep.get("triage"), on_file.get("triage")):
+                return on_file   # the file's log is the database's plus decisions recorded on the file
+            if Rp.extends(on_file.get("triage"), rep.get("triage")):
+                return rep       # the file is behind: it is rewritten from the database
+            raise ValueError(f"the triage recorded on {path} and in the playground's record disagree; "
+                             "nothing was written. Decide which one stands and move the other aside")
+
     def triage(self, rid: str, result_id: str, decision: str, by: str, reason: str) -> dict:
         with self.lock:   # read, decide and write as one step: a decision recorded meanwhile is never overwritten
-            rep = self.run(rid)
+            rep = self.current(rid)
             if rep is None:
                 raise KeyError(rid)
             Rp.triage(rep, result_id, decision, by, reason)

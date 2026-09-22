@@ -74,13 +74,29 @@ call.
   of the directory, as your own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG
   directories inside the temporary directory) and a time limit; its whole process group is killed at the limit and
   when the command ends. Hostile code can still read and write anything your user can, so for code you do not trust,
-  run the playground in a container (`playground/deploy/Dockerfile`).
+  run the playground in a container (`playground/deploy/Dockerfile`), from the candidate's directory, as your own
+  user, with the candidate mounted at a directory of its own name. The image is Python-only (no node, npm, npx or
+  git): a TypeScript candidate's tests and example do not run in it, and the contract check reports them failed.
+
+  ```sh
+  docker build -f playground/deploy/Dockerfile -t ai-playground .     # once, from the repository root
+  docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work/$(basename "$PWD")" -w "/work/$(basename "$PWD")" \
+    -e MODEL_GATEWAY_TOKEN ai-playground run --target t.json --component . --out reports
+  ```
 - **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)
-  with a reason. A critical or high finding is accepted as a risk or called a false positive only by someone other
-  than the tester (compared by address, ignoring case and spacing), and only on a run that names its tester.
+  with a reason of at least a sentence, on a finding that failed, needs review or could not run. A critical or high
+  finding is accepted as a risk or called a false positive only by someone other than the tester (compared by
+  address, ignoring case, spacing and a `+tag`: `ada+sec@` is `ada@`), and only on a run that names its tester
+  (`--by`); `fixed-retest` (reopen after a fix) may come from anyone. `triage REPORT.json` writes the file it is
+  given (and the `.md` and `.html` of the same name beside it), and refuses when that file meanwhile gained a
+  decision it did not see. The browser interface adopts a decision recorded with the command line on its own report
+  file before its next triage, and refuses when the two disagree.
 - **A report is sealed.** Its id is a hash of what the run recorded (the tester and role, the results, a random
   nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited
-  since it was written; the verdict is always recomputed from the results and the triage.
+  since it was written, and replay every triage entry through the rules above, so an entry added by hand (its hash
+  chain recomputed) that breaks them is refused too; the verdict is always recomputed from the results and the
+  triage. Reports replace any credential value, wherever it appears (the reason a run is incomplete included), and
+  every file is written whole or not at all.
 - **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.
 - **The web interface is local.** It listens on loopback only (`127.0.0.1`, or `--host ::1`), every API call needs
   the token printed at start, the Host header must be the loopback address, and the page shows a solution's answers
@@ -93,9 +109,10 @@ call.
 | `clear` | Everything that applies held, or was triaged by a named person | 0 |
 | `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |
 | `blocked` | A critical or high finding failed and nobody has triaged it | 2 |
-| `incomplete` | The solution could not be reached, or nothing that applies was checked (every probe and case was skipped) | 2 |
+| `incomplete` | The solution could not be reached, refused a plain question, or nothing applicable was checked (every probe and case was skipped, or every one that applies ended in an error) | 2 |
 
-A wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`.
+A wrong command is 3: a component directory that is not there, an `--out` that is a file or cannot be made
+(both checked before anything runs), a report file that cannot be read or written. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`.
 
 ## What is inside
 

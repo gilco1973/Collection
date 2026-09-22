@@ -26,7 +26,8 @@ class Verdicts(unittest.TestCase):
         self.assertEqual(rep_with(res("a", "fail", "critical"))["verdict"], "blocked")
         self.assertEqual(rep_with(res("a", "fail", "medium"))["verdict"], "needs-review")
         self.assertEqual(rep_with(res("a", "review", "critical"))["verdict"], "needs-review")
-        self.assertEqual(rep_with(res("a", "error", "low"))["verdict"], "needs-review")
+        self.assertEqual(rep_with(res("a", "error", "low"), res("b", "pass"))["verdict"], "needs-review")
+        self.assertEqual(rep_with(res("a", "error", "low"))["verdict"], "incomplete")   # an error alone judged nothing
         r = Rp.build([], target={"name": "t"}, component=None, tester={}, started=Rp.now(), suites=[], probes=[], incomplete="unreachable")
         self.assertEqual(r["verdict"], "incomplete")
 
