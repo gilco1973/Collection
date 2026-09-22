@@ -6,7 +6,8 @@ info:
     The front end's half of the Hub contract (specification §8, PLT-UI-*). Every
     request carries a bearer token from the bank's identity provider, an
     `X-Request-Id`, a W3C `traceparent` and `X-Client-Build`. Mutations that a
-    client may safely repeat carry `Idempotency-Key`; writes to a versioned
+    client may safely repeat carry `Idempotency-Key` (optional for the server,
+    which then runs the call once; the hub always sends one); writes to a versioned
     record carry `If-Match` with the etag last seen. Errors are RFC 9457
     `application/problem+json`; `422` carries `errors` keyed by dotted field
     path, and a platform refusal carries a `code` (a deny code the client shows
@@ -63,12 +64,12 @@ paths:
     put:
       tags: [me]
       summary: Set the person's preferences
-      description: Any subset of the keys may be sent; what is named is set and the rest keeps its value or its default. The record, this response and `GET /me` always carry the full `Preferences` shape.
+      description: Any subset of the keys may be sent; what is named is set over what the record holds and the rest keeps its stored value (or its default when nothing is stored yet); `notifications` merges the same way. `theme` and `density` must be one of the values `Preferences` names (422 otherwise), so the hub never reads a value it cannot apply. The record, this response and `GET /me` always carry the full `Preferences` shape.
       requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PreferencesUpdate" } } } }
       responses:
         "200": { description: The principal with the full preferences as now stored, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
         "413": { description: The body is over the 64 KB ceiling for this call, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
-        "422": { description: "A key that is not a preference, or a value of the wrong type; `errors` names the key", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "A key that is not a preference, a value of the wrong type, or a `theme` or `density` outside its enum; `errors` names the key", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /me/requests:
     get:
       tags: [requests]
@@ -78,6 +79,7 @@ paths:
     post:
       tags: [requests]
       summary: Ask for access, a role, or a higher ladder on a consumer
+      description: One pending ask per (kind, listing, ladder) and per person; another person's ask on the same listing is not this person's. The check and the write are one section, so two asks at once cannot both pass.
       parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
@@ -94,7 +96,8 @@ paths:
       responses:
         "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/AccessRequest" } } } }
         "403": { description: "Refused by policy; `code` names why (e.g. `ladder.above`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
-        "422": { description: "`consumerId` is not a listing in the catalog, or `ladder` is not one of the four; `errors` names the field", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "409": { description: "Nothing to send: the person already has this access (`request.already_granted`; open it from Discover), or their own pending ask for the same kind, listing and ladder is already with their lead (`request.duplicate`). A client showing the button was stale: it refreshes its requests, workspace and catalog", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "`kind` is not access, role or ladder; `consumerId` is not a listing in the catalog; or `ladder` is not one of the four; `errors` names the field", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /me/workspace:
     get:
       tags: [workspace]
@@ -228,6 +231,8 @@ paths:
       responses:
         "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/GuideAnswer" } } } }
         "401": { $ref: "#/components/responses/Problem" }
+        "404": { description: The guide is not configured on this deployment, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "`question` is not a string (`validation`; `errors.question`). An empty question is answered, not refused", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations:
     get:
       tags: [conversations]
@@ -240,7 +245,8 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [assistantId], properties: { assistantId: { type: string } } } } } }
       responses:
         "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Conversation" } } } }
-        "403": { $ref: "#/components/responses/Problem" }
+        "403": { description: "The person's role does not open this assistant (`entitlement.missing`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "404": { description: No assistant with that id, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations/{id}:
     get:
       tags: [conversations]
@@ -265,6 +271,8 @@ paths:
         "403": { description: "The person's entitlement to this assistant was revoked (`entitlement.missing`); the same on GET, feedback and handoff", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "409": { description: "The conversation has reached 200 turns (`conversation.full`; a turn adds two records, so the ceiling is never exceeded); start a new one. Or the assistant is still answering the previous message of this conversation (`conversation.busy`): one turn streams at a time, wait for it to finish", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "413": { description: The body is over the 64 KB ceiling for a turn, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "404": { description: No conversation with that id owned by this person, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
+        "422": { description: "`text` is missing, empty once trimmed, or not a string (`validation`)", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /conversations/{id}/feedback:
     post:
       tags: [conversations]
@@ -320,7 +328,7 @@ components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
   parameters:
-    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: "Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. The key is claimed before the call runs: a repeat while the first call is still being answered is 409 idempotency.in_progress (wait, then repeat); a call that ends in a problem or a stream leaves nothing to replay and frees the key. A claim left by a process that died is cleared when the service starts, and one older than 60 s with no answer is taken over by the next call with that key." }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: false, schema: { type: string }, description: "Client-generated and optional: without it the call runs once and nothing is replayed, so a client that may repeat a call (a retry after a dropped connection) sends one; the hub always does. With it, the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. The key is claimed before the call runs: a repeat while the first call is still being answered is 409 idempotency.in_progress (wait, then repeat); a call that ends in a problem or a stream leaves nothing to replay and frees the key. A claim left by a process that died is cleared when the service starts, and one older than 60 s with no answer is taken over by the next call with that key." }
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string }, description: The etag last seen; a mismatch is 409. }
   responses:
     Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
@@ -357,14 +365,15 @@ components:
         notifications: { type: object, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }
     PreferencesUpdate:
       type: object
-      description: Any subset of `Preferences` (`notifications` may itself be partial); a key that is not a preference, or a value of the wrong type, is 422
+      description: Any subset of `Preferences` (`notifications` may itself be partial); a key that is not a preference, a value of the wrong type, or a `theme` or `density` outside its enum, is 422
+      additionalProperties: false
       properties:
         theme: { type: string, enum: [system, light, dark] }
         accessibility: { type: boolean }
         noAssistant: { type: boolean }
         density: { type: string, enum: [comfortable, dense] }
-        locale: { type: string }
-        notifications: { type: object, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }
+        locale: { type: string, maxLength: 64 }
+        notifications: { type: object, additionalProperties: false, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }
     Principal:
       type: object
       required: [id, name, email, initials, tenant, roles, ladder, channel, teams, costCentre, entitlements, preferences]
@@ -456,9 +465,28 @@ components:
         model: { type: object, required: [need, classificationCeiling, substitute], properties: { need: { type: string, enum: [none, utility, workhorse, frontier] }, classificationCeiling: { type: string, enum: [internal, confidential, restricted] }, substitute: { type: boolean } } }
         outcome: { type: object, required: [metric, unit, baseline, target, measuredOn], properties: { metric: { type: string }, unit: { type: string }, baseline: { type: number }, target: { type: number }, measuredOn: { type: string, format: date } } }
         review: { type: object, required: [acknowledged], properties: { acknowledged: { type: boolean, const: true } } }
+    BriefDraftContent:
+      type: object
+      description: A brief as the record holds it while it is written - the same six sections as `BriefContent` with the same value sets, but without the completeness rules (a list may be empty, the acknowledgement unticked, a name short), since a draft is saved as it is typed. `BriefContent` is what filing validates.
+      required: [useCase, people, dataAndTools, model, outcome, review]
+      properties:
+        useCase: { type: object, required: [name, problem, channel, teamId], properties: { name: { type: string, maxLength: 80 }, problem: { type: string }, channel: { type: string, enum: [operator, customer, partner, batch] }, teamId: { type: string } } }
+        people: { type: object, required: [businessOwner, productOwner, domainExpert, labellingHoursPerWeek], properties: { businessOwner: { type: string }, productOwner: { type: string }, domainExpert: { type: string }, labellingHoursPerWeek: { type: number } } }
+        dataAndTools:
+          type: object
+          required: [systems, tools, dataClasses, tierCeiling]
+          properties:
+            systems: { type: array, items: { type: object, properties: { id: { type: string }, name: { type: string } } } }
+            tools: { type: array, maxItems: 15, items: { type: object, properties: { name: { type: string }, tier: { type: string, enum: [R, W1, W2, M] }, classes: { type: array, items: { type: string } } } } }
+            reuses: { type: array, maxItems: 26, items: { type: object, required: [id, name, kind], properties: { id: { type: string }, name: { type: string }, kind: { type: string }, required: { type: boolean } } } }
+            dataClasses: { type: array, items: { type: string, enum: [internal, confidential, restricted] } }
+            tierCeiling: { type: string, enum: [R, W1, W2] }
+        model: { type: object, required: [need, classificationCeiling, substitute], properties: { need: { type: string, enum: [none, utility, workhorse, frontier] }, classificationCeiling: { type: string, enum: [internal, confidential, restricted] }, substitute: { type: boolean } } }
+        outcome: { type: object, required: [metric, unit, baseline, target, measuredOn], properties: { metric: { type: string }, unit: { type: string }, baseline: { type: number }, target: { type: number }, measuredOn: { type: string } } }
+        review: { type: object, required: [acknowledged], properties: { acknowledged: { type: boolean } } }
     BriefContentPartial:
       type: object
-      description: Any subset of BriefContent's sections, each complete.
+      description: Any subset of BriefDraftContent's sections, each whole (a section replaces the stored one); a key that is not a section is ignored.
     Brief:
       type: object
       required: [id, status, etag, createdBy, createdAt, updatedAt, currentStep, completed, content]
@@ -471,7 +499,7 @@ components:
         updatedAt: { type: string, format: date-time }
         currentStep: { $ref: "#/components/schemas/BriefStep" }
         completed: { type: array, items: { $ref: "#/components/schemas/BriefStep" } }
-        content: { $ref: "#/components/schemas/BriefContent" }
+        content: { $ref: "#/components/schemas/BriefDraftContent", description: "Complete (`BriefContent`) once the brief is filed; a draft may be short of that" }
         road: { type: string }
         outcomeReason: { type: string }
     BriefEstimate: { type: object, required: [modelSpendMonthly, modelSpendBasis, reviewHours, reviewNote, platformShare, basis], properties: { modelSpendMonthly: { type: number }, modelSpendBasis: { type: string }, reviewHours: { type: number }, reviewNote: { type: string }, platformShare: { type: string }, basis: { type: string } } }
@@ -517,4 +545,13 @@ components:
         - { type: object, required: [kind, turn], properties: { kind: { const: interrupt }, turn: { type: integer } } }
     TurnEvent: { type: object, required: [seq, view], properties: { seq: { type: integer }, view: { $ref: "#/components/schemas/View" } } }
     Turn: { type: object, required: [id, role, at, views], properties: { id: { type: string }, role: { type: string, enum: [user, assistant] }, at: { type: string }, views: { type: array, items: { $ref: "#/components/schemas/View" } }, sourcesLabel: { type: string }, sources: { type: array, items: { $ref: "#/components/schemas/Chip" } } } }
-    Conversation: { type: object, required: [id, title, assistantId, assistant, turns], properties: { id: { type: string }, title: { type: string }, assistantId: { type: string }, assistant: { type: object, properties: { name: { type: string }, sub: { type: string }, chips: { type: array, items: { $ref: "#/components/schemas/Chip" } } } }, turns: { type: array, items: { $ref: "#/components/schemas/Turn" } } } }
+    Conversation:
+      type: object
+      required: [id, title, assistantId, assistant, turns]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        assistantId: { type: string }
+        assistant: { type: object, properties: { name: { type: string }, sub: { type: string }, chips: { type: array, items: { $ref: "#/components/schemas/Chip" } } } }
+        turns: { type: array, items: { $ref: "#/components/schemas/Turn" } }
+        feedback: { type: array, description: "The feedback already recorded for this conversation, by the `seq` of the feedback view: asked once, whatever the tab. `GET /conversations/{id}` carries it; the creation response may omit it", items: { type: object, required: [seq, answered], properties: { seq: { type: integer }, answered: { type: boolean } } } }

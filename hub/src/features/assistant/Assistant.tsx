@@ -67,10 +67,15 @@ export default function Assistant() {
     const text = draft;
     setDraft("");
     if (composer.current) composer.current.style.height = "20px";
-    void conv.send(text, (c) => {
-      setFresh(false);
-      setChosen(c.id);
-    });
+    void conv
+      .send(text, (c) => {
+        setFresh(false);
+        setChosen(c.id);
+      })
+      .then((sent) => {
+        // A refused turn was never recorded: the message goes back in the composer for a retry, unless a new one was typed meanwhile.
+        if (!sent) setDraft((d) => (d.trim() ? d : text));
+      });
   };
 
   if (catalog.isPending || list.isPending) return <PageState kind="loading" text="Opening the assistant…" />;

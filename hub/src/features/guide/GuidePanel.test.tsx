@@ -20,7 +20,7 @@ vi.mock("../../auth/AuthProvider", () => ({
 }));
 vi.mock("../../api", () => ({
   api: {
-    briefs: { list: async () => [{ id: "b1", status: "draft", currentStep: "model", content: { useCase: { name: "Returns triage" } } }] },
+    briefs: { list: async () => [{ id: "b1", status: "draft", createdBy: current.id, currentStep: "model", content: { useCase: { name: "Returns triage" } } }] },
     shelf: {
       list: async () => [
         {

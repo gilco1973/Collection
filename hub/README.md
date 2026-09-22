@@ -12,7 +12,7 @@ of the same API contract.
 | `/discover/:kind/:slug` | A listing (e.g. `/discover/agents/investigation-triage`) | `GET /consumers/:slug` |
 | `/assistant`, `/assistant/:consumerId` | Employee assistant and agents | `GET /conversations`, SSE `POST /conversations/:id/turns` |
 | `/workspace` | My workspace | `GET /me/workspace` |
-| `/build/intake`, `/build/intake/:briefId` | Intake brief (six sections, autosave, file) | `GET/PATCH /briefs/:id`, `POST …/estimate`, `…/road`, `…/file` |
+| `/build/intake`, `/build/intake/:briefId` | Intake brief (six sections, autosave, file); for a team lead, the team's drafts waiting to be filed | `GET /briefs`, `GET/PATCH /briefs/:id`, `POST …/estimate`, `…/road`, `…/file` |
 | `/settings` | Preferences and account | `GET /me`, `PUT /me/preferences` |
 | `/build/shelf/sign-offs` | Component sign-offs: the queue, the form, the export the shelf tool applies | `GET /shelf`, `POST /shelf/:name/signoffs`, `GET /shelf/signoffs/export` |
 | `/build/shelf/onboarding` | Onboarding: every component's stage on its way to the shelf; how champions, owners and AI security engineers join | `GET /shelf` |
@@ -45,6 +45,16 @@ of the same API contract.
   422 the person could have seen never happens; server 422s still land next to the field.
 - **Optimistic concurrency.** Drafts autosave with the etag last seen; a 409 stops
   saving until the person reloads, with the message the server sent.
+- **The lead files the team's write profiles.** `GET /briefs` carries, for an ops.lead whose team entry says
+  `lead`, the briefs that name that team (a platform lead sees all); the id-less intake page and the workspace list
+  the ones not their own under "Waiting for you to file", with a link to open and file each. The mock server applies
+  the same rule as hub-api (`GET /briefs`, `GET`/`PATCH`/`file /briefs/:id`). The section renders only when such
+  briefs exist, so the artboard persona's screens are unchanged.
+- **A refused turn is not a turn.** A 409 (`conversation.busy` from another tab, `conversation.full`), a 403 or a
+  413 on `POST /conversations/:id/turns` shows the platform's sentence, leaves no phantom turn, puts the message back
+  in the composer, and the next send reads the record again first. A 409 on `POST /me/requests` (`request.duplicate`,
+  `request.already_granted`) refreshes requests, workspace, catalog and listing, so a stale tab stops offering the
+  button; the mock counts only the person's own asks as duplicates, as hub-api does.
 - **Streaming.** Answers arrive as `text/event-stream` view events from the closed
   descriptor set of the specification (§8.2) and render as they come; Stop aborts the
   request (recorded as `human.interrupt`). Model text is never treated as markup.
@@ -54,7 +64,9 @@ of the same API contract.
 - **Accessibility**: real `<button>`, `<a>`, `<input>`, `<label>` under the
   artboards' classes; skip link; focus moves to the page on navigation; live regions
   for toasts and streaming; `:focus-visible` rings; `prefers-reduced-motion`;
-  `jsx-a11y` in lint.
+  `jsx-a11y` in lint. The palette, the guide panel and the composer trap Tab and give focus back to what opened
+  them on Escape (`src/ui/useFocusTrap.ts`, called before the dialog's own autofocus so the opener is captured
+  while it still has focus).
 - **Observability seam**: `src/telemetry.ts` records product events
   (`brief.filed`, `assistant.stopped`, …) to a sink (`none` | `console`) until the
   OpenTelemetry web SDK is wired; request ids join the platform's traces.
@@ -157,9 +169,9 @@ and the `VITE_OIDC_*` values; the server must implement `api/openapi.yaml`.
 - **End to end** (`tools/*test.cjs`, Playwright on the preview build): navigation,
   the whole brief (autosave, validation, the tier-ceiling rule, the lead rule, filing),
   entitlement and ladder requests reflected across screens, catalog tabs and views,
-  key rotation, the ⌘K palette, streaming with stop, feedback, handoff, assistant
-  switching, preferences and the dark theme, and role-based visibility for the
-  employee persona.
+  key rotation, the ⌘K palette, streaming with stop, a refused turn, feedback, handoff, assistant
+  switching, preferences and the dark theme, the composer's and the guide's focus return, the lead's
+  "Waiting for you to file" list, and role-based visibility for the employee persona.
 - **Pixel guard** as above. CI (`.github/workflows/ci.yml`, through `scripts/verify.sh hub`) runs all of it.
 
 ## Known limits, stated plainly
@@ -167,7 +179,9 @@ and the `VITE_OIDC_*` values; the server must implement `api/openapi.yaml`.
 - **Fixed 1440 px width and artboard heights** are kept for fidelity; the Hub is
   a desktop surface through Phase 4 (PD-UX-5).
 - **The mock API is in-memory per page load.** A reload resets it to the fixtures;
-  in-app navigation keeps state. That is what makes it deterministic for tests.
+  in-app navigation keeps state. That is what makes it deterministic for tests. It has no second tab to be busy
+  from, so a turn whose text contains `[mock:busy]` is refused with 409 `conversation.busy`, the way hub-api
+  refuses a second tab; the browser flows use it.
 - **Dark theme, density and accessibility** are the platform's own derivation of
   the light design system; the design canvas has no dark artboards yet.
 - **Learn** is the one page not drawn from an artboard.

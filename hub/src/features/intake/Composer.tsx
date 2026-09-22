@@ -45,10 +45,11 @@ export function Composer({ s, content, onClose }: { s: BriefState; content: Brie
   const [last, setLast] = useState<string | undefined>();
   const dialogRef = useRef<HTMLDivElement>(null);
 
+  // The trap first, so it captures "Browse the catalog" while it still has focus; then the search field takes it.
+  useFocusTrap(dialogRef, onClose);
   useEffect(() => {
     dialogRef.current?.querySelector<HTMLElement>("input")?.focus();
   }, []);
-  useFocusTrap(dialogRef, onClose);
 
   const reuses = reusesOf(v).filter((r) => !r.required);
   const baseline = baselineFor(content);

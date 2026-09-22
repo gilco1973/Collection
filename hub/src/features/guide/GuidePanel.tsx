@@ -14,13 +14,14 @@ export function GuidePanel({ steps }: { steps: Array<Step & { state: StepState }
   const g = useGuide();
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // The trap first, so it captures the launcher (or whatever opened the panel) while it still has focus.
+  useFocusTrap(panelRef, g.close);
   useEffect(() => {
     const el = panelRef.current;
     if (!el) return;
     (el.querySelector<HTMLElement>("[data-autofocus]") ?? el).focus();
     // Focus once on open.
   }, []);
-  useFocusTrap(panelRef, g.close);
 
   return (
     <aside id="hub-guide" ref={panelRef} className="guide-panel" aria-label="Guide" tabIndex={-1}>

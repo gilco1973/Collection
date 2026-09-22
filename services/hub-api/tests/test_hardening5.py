@@ -197,7 +197,8 @@ class IdentityMapShape(unittest.TestCase):
 
 
 class PreferencesShape(unittest.TestCase):
-    """Item 8: a partial PUT is merged over the defaults; the record, the answer and GET /me carry the full shape."""
+    """Item 8: a partial PUT is merged over what the record holds (the defaults when nothing is stored yet); the record,
+    the answer and GET /me carry the full shape."""
 
     def test_a_partial_put_is_stored_and_returned_in_the_full_shape(self):
         api = make_api(); gk = Client(api, "mock.gk")
@@ -206,7 +207,7 @@ class PreferencesShape(unittest.TestCase):
         self.assertEqual((s, me["preferences"]), (200, want))
         self.assertEqual(api.store.get("prefs", "u_gk"), want, "the record holds the merge, not the fragment")
         self.assertEqual(gk.call("GET", "/me")[1]["preferences"], want)
-        s, me = gk.call("PUT", "/me/preferences", {}); self.assertEqual((s, me["preferences"]), (200, A.DEFAULT_PREFS))
+        s, me = gk.call("PUT", "/me/preferences", {}); self.assertEqual((s, me["preferences"]), (200, want), "an empty PUT sets nothing: the stored values stay")
         api.store.put("prefs", "u_gk", {"density": "dense"}, "u_gk")   # a fragment written before this build
         self.assertEqual(gk.call("GET", "/me")[1]["preferences"], {**A.DEFAULT_PREFS, "density": "dense"}, "read back in the full shape too")
 

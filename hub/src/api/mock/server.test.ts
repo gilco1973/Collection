@@ -122,6 +122,42 @@ describe("mock API contract", () => {
     expect(ok.status).toBe("pending");
   });
 
+  it("counts only the person's own pending asks as duplicates", async () => {
+    // Neither the investigator nor the employee is entitled to the first responder; each may ask once.
+    const first = await clientAs("investigator").requests.create({ kind: "access", consumerId: "first-responder" }, "k8");
+    expect(first.status).toBe("pending");
+    await expect(clientAs("investigator").requests.create({ kind: "access", consumerId: "first-responder" }, "k9")).rejects.toBeInstanceOf(ConflictError);
+    const other = await clientAs("employee").requests.create({ kind: "access", consumerId: "first-responder" }, "k10");
+    expect(other.status).toBe("pending");
+    // Each sees only their own; the artboard person keeps the fixtures'.
+    expect((await clientAs("investigator").requests.list()).map((r) => r.id)).toEqual([first.id]);
+    expect((await clientAs("employee").requests.list()).map((r) => r.id)).toEqual([other.id]);
+    expect((await clientAs("gk").requests.list()).some((r) => r.id === first.id || r.id === other.id)).toBe(false);
+    expect((await clientAs("employee").workspace.get()).requests.map((r) => r.id)).toEqual([other.id]);
+  });
+
+  it("opens a team member's draft to the lead of the team it names, as hub-api does", async () => {
+    // The investigator's draft names team-payments-ops, which gk leads (ops.lead, lead: true); Maya is in another team.
+    const mine = await clientAs("investigator").briefs.create("k11");
+    expect(mine.content.useCase.teamId).toBe("team-payments-ops");
+    expect((await clientAs("gk").briefs.list()).some((b) => b.id === mine.id)).toBe(true);
+    expect(await clientAs("gk").briefs.get(mine.id)).toMatchObject({ id: mine.id, createdBy: "u_ap" });
+    await expect(clientAs("security").briefs.get(mine.id)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(clientAs("employee").briefs.get(mine.id)).rejects.toBeInstanceOf(NotFoundError);
+    expect((await clientAs("security").briefs.list()).some((b) => b.id === mine.id)).toBe(false);
+    // The lead saves and files it; it stays the member's.
+    const saved = await clientAs("gk").briefs.save(mine.id, mine.etag, { currentStep: "people" });
+    expect(saved.createdBy).toBe("u_ap");
+    expect(saved.currentStep).toBe("people");
+  });
+
+  it("refuses a turn with 409 conversation.busy on the test hook, as hub-api does for a second tab", async () => {
+    const api = clientAs("gk");
+    const it = api.conversations.send("cnv_1", "[mock:busy] hello", "k12", new AbortController().signal);
+    await expect(it.next()).rejects.toBeInstanceOf(ConflictError);
+    expect((await api.conversations.get("cnv_1")).turns.some((t) => t.views.some((v) => v.kind === "text" && /hello/.test(v.text)))).toBe(false);
+  });
+
   it("streams a turn as view events and records a stop on abort", async () => {
     const api = clientAs("gk");
     const kinds: string[] = [];

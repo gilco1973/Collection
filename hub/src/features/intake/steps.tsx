@@ -545,8 +545,8 @@ export function ReviewStep({ s, content, errors, needsLead, canFile }: StepProps
       {needsLead && !canFile && (
         <div className="banner warn" role="status">
           <div>
-            <b>Your team lead files this brief.</b> A write profile ({c.dataAndTools.tierCeiling}) needs the lead's confirmation. Your draft is saved; ask your
-            lead to open it from the team workspace and file it.
+            <b>Your team lead files this brief.</b> A write profile ({c.dataAndTools.tierCeiling}) needs the lead's confirmation. Your draft is saved; your lead
+            finds it under “Waiting for you to file” on their intake page and in their workspace, or opens this page's link, and files it from here.
           </div>
         </div>
       )}

@@ -7,7 +7,7 @@ Bedrock Converse answers in the cited engine's JSON shape, claims without a cita
 context is a stop before any model call. Every backend yields views from the closed descriptor set (§8.2).
 """
 from __future__ import annotations
-import json, logging, time, urllib.error, urllib.parse, urllib.request
+import http.client, json, logging, time, urllib.error, urllib.parse, urllib.request
 from .guide import question_score, well_formed_claims
 from .vendor import guard as G
 
@@ -73,9 +73,8 @@ class HttpRelayAssistant:
         except (urllib.error.URLError, OSError):
             yield {"kind": "stop", "reason": "upstream.error", "message": "The assistant could not be reached; try again in a moment."}
             return
-        for line in resp:
-            line = line.decode("utf-8").rstrip("\n")
-            if line.startswith("data:"):
+        for line in read_lines(resp):
+            if line.startswith(b"data:"):
                 try:
                     ev = json.loads(line[5:].strip())
                 except ValueError:
@@ -83,6 +82,30 @@ class HttpRelayAssistant:
                 view = ev.get("view") if isinstance(ev, dict) and "view" in ev else ev
                 if isinstance(view, dict) and view.get("kind"):
                     yield view
+
+
+def read_lines(resp, chunk: int = 65536):
+    """The response body line by line, read with `read1` and split here. Iterating the response itself goes through
+    `readline`, which peeks the next chunk and turns a chunk-size line that is not hex, or a socket closed mid-chunk,
+    into end-of-file: the stream ended silently. `read1` raises `IncompleteRead` for both, and a body shorter than its
+    Content-Length is raised here, so an upstream that dies mid-answer reaches the caller as an error, and the turn is
+    recorded with a stop view rather than as a finished answer."""
+    buf = b""
+    while True:
+        data = resp.read1(chunk)
+        if not data:
+            break
+        buf += data
+        while True:
+            i = buf.find(b"\n")
+            if i < 0:
+                break
+            yield buf[:i].rstrip(b"\r")
+            buf = buf[i + 1:]
+    if getattr(resp, "length", None):   # Content-Length promised more than the socket delivered
+        raise http.client.IncompleteRead(buf)
+    if buf:
+        yield buf.rstrip(b"\r")
 
 
 class BedrockAssistant:

@@ -72,6 +72,8 @@ function principalOf(req: Request) {
 const state = {
   briefs: new Map<string, Brief>([[DRAFT_BRIEF.id, structuredClone(DRAFT_BRIEF)]]),
   requests: [...INITIAL_REQUESTS] as AccessRequest[],
+  /** Who made each request (the fixtures' belong to the artboard person); GET /me/requests and the duplicate check read only the caller's own. */
+  requestOwners: new Map<string, string>(INITIAL_REQUESTS.map((r) => [r.id, "u_gk"])),
   conversations: new Map<string, Conversation>([[CONVERSATION_1.id, structuredClone(CONVERSATION_1)]]),
   prefs: new Map<string, (typeof PRINCIPALS)[string]["preferences"]>(),
   idempotency: new Map<string, Response>(),
@@ -132,7 +134,9 @@ route("GET", "/consumers/:slug", ({ params, principal }) => {
   );
 });
 
-route("GET", "/me/requests", ({ principal }) => json(principal.id === "u_gk" ? state.requests : state.requests.filter((r) => r.id.startsWith("req_new"))));
+const requestsOf = (principal: { id: string }) => state.requests.filter((r) => state.requestOwners.get(r.id) === principal.id);
+
+route("GET", "/me/requests", ({ principal }) => json(requestsOf(principal)));
 
 route("POST", "/me/requests", ({ principal, body }) => {
   const b = body as { kind: AccessRequest["kind"]; consumerId?: string; ladder?: string; reason?: string };
@@ -147,7 +151,8 @@ route("POST", "/me/requests", ({ principal, body }) => {
   if (b.kind === "access" && b.consumerId && principal.entitlements.includes(b.consumerId)) {
     return problem(409, { title: "Already yours", detail: `You already have access to ${listing?.name ?? b.consumerId}; open it from Discover.`, code: "request.already_granted" });
   }
-  if (state.requests.some((r) => r.status === "pending" && r.kind === b.kind && r.consumerId === b.consumerId && (b.kind !== "ladder" || r.title.includes(`Ladder ${b.ladder} `)))) {
+  // Only this person's own asks count: another person's pending ask on the same listing is not theirs to be refused for.
+  if (requestsOf(principal).some((r) => r.status === "pending" && r.kind === b.kind && r.consumerId === b.consumerId && (b.kind !== "ladder" || r.title.includes(`Ladder ${b.ladder} `)))) {
     return problem(409, { title: "Already asked", detail: `Your request for ${listing?.name ?? b.consumerId} is with your lead; there is nothing to send again.`, code: "request.duplicate" });
   }
   const r: AccessRequest = {
@@ -163,12 +168,13 @@ route("POST", "/me/requests", ({ principal, body }) => {
     createdAt: nowIso(),
   };
   state.requests.unshift(r);
+  state.requestOwners.set(r.id, principal.id);
   return json(r, { status: 201 });
 });
 
 route("GET", "/me/workspace", ({ principal }) => {
   const ws: Workspace = workspaceFor(principal, [...state.briefs.values()]);
-  ws.requests = principal.id === "u_gk" ? state.requests : state.requests.filter((r) => r.id.startsWith("req_new"));
+  ws.requests = requestsOf(principal);
   return json(ws);
 });
 
@@ -263,9 +269,15 @@ route("POST", "/shelf/:name/signoffs", ({ params, principal, body }) => {
 route("GET", "/registry/systems", () => json(REGISTRY_SYSTEMS));
 route("GET", "/registry/tools", () => json(REGISTRY_TOOLS));
 
-route("GET", "/briefs", ({ principal }) =>
-  json([...state.briefs.values()].filter((b) => b.createdBy === principal.id || principal.roles.includes("platform.lead"))),
-);
+/** The teams this person leads: an ops.lead whose team entry says `lead: true`. A write profile is filed by them (hub-api's rule). */
+const ledTeams = (principal: { roles: string[]; teams: Array<{ id: string; lead?: boolean }> }) =>
+  principal.roles.includes("ops.lead") ? new Set(principal.teams.filter((t) => t.lead === true).map((t) => t.id)) : new Set<string>();
+
+/** The creator, a platform lead, or the lead of the team the brief names may see it. */
+const maySee = (b: Brief, principal: { id: string; roles: string[]; teams: Array<{ id: string; lead?: boolean }> }) =>
+  b.createdBy === principal.id || principal.roles.includes("platform.lead") || (!!b.content.useCase.teamId && ledTeams(principal).has(b.content.useCase.teamId));
+
+route("GET", "/briefs", ({ principal }) => json([...state.briefs.values()].filter((b) => maySee(b, principal))));
 
 route("POST", "/briefs", ({ principal }) => {
   const id = `brf_${Math.random().toString(16).slice(2, 6)}`;
@@ -291,9 +303,9 @@ route("POST", "/briefs", ({ principal }) => {
   return json(b, { status: 201 });
 });
 
-const loadBrief = (id: string, principal: { id: string; roles: string[] }) => {
+const loadBrief = (id: string, principal: { id: string; roles: string[]; teams: Array<{ id: string; lead?: boolean }> }) => {
   const b = state.briefs.get(id);
-  if (!b || (b.createdBy !== principal.id && !principal.roles.includes("platform.lead"))) return undefined;
+  if (!b || !maySee(b, principal)) return undefined;
   return b;
 };
 
@@ -434,6 +446,13 @@ route("POST", "/conversations/:id/turns", ({ params, body, req }) => {
   const c = state.conversations.get(params.id);
   if (!c) return problem(404, { title: "Not found" });
   const { text } = body as { text: string };
+  // A test hook: hub-api refuses a turn while the previous one of the same conversation is still streaming (from another tab).
+  if (text.includes("[mock:busy]"))
+    return problem(409, {
+      title: "Answer in progress",
+      detail: "The assistant is still answering the previous message in this conversation; wait for it to finish.",
+      code: "conversation.busy",
+    });
   const at = new Date().toTimeString().slice(0, 5);
   c.turns.push({ id: `t${++state.seq}`, role: "user", at, views: [{ kind: "text", text, provenance: "system" }] });
   if (c.title === "New conversation") c.title = text.length > 48 ? `${text.slice(0, 45)}…` : text;
@@ -509,6 +528,7 @@ export const mockTransport: Transport = async (req) => {
 export function resetMockState() {
   state.briefs = new Map([[DRAFT_BRIEF.id, structuredClone(DRAFT_BRIEF)]]);
   state.requests = [...INITIAL_REQUESTS];
+  state.requestOwners = new Map(INITIAL_REQUESTS.map((r) => [r.id, "u_gk"]));
   state.conversations = new Map([[CONVERSATION_1.id, structuredClone(CONVERSATION_1)]]);
   state.prefs.clear();
   state.idempotency.clear();

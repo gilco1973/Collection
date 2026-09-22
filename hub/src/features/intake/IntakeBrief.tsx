@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api";
 import { newId } from "../../api/client";
@@ -14,6 +14,7 @@ import { useToast } from "../../ui/Toast";
 import { useTitle } from "../../ui/useTitle";
 import { DataAndToolsStep, ModelStep, OutcomeStep, PeopleStep, ReviewStep, STEP_META, UseCaseStep } from "./steps";
 import { useBrief, type SaveState } from "./useBrief";
+import { briefsWaitingFor, WaitingToFile } from "./WaitingToFile";
 
 /**
  * Build → Intake brief. The one page that is the whole intake (spec §7.11
@@ -22,8 +23,9 @@ import { useBrief, type SaveState } from "./useBrief";
  * road, the cost estimate and what happens next.
  *
  * With no brief id in the route the person's open draft is shown, or an
- * invitation to start one. The default render for the `gk` persona is the
- * published artboard, pixel for pixel.
+ * invitation to start one; below either, for a team lead, the team's drafts
+ * waiting to be filed (only when there are some). The default render for the
+ * `gk` persona is the published artboard, pixel for pixel.
  */
 export default function IntakeBrief() {
   const { briefId } = useParams<{ briefId?: string }>();
@@ -40,14 +42,17 @@ export default function IntakeBrief() {
     if (!briefId && latestDraft && !pinned) setPinned(latestDraft);
   }, [briefId, latestDraft, pinned]);
   const open = briefId ?? pinned ?? latestDraft;
+  // A lead's list also carries the team's drafts, which are theirs to file: shown on the id-less route, under the page's own content.
+  const waiting = useMemo(() => (briefId ? [] : briefsWaitingFor(list.data, principal.id)), [briefId, list.data, principal.id]);
 
   if (!briefId && list.isPending) return <PageState kind="loading" text="Loading your briefs…" />;
   if (!briefId && list.error) return <PageState kind="error" text="Your briefs could not be loaded." detail={(list.error as Error).message} />;
-  if (!open) return <StartBrief />;
-  return <BriefEditor id={open} />;
+  const below = waiting.length ? <WaitingToFile briefs={waiting} teams={principal.teams} /> : undefined;
+  if (!open) return <StartBrief below={below} />;
+  return <BriefEditor id={open} below={below} />;
 }
 
-function StartBrief() {
+function StartBrief({ below }: { below?: ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { can } = useAuth();
@@ -108,6 +113,7 @@ function StartBrief() {
             )}
           </div>
         </div>
+        {below}
       </div>
       <HubFoot />
     </div>
@@ -136,7 +142,7 @@ function useDebounced<T>(value: T, ms: number): T {
   return v;
 }
 
-function BriefEditor({ id }: { id: string }) {
+function BriefEditor({ id, below }: { id: string; below?: ReactNode }) {
   const s = useBrief(id);
   const { can } = useAuth();
   const toast = useToast();
@@ -500,6 +506,7 @@ function BriefEditor({ id }: { id: string }) {
             </div>
           </div>
         </div>
+        {below}
       </div>
       <HubFoot />
     </div>

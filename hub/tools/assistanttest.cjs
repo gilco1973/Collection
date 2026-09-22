@@ -56,6 +56,21 @@ const ready = (p) => p.waitForSelector(".hub:not([data-loading])", { timeout: 15
   await page.waitForSelector(".btn.ink:has-text('Send')", { timeout: 5000 });
   check(await page.locator(".fb").count() === 0, "a stopped answer asks for no feedback");
 
+  // A refused turn (409 conversation.busy, as hub-api answers a second tab): no phantom turn, the message back in the composer.
+  const turnsBefore = await page.locator(".turn").count();
+  await page.fill("textarea.in", "[mock:busy] keep this message");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector(".banner.crit", { timeout: 5000 });
+  await page.waitForTimeout(300);
+  check(/still answering/.test(await page.locator(".banner.crit").textContent() || ""), "a refused turn shows the platform's sentence");
+  check(await page.locator(".turn", { hasText: "keep this message" }).count() === 0 && (await page.locator(".turn").count()) === turnsBefore, "a refused turn leaves no phantom turn");
+  check((await page.inputValue("textarea.in")) === "[mock:busy] keep this message", "the refused message is back in the composer");
+  check(await page.evaluate(() => !document.querySelector("textarea.in").disabled), "composer usable after the refusal");
+  await page.fill("textarea.in", "And after the refusal?");
+  await page.keyboard.press("Enter");
+  await page.waitForSelector(".btn.ink:has-text('Send')", { timeout: 15000 });
+  check(await page.locator(".banner.crit").count() === 0 && (await page.locator(".turn").count()) === turnsBefore + 2, "the next send works and clears the error");
+
   // Switch assistant, start a new conversation.
   await page.locator("label.radio", { hasText: "Investigation triage" }).click();
   await page.waitForURL(/\/assistant\/investigation-triage/, { timeout: 5000 });

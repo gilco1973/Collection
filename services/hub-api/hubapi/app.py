@@ -54,11 +54,17 @@ class Stream:
         self.events, self.done = events, done
 
 
-def merge_prefs(p: dict | None) -> dict:
-    """A person's preferences in the full shape the hub reads: what they set over the defaults, key by key."""
+PREF_ENUMS = {"theme": ("system", "light", "dark"), "density": ("comfortable", "dense")}   # the values the hub's Preferences schema names; anything else is 422
+
+
+def merge_prefs(p: dict | None, base: dict | None = None) -> dict:
+    """A person's preferences in the full shape the hub reads: what they set over `base` (what the record holds,
+    else the defaults), key by key; `notifications` likewise. A partial object sets what it names and nothing else."""
     p = p if isinstance(p, dict) else {}
+    b = base if isinstance(base, dict) else {}
+    bn = b.get("notifications") if isinstance(b.get("notifications"), dict) else {}
     n = p.get("notifications") if isinstance(p.get("notifications"), dict) else {}
-    return {**DEFAULT_PREFS, **p, "notifications": {**DEFAULT_PREFS["notifications"], **n}}
+    return {**DEFAULT_PREFS, **b, **p, "notifications": {**DEFAULT_PREFS["notifications"], **bn, **n}}
 
 
 def now_iso() -> str:
@@ -229,9 +235,11 @@ class HubApi:
             elif isinstance(d, bool):
                 if not isinstance(v, bool): errors[k] = ["must be true or false"]
             elif not isinstance(v, str) or len(v) > 64: errors[k] = ["must be a short string"]
-        if errors: raise Problem(422, "Not valid", "Some preferences are not ones the hub keeps, or have the wrong type.", "validation", errors)
-        merged = merge_prefs(p)   # a partial object sets what it names; the record and the answer carry the full shape the hub reads
-        self.store.put("prefs", c["principal"].id, merged, c["principal"].id)
+            elif k in PREF_ENUMS and v not in PREF_ENUMS[k]: errors[k] = ["must be one of " + ", ".join(PREF_ENUMS[k])]
+        if errors: raise Problem(422, "Not valid", "Some preferences are not ones the hub keeps, have the wrong type, or a value the hub does not know.", "validation", errors)
+        pid = c["principal"].id
+        merged = merge_prefs(p, self.store.get("prefs", pid) or c["principal"].preferences)   # a partial object sets what it names over what is stored; the record and the answer carry the full shape the hub reads
+        self.store.put("prefs", pid, merged, pid)
         return {**c["principal"].to_json(), "preferences": merged}
 
     def consumer(self, c):
@@ -240,6 +248,10 @@ class HubApi:
         return d
 
     def create_request(self, c):
+        """POST /me/requests: 201 with the record; 422 for an unknown kind, listing or ladder; 403 `ladder.above`; 409
+        `request.already_granted` (access the person already has) or `request.duplicate` (their own pending ask for the
+        same kind, listing and ladder; another person's ask is not theirs). Idempotency-Key is optional: without it the
+        call runs once and nothing is replayed."""
         b, p = c["body"] or {}, c["principal"]
         kind = b.get("kind")
         if kind not in ("access", "ladder", "role"): raise Problem(422, "Not valid", "kind must be access, ladder or role", "validation")

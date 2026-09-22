@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api";
 import { newId } from "../../api/client";
 import type { TeamConsumer, Workspace as WorkspaceData } from "../../api/types";
+import { useAuth, usePrincipal } from "../../auth/AuthProvider";
+import { briefsWaitingFor, WaitingToFile } from "../intake/WaitingToFile";
 import { assistantRoute, ROUTES } from "../../routes";
 import { track } from "../../telemetry";
 import { HubFoot, HubNav } from "../../ui/HubChrome";
@@ -26,6 +28,11 @@ export default function Workspace() {
   const toast = useToast();
   const qc = useQueryClient();
   const ws = useQuery({ queryKey: ["workspace"], queryFn: ({ signal }) => api.workspace.get(signal) });
+  // For someone who may file: the team's drafts waiting for them (GET /briefs carries them for the team's lead).
+  const principal = usePrincipal();
+  const { can } = useAuth();
+  const briefs = useQuery({ queryKey: ["briefs"], queryFn: ({ signal }) => api.briefs.list(signal), enabled: can("brief.file"), staleTime: 30_000 });
+  const waiting = briefsWaitingFor(briefs.data, principal.id);
   const rotate = useMutation({
     mutationFn: () => api.workspace.rotatePlaygroundKey(newId()),
     onSuccess: (r) => {
@@ -136,6 +143,7 @@ export default function Workspace() {
                 <span>stages follow §7.11 of the platform specification; a failed gate returns to Build, never to Intake</span>
               </div>
             </div>
+            <WaitingToFile briefs={waiting} teams={principal.teams} />
           </div>
           <div className="col" style={{ gap: "16px" }}>
             <div className="card " style={{}} data-guide="workspace-requests">

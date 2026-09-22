@@ -39,8 +39,14 @@ export function useCreateRequest() {
     },
     onError: (e: unknown) => {
       if (e instanceof ForbiddenError) toast.notify("crit", e.problem?.title ?? "Not allowed.", e.problem?.detail);
-      else if (e instanceof ApiError && e.status === 409) toast.notify("warn", e.problem?.title ?? "Already asked.", e.problem?.detail);
-      else toast.notify("crit", "The request could not be sent.", e instanceof ApiError ? (e.problem?.detail ?? e.supportLine) : (e as Error).message);
+      else if (e instanceof ApiError && e.status === 409) {
+        // Already asked, or already granted: this tab is stale. Refresh what it shows so it stops offering the button.
+        toast.notify("warn", e.problem?.title ?? "Already asked.", e.problem?.detail);
+        qc.invalidateQueries({ queryKey: ["workspace"] });
+        qc.invalidateQueries({ queryKey: ["requests"] });
+        qc.invalidateQueries({ queryKey: ["catalog"] });
+        qc.invalidateQueries({ queryKey: ["consumer"] });
+      } else toast.notify("crit", "The request could not be sent.", e instanceof ApiError ? (e.problem?.detail ?? e.supportLine) : (e as Error).message);
     },
   });
 }

@@ -170,8 +170,10 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const persona = stored.persona;
 
   const facts = useMemo<Facts>(() => {
-    const drafts = (briefs.data ?? []).filter((b) => b.status === "draft");
-    const filed = (briefs.data ?? []).filter((b) => b.status !== "draft");
+    // Only this person's own briefs: a lead's list also carries the team's drafts, which are theirs to file, not to continue.
+    const own = (briefs.data ?? []).filter((b) => !pid || b.createdBy === pid);
+    const drafts = own.filter((b) => b.status === "draft");
+    const filed = own.filter((b) => b.status !== "draft");
     const draft = drafts[0];
     const entries = shelf.data ?? [];
     return {
@@ -198,7 +200,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       requests: { pending: (requests.data ?? []).filter((r) => r.status === "pending").length },
       isSigner: entries.some((e) => e.youMaySign.length > 0),
     };
-  }, [briefs.data, shelf.data, requests.data, persona, suggested, page, stored]);
+  }, [briefs.data, shelf.data, requests.data, persona, suggested, page, stored, pid]);
 
   const current = useMemo(() => (persona ? nudge(facts) : stored.dismissed.includes(WELCOME.id) ? undefined : WELCOME), [facts, persona, stored.dismissed]);
 

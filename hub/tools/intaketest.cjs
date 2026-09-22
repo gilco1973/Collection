@@ -34,6 +34,23 @@ async function session(browser, persona) {
   check(true, "autosave lands (chip back to draft saved)");
   check(await page.locator(".chip.accent", { hasText: "General ledger" }).count() === 1, "system chip rendered");
 
+  // Keyboard: the composer and the guide give focus back to what opened them.
+  const activeText = () => page.evaluate(() => (document.activeElement?.getAttribute("aria-label") || document.activeElement?.textContent || "").trim().slice(0, 40));
+  await page.getByRole("button", { name: /Browse the catalog/ }).first().focus();
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("[role=dialog]", { timeout: 4000 });
+  check(await page.evaluate(() => !!document.activeElement?.closest("[role=dialog]")), "the composer opens with focus inside");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  check((await page.locator("[role=dialog]").count()) === 0 && /Browse the catalog/.test(await activeText()), "Escape closes the composer and focus returns to Browse the catalog", await activeText());
+  await page.locator("button.guide-fab").focus();
+  await page.keyboard.press("Enter");
+  await page.waitForSelector("#hub-guide", { timeout: 4000 });
+  check(await page.evaluate(() => !!document.activeElement?.closest("#hub-guide")), "the guide opens with focus inside");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  check((await page.locator("#hub-guide").count()) === 0 && (await page.evaluate(() => document.activeElement?.classList.contains("guide-fab"))), "Escape closes the guide and focus returns to its launcher", await activeText());
+
   // Continue with ceiling R and a W1 tool -> validation error on the ceiling.
   await page.getByRole("button", { name: "Continue to Model" }).click();
   await page.waitForTimeout(200);
@@ -95,6 +112,25 @@ async function session(browser, persona) {
   check(/no team yet/.test(await e.page.locator("[data-testid=no-team]").textContent().catch(() => "") || ""), "the intake page says why and who to ask");
   check(e.errors.length === 0, "no page errors (employee)", e.errors.join(" | "));
   await e.page.close();
+
+  // --- platform lead: another person's draft is listed as waiting to be filed, on the intake page and in the workspace ---
+  const l = await session(browser, "platform");
+  await l.page.goto(BASE + "/build/intake", { waitUntil: "load" });
+  await l.page.waitForSelector(".hub:not([data-loading])");
+  check(/Start an intake brief/.test(await l.page.locator("h1").textContent() || ""), "a lead with no draft of their own is offered to start one");
+  const waiting = l.page.locator("[data-testid=waiting-to-file]");
+  check((await waiting.count()) === 1 && /Payments returns triage/.test(await waiting.textContent() || ""), "the team's draft is listed under Waiting for you to file");
+  check(!/Payments returns triage/.test(await l.page.locator("h1").textContent() || ""), "the other person's draft is not opened as the lead's own");
+  await l.page.goto(BASE + "/workspace", { waitUntil: "load" });
+  await l.page.waitForSelector(".hub:not([data-loading])");
+  await l.page.waitForSelector("[data-testid=waiting-to-file]", { timeout: 5000 });
+  check(/Payments returns triage/.test(await l.page.locator("[data-testid=waiting-to-file]").textContent() || ""), "the workspace lists it too");
+  await l.page.locator("[data-testid=waiting-to-file] a", { hasText: "Open" }).first().click();
+  await l.page.waitForURL(/\/build\/intake\/brf_7c1e/, { timeout: 5000 });
+  await l.page.waitForSelector(".hub:not([data-loading])");
+  check((await l.page.locator("h1").textContent()) === "Payments returns triage for the collections desk", "Open leads to the member's brief");
+  check(l.errors.length === 0, "no page errors (platform)", l.errors.join(" | "));
+  await l.page.close();
 
   await browser.close();
   console.log(fails ? `\n${fails} failure(s)` : "\nall intake steps pass");

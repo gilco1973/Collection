@@ -29,11 +29,12 @@ export function useConversation(id: string | undefined, assistantId: string) {
     () => ({ ...Object.fromEntries((query.data?.feedback ?? []).map((f) => [String(f.seq), f.answered])), ...answeredHere }),
     [query.data?.feedback, answeredHere],
   );
-  const streaming = useRef<string | undefined>(undefined);  // the conversation the live turn belongs to
+  const streaming = useRef<string | undefined>(undefined); // the conversation the live turn belongs to
+  const staleAfterError = useRef<string | undefined>(undefined); // a conversation whose last send was refused: another tab may have written to it since
   const selected = useRef(id);
   useEffect(() => {
     selected.current = id;
-    if (streaming.current !== id) setLive(null);  // a turn streaming for another conversation never shows under this one
+    if (streaming.current !== id) setLive(null); // a turn streaming for another conversation never shows under this one
   }, [id]);
 
   // A new conversation is created on the first send, never on open (no empty records).
@@ -41,14 +42,26 @@ export function useConversation(id: string | undefined, assistantId: string) {
 
   const hhmm = () => new Date().toTimeString().slice(0, 5);
 
+  /**
+   * Send one turn. Resolves true once the answer has streamed to its end (or was stopped by the person), false when
+   * the turn was refused or the connection failed before the answer began: the message was not recorded, so the
+   * caller puts it back in the composer. A refused turn leaves no phantom turn behind.
+   */
   const send = useCallback(
-    async (text: string, onCreated?: (c: Conversation) => void) => {
+    async (text: string, onCreated?: (c: Conversation) => void): Promise<boolean> => {
       const t = text.trim();
-      if (!t || state === "streaming" || state === "sending") return;
-      setError(undefined); setErrorDetail(undefined);
+      if (!t || state === "streaming" || state === "sending") return false;
+      setError(undefined);
+      setErrorDetail(undefined);
       setState("sending");
       let cid = id;
+      let ok = false;
       try {
+        if (cid && staleAfterError.current === cid) {
+          // The last send here was refused (busy, full, forbidden): whatever the server holds now is the truth to build on.
+          staleAfterError.current = undefined;
+          await qc.invalidateQueries({ queryKey: ["conversation", cid] });
+        }
         if (!cid) {
           const c = await create.mutateAsync(assistantId);
           cid = c.id;
@@ -68,6 +81,7 @@ export function useConversation(id: string | undefined, assistantId: string) {
           if (selected.current === cid) setLive({ user, assistant: { ...assistant } });
         }
         setState("idle");
+        ok = true;
       } catch (e) {
         if (abort.current?.signal.aborted) {
           // Stopped by the person: the server records the interrupt; show it at once.
@@ -78,7 +92,12 @@ export function useConversation(id: string | undefined, assistantId: string) {
           );
           track("assistant.stopped", { assistantId });
           setState("idle");
+          ok = true;
         } else {
+          // Refused (409 busy or full, 403, 413) or dropped: nothing was recorded, so nothing is shown as sent.
+          if (streaming.current === cid) streaming.current = undefined;
+          setLive(null);
+          staleAfterError.current = cid;
           // The platform's sentence first (the ceiling, a lost entitlement, a body too large); the support line beside it.
           setError(e instanceof ApiError ? (e.problem?.detail ?? e.message) : "The connection dropped before the answer finished. Send again.");
           setErrorDetail(e instanceof ApiError ? e.supportLine : undefined);
@@ -87,9 +106,10 @@ export function useConversation(id: string | undefined, assistantId: string) {
       } finally {
         abort.current = null;
         // Refresh the server's copy so the list title and the recorded turns are the truth.
-        await qc.invalidateQueries({ queryKey: ["conversation", cid] });
+        if (cid) await qc.invalidateQueries({ queryKey: ["conversation", cid] });
         qc.invalidateQueries({ queryKey: ["conversations"] });
       }
+      return ok;
     },
     [id, assistantId, state, create, qc],
   );
