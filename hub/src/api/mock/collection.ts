@@ -948,7 +948,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -6741,7 +6741,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -6790,7 +6790,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       {
         "label": "Language",
         "value": "mixed",
-        "note": "no runtime dependency"
+        "note": "edge-tts (optional: the narration voice without a key)"
       },
       {
         "label": "Status",
@@ -6932,7 +6932,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.1",
+        "version": "1.0.2",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -7898,7 +7898,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "walkthrough-video",
     "title": "Walkthrough video",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "category": "skill",
     "language": "mixed",
     "owner": "gil.klainert",

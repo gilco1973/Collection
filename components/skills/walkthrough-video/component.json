@@ -1,6 +1,6 @@
 {
   "name": "walkthrough-video",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "category": "skill",
   "language": "mixed",
   "summary": "A narrated, captioned walkthrough video from real screenshots, a slide plan, text-to-speech and ffmpeg; rebuilt, never re-recorded",
@@ -19,7 +19,7 @@
     "video",
     "onboarding"
   ],
-  "requires": [],
+  "requires": ["edge-tts (optional: the narration voice without a key)"],
   "pairs_with": [],
   "test": "python3 deck.py example_slides.py && test -f deck.html && test $(ls narration/*.txt | wc -l) -eq 5",
   "walkthrough": "WALKTHROUGH.md",

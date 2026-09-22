@@ -945,7 +945,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.1",
+     "text": "v1.0.2",
      "kind": "mono"
     },
     {
@@ -6737,7 +6737,7 @@
      "kind": "mono"
     },
     {
-     "text": "v1.0.1",
+     "text": "v1.0.2",
      "kind": "mono"
     },
     {
@@ -6786,7 +6786,7 @@
     {
      "label": "Language",
      "value": "mixed",
-     "note": "no runtime dependency"
+     "note": "edge-tts (optional: the narration voice without a key)"
     },
     {
      "label": "Status",
@@ -6928,7 +6928,7 @@
    ],
    "versions": [
     {
-     "version": "1.0.1",
+     "version": "1.0.2",
      "state": "current",
      "date": "2026-09-19"
     }
@@ -7892,7 +7892,7 @@
   {
    "name": "walkthrough-video",
    "title": "Walkthrough video",
-   "version": "1.0.1",
+   "version": "1.0.2",
    "category": "skill",
    "language": "mixed",
    "owner": "gil.klainert",
