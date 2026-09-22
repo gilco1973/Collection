@@ -39,6 +39,10 @@ class Store:
         self.ttl = idempotency_ttl_s
         self._prunes = 0
         self.migrate()
+        # One process owns the file: a placeholder (status 0) still here at start was claimed by a call that never
+        # answered (the process died mid-call); left alone it would answer 409 in_progress until the TTL prunes it.
+        with self.lock:
+            self.conn.execute("DELETE FROM idempotency WHERE status = 0")
 
     def version(self) -> int:
         return int(self.conn.execute("PRAGMA user_version").fetchone()[0])
@@ -125,6 +129,13 @@ class Store:
         """Releases a reserved key whose call produced no answer to replay (a problem, a defect, a stream)."""
         with self.lock:
             self.conn.execute("DELETE FROM idempotency WHERE principal = ? AND key = ?", (principal, key))
+
+    def abandon(self, key: str, principal: str, older_than_s: float, now: float | None = None) -> bool:
+        """Releases a placeholder claimed more than `older_than_s` ago and never answered: the call that held it died
+        (a crash between reserve and remember or forget). True when the key is free again; False when a call still holds it."""
+        with self.lock:
+            cur = self.conn.execute("DELETE FROM idempotency WHERE principal = ? AND key = ? AND status = 0 AND created < ?", (principal, key, (now or time.time()) - older_than_s))
+            return cur.rowcount == 1
 
     def remember(self, key: str, principal: str, status: int, ctype: str, body: bytes, route: str = "") -> None:
         with self.lock:

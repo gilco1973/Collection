@@ -67,8 +67,10 @@ class IdentityMap:
     def __init__(self, doc: dict):
         if not isinstance(doc, dict): raise IdentityMapError("the identity map must be a JSON object")
         self.tenant = doc.get("tenant", "t_bank")
-        self.default = doc.get("default") or {}
-        self.groups = doc.get("groups") or {}
+        # A key that is present with the wrong type (a list, null) is a typed error, never read as "no grants": a map
+        # that silently grants nobody anything would sign every lead in as a plain employee.
+        self.default = doc["default"] if "default" in doc else {}
+        self.groups = doc["groups"] if "groups" in doc else {}
         self.ai_security_group = doc.get("ai_security_group", "")
         if not isinstance(self.tenant, str) or not isinstance(self.ai_security_group, str): raise IdentityMapError("tenant and ai_security_group must be strings")
         _check_grant("default", self.default)
@@ -135,7 +137,7 @@ class OidcAuth:
         except Exception as e:  # the verifier is the authority; anything it cannot read is not a token
             raise AuthError(401, "Unauthenticated", f"unreadable token ({type(e).__name__})")
         try:
-            return self.map.principal(claims, self.ai_security_group)
+            return self.map.principal(claims, self.ai_security_group or self.map.ai_security_group)   # the setting, else the map's own value; the settings refuse a mismatch
         except AuthError:
             raise
         except Exception as e:  # noqa: BLE001 - odd claim types or a map the check missed: a refusal, never a 500 per call

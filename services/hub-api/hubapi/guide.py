@@ -62,7 +62,8 @@ QUESTION_PER = 4.0
 # same list (hub/src/api/mock/guideRules.ts STRONG); the weaker markers still need two independent hits.
 STRONG_PHRASES = ("ignore previous instructions", "ignore all previous instructions", "ignore the previous instructions", "ignore prior instructions",
                   "disregard your rules", "disregard your instructions", "disregard the rules", "disregard the instructions", "you are now",
-                  "system prompt", "reveal your prompt", "reveal the prompt", "reveal your instructions", "print the token", "exfiltrate", "pretend you are", "pretend to be")
+                  "reveal the system prompt", "reveal your system prompt", "print the system prompt", "print your system prompt",   # asking for it is an order; "system prompt" alone is a concept the pages document
+                  "reveal your prompt", "reveal the prompt", "reveal your instructions", "print the token", "exfiltrate", "pretend you are", "pretend to be")
 
 
 def question_score(text: str) -> float:

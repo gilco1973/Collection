@@ -62,10 +62,11 @@ paths:
   /me/preferences:
     put:
       tags: [me]
-      summary: Replace the person's preferences
-      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Preferences" } } } }
+      summary: Set the person's preferences
+      description: Any subset of the keys may be sent; what is named is set and the rest keeps its value or its default. The record, this response and `GET /me` always carry the full `Preferences` shape.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PreferencesUpdate" } } } }
       responses:
-        "200": { description: The principal with the new preferences, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
+        "200": { description: The principal with the full preferences as now stored, content: { application/json: { schema: { $ref: "#/components/schemas/Principal" } } } }
         "413": { description: The body is over the 64 KB ceiling for this call, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
         "422": { description: "A key that is not a preference, or a value of the wrong type; `errors` names the key", content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
   /me/requests:
@@ -142,7 +143,7 @@ paths:
   /briefs:
     get:
       tags: [briefs]
-      summary: Briefs this person may see (their own; a platform lead sees all)
+      summary: Briefs this person may see (their own; those naming a team they lead, for an ops.lead whose team entry says lead; a platform lead sees all)
       responses:
         "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Brief" } } } } }
     post:
@@ -155,6 +156,7 @@ paths:
     parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
     get:
       tags: [briefs]
+      description: Open to the creator, to a platform lead, and to an ops.lead who leads the team the brief names in `content.useCase.teamId` (who files its write profile); anyone else is 404.
       responses:
         "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
         "404": { $ref: "#/components/responses/Problem" }
@@ -196,7 +198,7 @@ paths:
     post:
       tags: [briefs]
       summary: File the brief
-      description: The server validates the full content with the intake schema (422 with field errors) and applies the lead rule for write profiles (403, `brief.lead_required`).
+      description: The server validates the full content with the intake schema (422 with field errors) and applies the lead rule for write profiles (403, `brief.lead_required`) - a tier ceiling above R is filed by an ops.lead who leads the brief's team, or by a platform lead, who can load and list the member's draft for that.
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IfMatch" }, { $ref: "#/components/parameters/IdempotencyKey" }]
       responses:
         "200": { description: Filed, content: { application/json: { schema: { $ref: "#/components/schemas/Brief" } } } }
@@ -254,6 +256,8 @@ paths:
         `Accept: text/event-stream`. Each event is `event: view` with a JSON `TurnEvent`
         (`{ seq, view }`) whose `view` is one of the closed descriptor set of specification §8.2.
         Aborting the request stops the turn; the harness records `human.interrupt` (PLT-HAR-29).
+        An assistant that fails mid-answer ends the stream with a `stop` view (`reason: upstream.error`) in the same
+        `{ seq, view }` envelope as every other frame; it is recorded with the turn. `text` must be a string (422 otherwise).
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string } } } } } }
       responses:
@@ -316,7 +320,7 @@ components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
   parameters:
-    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: "Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. The key is claimed before the call runs: a repeat while the first call is still being answered is 409 idempotency.in_progress (wait, then repeat); a call that ends in a problem or a stream leaves nothing to replay and frees the key." }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string }, description: "Client-generated; the server replays the first response for a repeat by the same person on the same route; the key reused elsewhere is 422 idempotency.reused. The key is claimed before the call runs: a repeat while the first call is still being answered is 409 idempotency.in_progress (wait, then repeat); a call that ends in a problem or a stream leaves nothing to replay and frees the key. A claim left by a process that died is cleared when the service starts, and one older than 60 s with no answer is taken over by the next call with that key." }
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string }, description: The etag last seen; a mismatch is 409. }
   responses:
     Problem: { description: RFC 9457 problem, content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } } }
@@ -348,6 +352,16 @@ components:
         theme: { type: string, enum: [system, light, dark] }
         accessibility: { type: boolean, description: PLT-UI-15 }
         noAssistant: { type: boolean, description: PLT-CH-18 }
+        density: { type: string, enum: [comfortable, dense] }
+        locale: { type: string }
+        notifications: { type: object, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }
+    PreferencesUpdate:
+      type: object
+      description: Any subset of `Preferences` (`notifications` may itself be partial); a key that is not a preference, or a value of the wrong type, is 422
+      properties:
+        theme: { type: string, enum: [system, light, dark] }
+        accessibility: { type: boolean }
+        noAssistant: { type: boolean }
         density: { type: string, enum: [comfortable, dense] }
         locale: { type: string }
         notifications: { type: object, properties: { requests: { type: boolean }, briefs: { type: boolean }, digest: { type: boolean } } }

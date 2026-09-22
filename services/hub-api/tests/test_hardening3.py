@@ -122,16 +122,20 @@ class IdempotencyRace(unittest.TestCase):
         self.api = make_api(); self.gk = Client(self.api, "mock.gk"); self.body = {"kind": "access", "consumerId": "compliance-narration"}
 
     def test_a_second_call_while_the_first_runs_is_409_then_replays(self):
-        gate, entered = threading.Event(), threading.Event(); orig = self.api.store.put
-        def slow_put(kind, id, doc, owner=None):
-            if kind == "request": entered.set(); gate.wait(5)
-            return orig(kind, id, doc, owner)
-        self.api.store.put = slow_put; res = []
-        t = threading.Thread(target=lambda: res.append(self.gk.call("POST", "/me/requests", self.body, {"Idempotency-Key": "once"}))); t.start()
-        self.assertTrue(entered.wait(5))
-        s, body = self.gk.call("POST", "/me/requests", self.body, {"Idempotency-Key": "once"})
-        self.assertEqual((s, body["code"]), (409, "idempotency.in_progress"))
-        gate.set(); t.join(5); self.api.store.put = orig
+        from hubapi import app as A
+        gate, entered = threading.Event(), threading.Event(); orig = A.now_iso
+        def slow_now():   # the first call stalls while building its answer, outside the record's lock (the duplicate check and the write are one locked section)
+            if not entered.is_set(): entered.set(); gate.wait(5)
+            return orig()
+        A.now_iso = slow_now; res = []
+        try:
+            t = threading.Thread(target=lambda: res.append(self.gk.call("POST", "/me/requests", self.body, {"Idempotency-Key": "once"}))); t.start()
+            self.assertTrue(entered.wait(5))
+            s, body = self.gk.call("POST", "/me/requests", self.body, {"Idempotency-Key": "once"})
+            self.assertEqual((s, body["code"]), (409, "idempotency.in_progress"))
+            gate.set(); t.join(5)
+        finally:
+            A.now_iso = orig
         self.assertEqual(res[0][0], 201)
         s, again = self.gk.call("POST", "/me/requests", self.body, {"Idempotency-Key": "once"})
         self.assertEqual((s, again["id"]), (201, res[0][1]["id"]), "once finished, the key replays the first answer")
@@ -207,10 +211,11 @@ class OneTurnAtATime(unittest.TestCase):
                 raise RuntimeError("no adapter"); yield
         api = make_api(assistant=Broken()); gk = Client(api, "mock.gk")
         _, c = gk.call("POST", "/conversations", {"assistantId": "employee-assistant"})
-        with self.assertRaises(RuntimeError):
-            res = api.handle("POST", f"/conversations/{c['id']}/turns", {"Authorization": "Bearer mock.gk"}, b'{"text": "x"}')
-            try: list(res.events)
-            finally: res.done(True)
+        res = api.handle("POST", f"/conversations/{c['id']}/turns", {"Authorization": "Bearer mock.gk"}, b'{"text": "x"}')
+        lg = logging.getLogger("hubapi"); level = lg.level; lg.setLevel(logging.CRITICAL)   # the failure is logged with its traceback; not test output
+        try: frames = list(res.events)   # the adapter's failure is a stop frame in the stream's own envelope, never an exception out of it
+        finally: res.done(False); lg.setLevel(level)
+        self.assertEqual([(f["seq"], f["view"]["kind"], f["view"]["reason"]) for f in frames], [(2, "stop", "upstream.error")])
         self.assertNotIn(c["id"], api._busy)
 
     def test_the_ceiling_is_a_ceiling_under_concurrency(self):

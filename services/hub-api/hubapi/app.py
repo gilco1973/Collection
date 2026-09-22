@@ -19,7 +19,9 @@ log = logging.getLogger("hubapi")
 ROUTE_BODY_LIMIT = 64 * 1024      # briefs, preferences and turns: a form or a message, never a megabyte
 MAX_TURNS = 200                   # turns (both sides) in one conversation; past it the person starts a new one
 MAX_USED_IN, MAX_NOTE = 200, 2000
+STALE_RESERVATION_S = 60          # an Idempotency-Key claimed this long ago with no answer belongs to a call that died; the next call takes it over
 GONE = (BrokenPipeError, ConnectionResetError, TimeoutError, socket.timeout)   # the client is no longer there to read
+UPSTREAM_STOP = {"kind": "stop", "reason": "upstream.error", "message": "The assistant stopped answering; try again in a moment."}
 
 
 def _no_constant(name: str):
@@ -45,10 +47,18 @@ class Problem(Exception):
 
 
 class Stream:
-    """An SSE response: `events` yields dicts; `done(views)` is called with what was sent, for the record."""
+    """An SSE response: `events` yields `{seq, view}` frames; `done(aborted, error=None)` is called once the stream
+    ends, for the record. `error` is a stop view the server wrote itself when a frame could not be sent."""
 
     def __init__(self, events, done=None):
         self.events, self.done = events, done
+
+
+def merge_prefs(p: dict | None) -> dict:
+    """A person's preferences in the full shape the hub reads: what they set over the defaults, key by key."""
+    p = p if isinstance(p, dict) else {}
+    n = p.get("notifications") if isinstance(p.get("notifications"), dict) else {}
+    return {**DEFAULT_PREFS, **p, "notifications": {**DEFAULT_PREFS["notifications"], **n}}
 
 
 def now_iso() -> str:
@@ -99,8 +109,11 @@ class HubApi:
                 hit = self.store.replay(key, principal.id)
                 if hit and hit[3] and hit[3] != route:   # a row migrated from before routes were recorded has route '': it still replays
                     return self.problem(Problem(422, "Key reused", "This Idempotency-Key was used for another call; a key belongs to one request.", "idempotency.reused"))
-                if hit and hit[0] == 0:   # the placeholder: the first call with this key is still running
-                    return self.problem(Problem(409, "Request in progress", "A call with this Idempotency-Key is still being answered; wait for it rather than repeating it.", "idempotency.in_progress"))
+                if hit and hit[0] == 0:   # the placeholder: the first call with this key is still running, unless it died
+                    if not self.store.abandon(key, principal.id, STALE_RESERVATION_S):
+                        return self.problem(Problem(409, "Request in progress", "A call with this Idempotency-Key is still being answered; wait for it rather than repeating it.", "idempotency.in_progress"))
+                    log.warning("idempotency.abandoned route=%s: a placeholder older than %ds was taken over", route, STALE_RESERVATION_S)
+                    hit = None   # the key is free: this call claims it below and runs
                 if hit:
                     return hit[0], {"Content-Type": hit[1], "Idempotent-Replayed": "true"}, hit[2]
                 reserved = self.store.reserve(key, principal.id, route)
@@ -152,7 +165,7 @@ class HubApi:
         r = self.route
         r("GET", "/health", self.health, anonymous=True)
         r("GET", "/ready", self.ready, anonymous=True)
-        r("GET", "/me", lambda c: {**c["principal"].to_json(), "preferences": self.store.get("prefs", c["principal"].id) or c["principal"].preferences})
+        r("GET", "/me", lambda c: {**c["principal"].to_json(), "preferences": merge_prefs(self.store.get("prefs", c["principal"].id) or c["principal"].preferences)})
         r("PUT", "/me/preferences", self.put_prefs, max_body=ROUTE_BODY_LIMIT)
         r("GET", "/catalog", lambda c: self.catalog.catalog_for(c["principal"]))
         r("GET", "/catalog/search", lambda c: self.catalog.search(c["principal"], c["query"].get("q", "")))
@@ -186,7 +199,9 @@ class HubApi:
         if not self.guide: raise Problem(404, "Not found", "The guide is not configured.")
         b = c["body"] or {}
         audience = b.get("audience") if b.get("audience") in ("engineer", "leadership", "employee") else ("leadership" if "platform.lead" in c["principal"].roles and not c["principal"].teams else "engineer")
-        out = self.guide.ask(str(b.get("question") or ""), audience, b.get("page"))
+        question = b.get("question")
+        if question is not None and not isinstance(question, str): raise Problem(422, "Not valid", "question must be a string.", "validation", {"question": ["must be a string"]})
+        out = self.guide.ask(question or "", audience, b.get("page"))
         log.info("guide.ask audience=%s mode=%s sources=%d refused=%s", audience, out.get("mode"), len(out.get("sources", [])), out.get("refused", ""))
         return out
 
@@ -215,8 +230,9 @@ class HubApi:
                 if not isinstance(v, bool): errors[k] = ["must be true or false"]
             elif not isinstance(v, str) or len(v) > 64: errors[k] = ["must be a short string"]
         if errors: raise Problem(422, "Not valid", "Some preferences are not ones the hub keeps, or have the wrong type.", "validation", errors)
-        self.store.put("prefs", c["principal"].id, p, c["principal"].id)
-        return {**c["principal"].to_json(), "preferences": p}
+        merged = merge_prefs(p)   # a partial object sets what it names; the record and the answer carry the full shape the hub reads
+        self.store.put("prefs", c["principal"].id, merged, c["principal"].id)
+        return {**c["principal"].to_json(), "preferences": merged}
 
     def consumer(self, c):
         d = self.catalog.consumer(c["params"]["slug"], c["principal"])
@@ -237,13 +253,15 @@ class HubApi:
                 raise Problem(403, "Above your ceiling", f"Your own ladder is {p.ladder}; ask your lead to raise it first.", "ladder.above")
         if kind == "access" and cid in p.entitlements:
             raise Problem(409, "Already yours", f"You already have access to {listing['name']}; open it from Discover.", "request.already_granted")
-        for r in self.store.list("request", p.id):
-            if r.get("status") == "pending" and r.get("kind") == kind and r.get("consumerId") == cid and r.get("ladder") == b.get("ladder"):
-                raise Problem(409, "Already asked", f"Your request for {listing['name']} is with your lead; there is nothing to send again.", "request.duplicate")
+        ladder = b.get("ladder") if kind == "ladder" else None   # the shape the record holds: a stray field on an access or role ask is not a different ask
         name = listing["name"]
-        req = {"id": "req_" + uuid.uuid4().hex[:8], "kind": kind, "consumerId": b.get("consumerId"), "ladder": b.get("ladder") if kind == "ladder" else None, "status": "pending", "createdAt": now_iso(),
-               "title": f"Ladder {b.get('ladder')} on {name}" if kind == "ladder" else f"{name} · {'reviewer role' if kind == 'role' else 'access'}", "note": "with your lead"}
-        self.store.put("request", req["id"], req, p.id)
+        req = {"id": "req_" + uuid.uuid4().hex[:8], "kind": kind, "consumerId": cid, "ladder": ladder, "status": "pending", "createdAt": now_iso(),
+               "title": f"Ladder {ladder} on {name}" if kind == "ladder" else f"{name} · {'reviewer role' if kind == 'role' else 'access'}", "note": "with your lead"}
+        with self.store.lock:   # the duplicate check and the write are one section: two asks at once cannot both pass
+            for r in self.store.list("request", p.id):
+                if r.get("status") == "pending" and r.get("kind") == kind and r.get("consumerId") == cid and r.get("ladder") == ladder:
+                    raise Problem(409, "Already asked", f"Your request for {name} is with your lead; there is nothing to send again.", "request.duplicate")
+            self.store.put("request", req["id"], req, p.id)
         return 201, req
 
     def workspace(self, c):
@@ -256,13 +274,31 @@ class HubApi:
         b = B.new_brief(p)
         return b["id"], b, p.id
 
+    @staticmethod
+    def _led_teams(p) -> set:
+        """The teams this person leads: an ops.lead whose team entry says `lead: true`. A write profile is filed by them."""
+        if "ops.lead" not in p.roles: return set()
+        return {t["id"] for t in p.teams if isinstance(t, dict) and t.get("lead") is True and isinstance(t.get("id"), str)}
+
+    @staticmethod
+    def _team_of(b: dict) -> str:
+        use = (b.get("content") or {}).get("useCase") if isinstance(b.get("content"), dict) else None
+        team = use.get("teamId") if isinstance(use, dict) else None
+        return team if isinstance(team, str) else ""
+
+    def _may_see(self, b: dict, p) -> bool:
+        """The creator, a platform lead, or the lead of the team the brief names (who files its write profile)."""
+        return b.get("createdBy") == p.id or "platform.lead" in p.roles or (self._team_of(b) != "" and self._team_of(b) in self._led_teams(p))
+
     def list_briefs(self, c):
         p = c["principal"]
-        return self.store.list("brief") if "platform.lead" in p.roles else self.store.list("brief", p.id)
+        if "platform.lead" in p.roles or self._led_teams(p):
+            return [b for b in self.store.list("brief") if self._may_see(b, p)]
+        return self.store.list("brief", p.id)
 
     def load_brief(self, c):
         b = self.store.get("brief", c["params"]["id"]); p = c["principal"]
-        if not b or (b["createdBy"] != p.id and "platform.lead" not in p.roles): raise Problem(404, "Not found", "No brief with that id, or you cannot see it.")
+        if not b or not self._may_see(b, p): raise Problem(404, "Not found", "No brief with that id, or you cannot see it.")
         return b
 
     def patch_brief(self, c):
@@ -323,7 +359,9 @@ class HubApi:
         return sum(len(t.get("views", [])) for t in x.get("turns", []))
 
     def turn(self, c):
-        text = str((c["body"] or {}).get("text", "")).strip()
+        text = (c["body"] or {}).get("text", "")
+        if not isinstance(text, str): raise Problem(422, "Not valid", "text must be a string.", "validation", {"text": ["must be a string"]})
+        text = text.strip()
         if not text: raise Problem(422, "Not valid", "text is required", "validation")
         with self.store.lock:   # the read, the ceiling, the busy check and the claim are one section
             x = self.load_conversation(c)
@@ -342,13 +380,20 @@ class HubApi:
 
         def events():
             seq = base + 1   # the person's view
-            for view in api.assistant.stream(x, text, c["principal"]):
+            try:
+                for view in api.assistant.stream(x, text, c["principal"]):
+                    seq += 1
+                    if view.get("kind") == "feedback": view = {**view, "seq": seq}
+                    assistant_turn["views"].append(view)
+                    yield {"seq": seq, "view": view}
+            except Exception:  # noqa: BLE001 - the adapter failed mid-answer: the stop is a frame like any other, and the record shows why the answer ended
+                log.exception("stream failed conversation=%s", x["id"])
                 seq += 1
-                if view.get("kind") == "feedback": view = {**view, "seq": seq}
-                assistant_turn["views"].append(view)
-                yield {"seq": seq, "view": view}
+                assistant_turn["views"].append(dict(UPSTREAM_STOP))
+                yield {"seq": seq, "view": dict(UPSTREAM_STOP)}
 
-        def done(aborted: bool):
+        def done(aborted: bool, error: dict | None = None):
+            if error: assistant_turn["views"].append(dict(error))   # a stop the server wrote itself when a frame could not be sent
             if aborted: assistant_turn["views"].append({"kind": "stop", "reason": "human.interrupt", "message": "Stopped."})
             try:
                 with api.store.lock:   # append to the record as it is now, never to the copy read before the stream
@@ -392,7 +437,9 @@ class HubApi:
         attest = attest or {}
         missing = [k for k in ("testsGreen", "exampleRun", "walkthroughRead", "rulesRead") if attest.get(k) is not True]
         if missing: raise Problem(422, "Every attestation is required", f"Not ticked: {', '.join(missing)}.", "validation", {f"attest.{k}": ["required"] for k in missing})
-        used_in, note = str(b.get("usedIn") or "").strip(), str(b.get("note") or "").strip()
+        for k in ("usedIn", "note"):   # text the record carries verbatim: a string or nothing, never another type spelled out
+            if b.get(k) is not None and not isinstance(b.get(k), str): raise Problem(422, "Not valid", f"{k} must be a string.", "validation", {k: ["must be a string"]})
+        used_in, note = (b.get("usedIn") or "").strip(), (b.get("note") or "").strip()
         if role == "owner" and not r.get("usedIn") and not used_in: raise Problem(422, "Where was it used?", "The owner signs after one real use; name the project.", "validation", {"usedIn": ["required"]})
         if len(used_in) > MAX_USED_IN: raise Problem(422, "Not valid", f"usedIn is at most {MAX_USED_IN} characters.", "validation", {"usedIn": ["too long"]})
         if len(note) > MAX_NOTE: raise Problem(422, "Not valid", f"note is at most {MAX_NOTE} characters.", "validation", {"note": ["too long"]})
@@ -439,6 +486,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Request-Id", current_request_id())
             self.end_headers()
+            self._sent = True   # a status line is on the wire: whatever happens next, this response cannot be replaced by another
             if self.command != "HEAD":
                 self.wfile.write(body)
 
@@ -449,6 +497,7 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             if lock is not None:
                 with lock:
                     self.server.inflight += 1
+            self._sent = False
             try:
                 self._dispatch_one()
             except (BrokenPipeError, ConnectionResetError):
@@ -457,11 +506,12 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
                 self.close_connection = True  # the client stopped sending; the thread goes back to the pool
             except Exception:  # noqa: BLE001 - a defect outside the API's own handling: answer 500 when nothing was sent yet
                 log.exception("%s %s failed", self.command, self.path.split("?")[0])
-                try:
-                    self.close_connection = True
-                    self._send(500, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 500, "title": "Internal error", "code": "internal"}).encode())
-                except Exception:  # noqa: BLE001 - headers already sent or the socket gone
-                    pass
+                self.close_connection = True
+                if not self._sent:   # once headers are out, a second status line would land inside the first response's body
+                    try:
+                        self._send(500, {"Content-Type": "application/problem+json", "Connection": "close"}, json.dumps({"status": 500, "title": "Internal error", "code": "internal"}).encode())
+                    except Exception:  # noqa: BLE001 - the socket gone
+                        pass
             finally:
                 if lock is not None:
                     with lock:
@@ -514,24 +564,29 @@ def make_handler(api: HubApi, static_dir: str = "", api_prefix: str = "/api"):
             body = self.rfile.read(length) if length else b""
             res = api.handle(self.command, path[len(api_prefix):] or "/", self.headers, body)
             if isinstance(res, Stream):
-                aborted = False
+                aborted, error, seq = False, None, 0
                 try:
                     self.send_response(200); self.send_header("Content-Type", "text/event-stream"); self.send_header("Cache-Control", "no-cache"); self.send_header("Connection", "close"); self.send_header("X-Request-Id", current_request_id()); self.end_headers()
+                    self._sent = True
                     for ev in res.events:
+                        seq = ev.get("seq", seq) if isinstance(ev, dict) else seq
                         self.wfile.write(f"event: view\ndata: {json.dumps(ev, ensure_ascii=False, allow_nan=False)}\n\n".encode("utf-8")); self.wfile.flush()
                 except GONE:   # the browser navigated away, or stopped reading (a write that times out): the answer stops here
                     aborted = True
-                except Exception:  # noqa: BLE001 - the adapter failed mid-stream: the person sees why the answer stopped
+                except Exception:  # noqa: BLE001 - a frame that could not be encoded or a stream that failed outside the adapter: the person sees why the answer stopped, in the same envelope as every other frame
                     log.exception("stream failed")
+                    error = dict(UPSTREAM_STOP)
                     try:
-                        stop = {"kind": "stop", "reason": "upstream.error", "message": "The assistant stopped answering; try again in a moment."}
-                        self.wfile.write(f"event: view\ndata: {json.dumps(stop)}\n\n".encode("utf-8")); self.wfile.flush()
+                        self.wfile.write(f"event: view\ndata: {json.dumps({'seq': seq + 1, 'view': error})}\n\n".encode("utf-8")); self.wfile.flush()
                     except GONE:
                         aborted = True
                 finally:
-                    getattr(res.events, "close", lambda: None)()   # the adapter's generator releases whatever it holds upstream
-                    if res.done: res.done(aborted)
                     self.close_connection = True
+                    getattr(res.events, "close", lambda: None)()   # the adapter's generator releases whatever it holds upstream
+                    try:
+                        if res.done: res.done(aborted, error=error)
+                    except Exception:  # noqa: BLE001 - the record could not be written: the stream already answered; nothing else is written into it
+                        log.exception("record write failed conversation stream")
                 log.info("%s %s 200 stream%s %dms", self.command, urllib.parse.urlparse(path).path, " aborted" if aborted else "", int((time.time() - t0) * 1000))
                 return
             status, headers, out = res

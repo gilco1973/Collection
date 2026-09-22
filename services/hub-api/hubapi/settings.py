@@ -103,6 +103,7 @@ class Settings:
         if self.live and self.assistant == "fake": p.append("the fake assistant is refused in staging and production")
         if not 1 <= self.listen_port <= 65535: p.append(f"{P}LISTEN_PORT out of range")
         if not 100 <= self.bedrock_max_output_tokens <= 100_000: p.append(f"{P}BEDROCK_MAX_OUTPUT_TOKENS out of range")
+        map_group = ""   # the identity map's own ai_security_group, once the file is read
         for name, path in (("IDENTITY_MAP", self.identity_map), ("CONSUMERS_FILE", self.consumers_file), ("COLLECTION_FILE", self.collection_file), ("GUIDE_FILE", self.guide_file)):
             if not os.path.isfile(path): p.append(f"{P}{name} does not exist"); continue
             try:
@@ -110,13 +111,16 @@ class Settings:
             except (OSError, ValueError): p.append(f"{P}{name} is not readable JSON"); continue
             if name == "IDENTITY_MAP":   # the same check the mapping applies at load: a typo is named here, not a refusal per call
                 from .auth import IdentityMap, IdentityMapError
-                try: IdentityMap(doc)
-                except IdentityMapError as e: p.append(f"{P}IDENTITY_MAP is not well-formed: {e}")
+                try: m = IdentityMap(doc)
+                except IdentityMapError as e: p.append(f"{P}IDENTITY_MAP is not well-formed: {e}"); continue
+                map_group = m.ai_security_group
+                if self.ai_security_group and map_group and map_group != self.ai_security_group:   # two names for one group: the AI security engineers would be whichever the operator did not mean
+                    p.append(f"{P}AI_SECURITY_GROUP and the identity map's ai_security_group name different groups; set one, or set both to the same group")
         if self.secrets.startswith("file:") and not os.path.isfile(self.secrets[5:]): p.append(f"{P}SECRETS names a file that does not exist")
         if self.static_dir and not os.path.isdir(self.static_dir): p.append(f"{P}STATIC_DIR is not a directory")
         if self.auth == "oidc" and (not self.idp_issuer or not self.idp_audience): p.append(f"{P}IDP_ISSUER and {P}IDP_AUDIENCE are required with oidc")
         if self.auth == "oidc" and self.idp_issuer and not self.idp_issuer.startswith("https://"): p.append(f"{P}IDP_ISSUER must be https")
-        if self.auth == "oidc" and not self.ai_security_group: p.append(f"{P}AI_SECURITY_GROUP is empty: nobody could sign for AI security")
+        if self.auth == "oidc" and not self.ai_security_group and not map_group: p.append(f"{P}AI_SECURITY_GROUP is empty and the identity map names no ai_security_group: nobody could sign for AI security")
         if self.auth == "oidc" and not self.owner_domain: p.append(f"{P}OWNER_DOMAIN is required with oidc: the owner's handle alone would match the same name at any domain")
         if self.owner_domain and ("@" in self.owner_domain or "/" in self.owner_domain or " " in self.owner_domain): p.append(f"{P}OWNER_DOMAIN must be a bare domain name")
         if self.log_level.upper() not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"): p.append(f"{P}LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR or CRITICAL")
