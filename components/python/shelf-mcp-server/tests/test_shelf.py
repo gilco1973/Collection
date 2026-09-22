@@ -63,3 +63,19 @@ class ReadOnlyShelf(unittest.TestCase):
         self.assertEqual(lines[0]["result"]["serverInfo"]["name"], "shelf")
         self.assertEqual(lines[1]["error"]["code"], P.PARSE_ERROR)
         self.assertEqual(lines[2], {"jsonrpc": "2.0", "id": 2, "result": {}})
+
+
+class HostileInput(unittest.TestCase):
+    def test_wrong_shapes_are_errors_and_the_loop_survives_bad_bytes(self):
+        import io, json
+        from server import Shelf, ShelfServer, serve_stdio, find_root
+        srv = ShelfServer(Shelf(find_root(None)))
+        for msg in ({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": [1]},
+                    {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "shelf_list", "arguments": [1]}},
+                    {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "shelf_list", "arguments": {"category": ["agent"]}}},
+                    {"jsonrpc": "2.0", "id": 4, "method": "resources/read", "params": {"uri": 5}}):
+            r = srv.handle(msg); self.assertIn("error", r, msg)
+        lines = b'{"jsonrpc":"2.0","id":1,"method":"ping"}\n\xff\xfe{bad\n' + b'{"jsonrpc":"2.0","id":2,"method":"ping"}\n' + b"[" * 1_100_000 + b"\n" + b'{"jsonrpc":"2.0","id":3,"method":"ping"}\n'
+        out = io.StringIO(); serve_stdio(srv, io.TextIOWrapper(io.BytesIO(lines), encoding="utf-8"), out)
+        answers = [json.loads(l) for l in out.getvalue().splitlines()]
+        self.assertEqual([a.get("id") for a in answers], [1, None, 2, None, 3], "every ping is answered; the bad byte and the huge line are parse errors")

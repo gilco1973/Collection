@@ -250,3 +250,10 @@ class ThirdReview(unittest.TestCase):
                  "args": {"dry": {"type": "bool", "required": True}, "ratio": {"type": "float"}, "meta": {"type": "dict"}}}
         self.assertEqual(McpToolServer.tool_of(entry)["inputSchema"]["properties"], {"dry": {"type": "boolean"}, "ratio": {"type": "number"}, "meta": {"type": "object"}})
         self.assertEqual(C.validate_args(entry, {"dry": True, "ratio": 0.5, "meta": {}}), {"dry": True, "ratio": 0.5, "meta": {}}, "what is advertised is accepted")
+
+
+class WireEncoding(unittest.TestCase):
+    def test_a_lone_surrogate_in_a_result_is_escaped_not_fatal(self):
+        line = P.dumps({"jsonrpc": "2.0", "id": 1, "result": {"text": "bad \ud800 char"}})
+        self.assertIn("\\ud800", line); line.encode("utf-8")  # writable to any stream
+        self.assertEqual(json.loads(line)["result"]["text"], "bad \ud800 char")

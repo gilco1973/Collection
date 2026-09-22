@@ -71,4 +71,6 @@ def is_response(msg: dict) -> bool:
 
 
 def dumps(msg: dict) -> str:
-    return json.dumps(msg, separators=(",", ":"), ensure_ascii=False)
+    """One line of JSON, ASCII-escaped: a lone surrogate that reached a result from upstream is written as an escape,
+    never an encode error that kills the transport."""
+    return json.dumps(msg, separators=(",", ":"), ensure_ascii=True)

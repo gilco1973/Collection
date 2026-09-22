@@ -138,6 +138,8 @@ class ShelfServer:
     def handle(self, msg: dict) -> dict | None:
         method, params, mid = msg.get("method"), msg.get("params") or {}, msg.get("id")
         try:
+            if not isinstance(params, dict):
+                raise P.RpcError(P.INVALID_REQUEST, "params must be an object")
             if P.is_notification(msg):
                 if method == "notifications/initialized":
                     self.initialized = True
@@ -150,7 +152,10 @@ class ShelfServer:
             if method == "tools/list":
                 return P.result(mid, {"tools": TOOLS})
             if method == "tools/call":
-                return P.result(mid, self.call(params.get("name"), params.get("arguments") or {}))
+                args = params.get("arguments") or {}
+                if not isinstance(args, dict):
+                    raise P.RpcError(P.INVALID_PARAMS, "arguments must be an object")
+                return P.result(mid, self.call(params.get("name"), args))
             if method == "resources/list":
                 return P.result(mid, {"resources": self.shelf.resources()})
             if method == "resources/read":
@@ -158,8 +163,13 @@ class ShelfServer:
             raise P.RpcError(P.METHOD_NOT_FOUND, f"method not found: {method}")
         except P.RpcError as e:
             return P.error(mid, e)
+        except Exception as e:  # noqa: BLE001 - a defect answers as an error, by class; the server keeps serving
+            return P.error(mid, P.RpcError(P.INTERNAL_ERROR, f"internal error: {type(e).__name__}"))
 
     def call(self, name: str | None, args: dict) -> dict:
+        for k, v in args.items():
+            if v is not None and not isinstance(v, str):
+                raise P.RpcError(P.INVALID_PARAMS, f"argument {k} must be a string")
         if name == "shelf_list": data = self.shelf.list(args.get("category"))
         elif name == "shelf_get": data = self.shelf.get(str(args.get("name", "")))
         elif name == "shelf_search": data = self.shelf.search(str(args.get("q", "")))
@@ -170,12 +180,32 @@ class ShelfServer:
         return {"content": [{"type": "text", "text": json.dumps(data, ensure_ascii=False, indent=1)}], "structuredContent": data if isinstance(data, dict) else {"items": data}, "isError": False}
 
 
+MAX_LINE_BYTES = 1_000_000
+
+
 def serve_stdio(server: ShelfServer, inp=None, out=None) -> None:
+    """One JSON-RPC message per line. Bytes are read and decoded with replacement (a bad byte is a parse error, not
+    the end of the server); a line above MAX_LINE_BYTES is drained and refused."""
     inp, out = inp or sys.stdin, out or sys.stdout
-    for line in inp:
+    raw = getattr(inp, "buffer", inp)
+    while True:
+        line = raw.readline(MAX_LINE_BYTES + 1)
+        if not line:
+            break
+        if isinstance(line, bytes):
+            too_long = len(line) > MAX_LINE_BYTES
+            while too_long and not line.endswith(b"\n"):
+                more = raw.readline(MAX_LINE_BYTES)
+                if not more: break
+                line = line[-1:] + more[-1:]  # drain; keep only the tail to see the newline
+            line = line.decode("utf-8", "replace")
+        else:
+            too_long = len(line) > MAX_LINE_BYTES
         if not line.strip():
             continue
         try:
+            if too_long:
+                raise P.RpcError(P.PARSE_ERROR, f"line above {MAX_LINE_BYTES} bytes")
             msg = P.parse(line)
         except P.RpcError as e:
             out.write(P.dumps(P.error(None, e)) + "\n"); out.flush(); continue
