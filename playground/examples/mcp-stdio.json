@@ -1,0 +1,9 @@
+{
+  "$comment": "An MCP tool server started as a command on stdio. ./demo_mcp.py starts the playground's vulnerable demo server.",
+  "name": "tools-stdio",
+  "kind": "mcp-stdio",
+  "environment": "sandbox",
+  "command": ["python3", "./demo_mcp.py", "--vulnerable"],
+  "env": [],
+  "description": "The demo tool server, deliberately unsafe"
+}

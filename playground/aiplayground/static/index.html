@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Playground</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true">◇</span> AI Playground <span class="ver" id="ver"></span></div>
+  <nav id="nav" aria-label="Sections">
+    <a href="#home" data-view="home">Start</a>
+    <a href="#targets" data-view="targets">Solutions</a>
+    <a href="#try" data-view="try">Try it</a>
+    <a href="#run" data-view="run">Run checks</a>
+    <a href="#runs" data-view="runs">Reports</a>
+    <a href="#probes" data-view="probes">Probe library</a>
+  </nav>
+  <div class="who">
+    <label>You are
+      <select id="role">
+        <option value="engineer">an engineer</option>
+        <option value="ai-security">an AI security engineer</option>
+      </select>
+    </label>
+    <input id="by" placeholder="Name &lt;address&gt;" aria-label="Your name and address, recorded on runs and triage" autocomplete="off">
+  </div>
+</header>
+<main id="main" tabindex="-1"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/app.js"></script>
+</body>
+</html>

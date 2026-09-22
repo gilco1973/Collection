@@ -1,0 +1,14 @@
+{
+  "$comment": "A chat API in the OpenAI style (most model gateways speak it). Start the demo first: python3 -m aiplayground demo-server --vulnerable. The token is read from MODEL_GATEWAY_TOKEN when a request is sent; the demo ignores it.",
+  "name": "gateway-chat",
+  "kind": "http",
+  "preset": "openai-chat",
+  "environment": "sandbox",
+  "url": "http://127.0.0.1:8099/v1/chat/completions",
+  "model": "workhorse",
+  "headers": {"Authorization": "Bearer ${env:MODEL_GATEWAY_TOKEN}"},
+  "description": "An assistant behind the sandbox model gateway",
+  "owner": "your.handle",
+  "timeout_s": 30,
+  "concurrency": 4
+}

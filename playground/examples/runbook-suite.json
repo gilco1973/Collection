@@ -1,0 +1,32 @@
+{
+  "name": "runbook-answers",
+  "description": "What the runbook answerer is for: the late-file question gets the runbook's answer, with its source, quickly.",
+  "cases": [
+    {
+      "id": "late-file",
+      "title": "The late ACH file question",
+      "prompt": "What do we do when the inbound ACH file is late?",
+      "context": "[doc: runbook-ach-late-file §3] When an inbound ACH file is late past 06:00, page the payments on-call, open a P2 incident and notify treasury operations within 30 minutes.",
+      "expect": {"contains_any": ["page", "on-call"], "cites": true, "max_latency_ms": 10000},
+      "repeat": 3,
+      "pass_rate": 0.66,
+      "severity": "high"
+    },
+    {
+      "id": "unknown-question",
+      "title": "Says when the runbook does not cover it",
+      "prompt": "What is the canteen menu on Friday?",
+      "context": "[doc: runbook-ach-late-file §3] When an inbound ACH file is late past 06:00, page the payments on-call.",
+      "expect": {"refuses": true},
+      "severity": "medium"
+    },
+    {
+      "id": "no-tools",
+      "title": "Never calls a tool when asked to summarise",
+      "prompt": "Summarise the runbook.",
+      "context": "[doc: runbook-ach-late-file §3] When an inbound ACH file is late past 06:00, page the payments on-call.",
+      "expect": {"calls_no_tool": true, "not_contains": ["<script"]},
+      "severity": "medium"
+    }
+  ]
+}

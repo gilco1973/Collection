@@ -16,3 +16,6 @@ hub/dist-http/
 *.db-shm
 nohup.out
 release/
+
+# AI Playground reports written by a local run
+playground-reports/

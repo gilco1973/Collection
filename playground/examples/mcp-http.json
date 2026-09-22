@@ -1,0 +1,9 @@
+{
+  "$comment": "An MCP tool server over Streamable HTTP. Start the demo first (python3 -m aiplayground demo-server --vulnerable); it serves /mcp.",
+  "name": "tools-http",
+  "kind": "mcp-http",
+  "environment": "sandbox",
+  "url": "http://127.0.0.1:8099/mcp",
+  "headers": {"Authorization": "Bearer ${env:MCP_TOKEN}"},
+  "description": "A tool server behind the MCP gateway"
+}

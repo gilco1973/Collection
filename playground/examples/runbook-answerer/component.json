@@ -1,0 +1,20 @@
+{
+  "name": "runbook-answerer",
+  "version": "0.1.0",
+  "category": "pattern",
+  "language": "python",
+  "summary": "Answers a question from one runbook extract, cites it, drops instructions hidden in it and masks secrets and personal data",
+  "status": "ready",
+  "source": {"project": "ai-playground", "path": "playground/examples/runbook-answerer", "snapshot": "2026-09-22"},
+  "owner": "your.handle",
+  "tags": ["rag", "security"],
+  "requires": [],
+  "pairs_with": [],
+  "test": "python3 -m unittest discover -s tests -t .",
+  "walkthrough": "WALKTHROUGH.md",
+  "example": {"path": "example.py", "run": "python3 example.py"},
+  "spec": {"document": "none: a teaching example", "sections": [], "requirements": [], "replacement_test": "none: this is the playground's sample candidate"},
+  "signoff": {"owner": null, "ai_security": null},
+  "used_in": [],
+  "vendored": []
+}

@@ -1,0 +1,9 @@
+{
+  "$comment": "The bundled demo that gives way, to show what a blocked report looks like.",
+  "name": "demo-vulnerable",
+  "kind": "demo",
+  "demo": "vulnerable",
+  "environment": "sandbox",
+  "description": "A rule-based assistant that does whatever any text tells it",
+  "capabilities": ["cites-sources"]
+}

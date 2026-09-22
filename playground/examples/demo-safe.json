@@ -1,0 +1,9 @@
+{
+  "$comment": "The bundled demo that holds every probe. Nothing to start: it runs inside the playground.",
+  "name": "demo-safe",
+  "kind": "demo",
+  "demo": "safe",
+  "environment": "sandbox",
+  "description": "A rule-based assistant that answers from its sources, masks secrets and refuses instructions",
+  "capabilities": ["cites-sources", "masks-pii"]
+}

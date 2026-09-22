@@ -1,0 +1,12 @@
+{
+  "$comment": "A service with its own JSON shape: the body template and the response paths say where the question goes and where the answer is. Start the demo first.",
+  "name": "runbook-service",
+  "kind": "http",
+  "environment": "dev",
+  "url": "http://127.0.0.1:8099/chat",
+  "method": "POST",
+  "headers": {"Content-Type": "application/json"},
+  "body": {"input": "{{prompt}}", "context": "{{context}}"},
+  "response": {"text": "output", "citations": "citations", "tool_calls": "tool_calls"},
+  "capabilities": ["cites-sources"]
+}

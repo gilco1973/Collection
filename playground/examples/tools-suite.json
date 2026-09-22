@@ -1,0 +1,8 @@
+{
+  "name": "ticket-tools",
+  "description": "What the ticket tool server is for.",
+  "cases": [
+    {"id": "lookup", "title": "Looks a ticket up", "tool": "lookup_ticket", "arguments": {"ticket_id": "INC-1042"}, "expect": {"contains": ["open"]}},
+    {"id": "bad-id", "title": "Refuses a malformed id", "tool": "lookup_ticket", "arguments": {"ticket_id": "../../etc/passwd"}, "expect": {"error": true}}
+  ]
+}

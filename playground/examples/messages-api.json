@@ -1,0 +1,12 @@
+{
+  "$comment": "A Messages-style API behind the bank's gateway. The host is a placeholder: replace it, and list the real sandbox host in allow_hosts.",
+  "name": "gateway-messages",
+  "kind": "http",
+  "preset": "anthropic-messages",
+  "environment": "sandbox",
+  "url": "https://model-gateway.example.internal/v1/messages",
+  "allow_hosts": ["model-gateway.example.internal"],
+  "model": "workhorse",
+  "headers": {"x-api-key": "${env:MODEL_GATEWAY_KEY}"},
+  "description": "An agent behind the sandbox model gateway"
+}

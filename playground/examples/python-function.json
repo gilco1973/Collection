@@ -1,0 +1,12 @@
+{
+  "$comment": "A Python function inside the candidate component, called in a fresh interpreter per question.",
+  "name": "runbook-answerer",
+  "kind": "python",
+  "environment": "sandbox",
+  "path": "./runbook-answerer",
+  "callable": "answerer:answer",
+  "component": "runbook-answerer",
+  "owner": "your.handle",
+  "description": "The sample candidate component, as a function",
+  "capabilities": ["cites-sources", "masks-pii"]
+}
