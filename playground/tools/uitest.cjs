@@ -84,12 +84,23 @@ const check = (ok, what) => { console.log((ok ? "PASS " : "FAIL ") + what); if (
   await page.click("nav >> text=Reports");
   await page.waitForSelector("h1:has-text('Reports')");
   await page.waitForSelector("table");
-  const boxes = await page.$$("main table input[type=checkbox]");
-  await boxes[0].check(); await boxes[1].check();
+  // the table is newest first; the older run is "before" whichever box is ticked first
+  let boxes = await page.$$("main table input[type=checkbox]");
+  await boxes[0].check(); await boxes[1].check();   // the newer (safe) run first
   await page.click("button:has-text('Compare the two selected')");
   await page.waitForSelector("h1:has-text('What changed')");
-  check(await page.isVisible("td:has-text('better')"), "comparing the two runs shows what got better");
+  check(await page.isVisible("td:has-text('better')") && !(await page.isVisible("td:has-text('worse')")),
+    "comparing the two runs shows what got better (newer ticked first)");
   await shot("06-compare");
+  await page.click("button:has-text('Back to reports')");
+  await page.waitForSelector("h1:has-text('Reports')");
+  await page.waitForSelector("table");
+  boxes = await page.$$("main table input[type=checkbox]");
+  await boxes[1].check(); await boxes[0].check();   // the older (vulnerable) run first
+  await page.click("button:has-text('Compare the two selected')");
+  await page.waitForSelector("h1:has-text('What changed')");
+  check(await page.isVisible("td:has-text('better')") && !(await page.isVisible("td:has-text('worse')")),
+    "the direction does not depend on the order the runs were ticked (older ticked first)");
 
   await page.click("nav >> text=Probe library");
   await page.waitForSelector("text=Instruction hidden in a retrieved document");

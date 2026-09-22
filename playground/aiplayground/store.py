@@ -4,7 +4,9 @@
     <data>/playground.db            runs: id, target, verdict, when, by, and the report itself
     <data>/reports/<id>.{json,md,html}
 
-SQLite from the standard library; one writer at a time through a lock, so the web server's threads share it.
+SQLite from the standard library; one writer at a time through a lock, so the web server's threads share it. A
+triage holds the lock from reading the run to writing it back, so two people triaging at once both keep their
+decision.
 """
 from __future__ import annotations
 
@@ -30,7 +32,7 @@ class Store:
         self.dir = os.path.abspath(data_dir)
         os.makedirs(os.path.join(self.dir, "targets"), exist_ok=True)
         os.makedirs(os.path.join(self.dir, "reports"), exist_ok=True)
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()   # re-entrant: triage holds it across run() and add_run()
         self.db = sqlite3.connect(os.path.join(self.dir, "playground.db"), check_same_thread=False)
         self.db.executescript(SCHEMA)
 
@@ -79,8 +81,8 @@ class Store:
 
     # runs -----------------------------------------------------------------------------------------------------------
     def add_run(self, rep: dict) -> dict:
-        paths = Rp.save(rep, os.path.join(self.dir, "reports"))
         with self.lock:
+            paths = Rp.save(rep, os.path.join(self.dir, "reports"))
             self.db.execute("INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?)",
                             (rep["id"], rep["started"], (rep.get("target") or {}).get("name"), (rep.get("component") or {}).get("name"),
                              rep["verdict"], rep["tester"].get("by"), rep["tester"].get("role"), json.dumps(rep)))
@@ -102,9 +104,10 @@ class Store:
         return json.loads(row[0]) if row else None
 
     def triage(self, rid: str, result_id: str, decision: str, by: str, reason: str) -> dict:
-        rep = self.run(rid)
-        if rep is None:
-            raise KeyError(rid)
-        Rp.triage(rep, result_id, decision, by, reason)
-        self.add_run(rep)
+        with self.lock:   # read, decide and write as one step: a decision recorded meanwhile is never overwritten
+            rep = self.run(rid)
+            if rep is None:
+                raise KeyError(rid)
+            Rp.triage(rep, result_id, decision, by, reason)
+            self.add_run(rep)
         return rep

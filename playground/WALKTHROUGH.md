@@ -72,9 +72,11 @@ Every command runs from the `playground/` directory.
      --reason "Records reach it already masked by the data guard; the probe's record is unmasked on purpose."
    ```
 
-   `accepted-risk` needs a reason, and a critical or high risk is accepted by someone other than the tester.
-   `false-positive` says the probe was wrong. `fixed-retest` reopens a finding after a fix. An accepted risk is
-   listed under "Known limits to add": the owner copies it into the component's README.
+   Every decision needs a reason. On a critical or high finding, `accepted-risk` and `false-positive` are taken
+   by someone other than the tester (the same address in another spelling is the same person), and only on a run
+   that names its tester (`--by`). `false-positive` says the probe was wrong. `fixed-retest` reopens a finding
+   after a fix. An accepted risk is listed under "Known limits to add": the owner copies it into the component's
+   README. A report edited by hand after it was written is refused.
 
 4. **Sign, outside the playground.** The report's "Cite as" line goes in the sign-off note:
 
@@ -98,5 +100,6 @@ python3 -m aiplayground serve            # prints http://127.0.0.1:8765/#token=.
 ```
 
 Set your name and role at the top right; they are recorded on runs and triage. Solutions, Try it, Run checks,
-Reports (with compare), and the Probe library are the same functions as the commands above. Runs, reports and
-target files are kept in `~/.aiplayground` (`--data` to change it).
+Reports (with compare: of the two runs you tick, the older is "before"), and the Probe library are the same
+functions as the commands above. Runs, reports and target files are kept in `~/.aiplayground` (`--data` to
+change it).

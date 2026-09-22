@@ -271,7 +271,13 @@ function track(job, status, button) {
 function runsTable(runs, selectable) {
   if (!runs.length) return h("div", { class: "card empty" }, "No reports yet.");
   const picked = new Set();
-  const compare = h("button", { disabled: true, onclick: () => viewCompare([...picked]) }, "Compare the two selected");
+  // the older run is "before", whichever was ticked first; the table is newest first, so a tie keeps its order
+  const when = new Map(runs.map((r, i) => [r.id, [r.started, -i]]));
+  const inOrder = () => [...picked].sort((a, b) => {
+    const [sa, ia] = when.get(a), [sb, ib] = when.get(b);
+    return sa < sb ? -1 : sa > sb ? 1 : ia - ib;
+  });
+  const compare = h("button", { disabled: true, onclick: () => viewCompare(inOrder()) }, "Compare the two selected");
   const rows = runs.map((r) => h("tr", { class: "click", onclick: (ev) => { if (ev.target.tagName !== "INPUT") go("report", r.id); } },
     selectable ? h("td", {}, h("input", { type: "checkbox", "aria-label": "Select " + r.id, onchange: (ev) => {
       ev.target.checked ? picked.add(r.id) : picked.delete(r.id);
@@ -291,9 +297,10 @@ async function viewRuns() {
   catch (e) { show("runs", errorBox(e)); }
 }
 
+// ids: [before, after], the older run first
 async function viewCompare(ids) {
   try {
-    const c = await api("GET", "compare?a=" + encodeURIComponent(ids[1]) + "&b=" + encodeURIComponent(ids[0]));
+    const c = await api("GET", "compare?a=" + encodeURIComponent(ids[0]) + "&b=" + encodeURIComponent(ids[1]));
     show("runs", h("h1", {}, "What changed"),
       h("p", { class: "lede" }, c.before.id + " (" + c.before.verdict + ") → " + c.after.id + " (" + c.after.verdict + ")"),
       c.changes.length ? h("div", { class: "card" }, h("table", {}, h("tr", {}, h("th", {}, "Check"), h("th", {}, "Before"), h("th", {}, "After"), h("th", {}, "")),

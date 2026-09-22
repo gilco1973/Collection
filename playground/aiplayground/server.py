@@ -12,6 +12,7 @@ import hmac
 import json
 import os
 import secrets
+import socket
 import sys
 import threading
 import traceback
@@ -30,8 +31,14 @@ from .targets import open_target
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAX_BODY = 1_000_000
+DRAIN_MAX = 16 * MAX_BODY   # a refused body up to this size is read and dropped; a larger one closes the connection
 CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 REPORT_CSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+
+
+class ThreadingHTTPServerV6(ThreadingHTTPServer):
+    """The same server on an IPv6 address (`serve --host ::1`)."""
+    address_family = socket.AF_INET6
 
 
 class Jobs:
@@ -74,14 +81,24 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
     token = token or secrets.token_urlsafe(24)
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}", f"[::1]:{port}"}
 
+    def object_body(data: bytes) -> dict:
+        try:
+            value = json.loads(data or b"{}")
+        except ValueError:   # not JSON, or not UTF-8
+            raise ValueError("the body is a JSON object; this is not valid JSON") from None
+        if not isinstance(value, dict):
+            raise ValueError("the body is a JSON object")
+        return value
+
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
+        timeout = 120   # a client that stops sending mid-request does not hold a thread for ever
         server_version = "ai-playground/" + __version__
         sys_version = ""
 
         def log_message(self, fmt, *args):
             if not quiet:   # method and path only: never the query, never a header
-                sys.stderr.write("%s %s\n" % (self.command, self.path.split("?")[0]))
+                sys.stderr.write("%s %s\n" % (getattr(self, "command", None) or "-", (getattr(self, "path", None) or "-").split("?")[0]))
 
         # plumbing -------------------------------------------------------------------------------------------------
         def send(self, code, body: bytes, ctype: str, extra=None):
@@ -93,6 +110,9 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
             self.send_header("Referrer-Policy", "no-referrer")
             for k, v in (extra or {}).items():
                 self.send_header(k, v)
+            if self.unread_body():   # a refusal before the body was read: the rest of it is not a next request
+                self.send_header("Connection", "close")
+                self.close_connection = True
             self.end_headers()
             if self.command != "HEAD":
                 self.wfile.write(body)
@@ -103,18 +123,38 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
         def problem(self, code, message):
             self.json(code, {"error": message})
 
-        def body(self):
+        def unread_body(self):
+            """True when a body is left unread and the connection must close after the answer. A body of a sane
+            size is read and dropped first, so the client finishes sending and reads the answer."""
+            if getattr(self, "body_read", True):
+                return False
+            n = self.headers.get("Content-Length") or "0"
+            if not n.isdigit():
+                return True
+            left = int(n)
+            if left > DRAIN_MAX:
+                return True
+            while left > 0:
+                chunk = self.rfile.read(min(left, 65536))
+                if not chunk:
+                    return True
+                left -= len(chunk)
+            self.body_read = True
+            return False
+
+        def body(self) -> dict:
             n = self.headers.get("Content-Length")
             if n is None or not n.isdigit():
                 raise ValueError("Content-Length is required")
             if int(n) > MAX_BODY:
                 raise OverflowError
             data = self.rfile.read(int(n))
-            return json.loads(data or b"{}")
+            self.body_read = True
+            return object_body(data)
 
         def host_ok(self):
             server_port = self.server.server_address[1]
-            return self.headers.get("Host", "") in allowed_hosts | {f"127.0.0.1:{server_port}", f"localhost:{server_port}"}
+            return self.headers.get("Host", "") in allowed_hosts | {f"127.0.0.1:{server_port}", f"localhost:{server_port}", f"[::1]:{server_port}"}
 
         def authed(self):
             given = self.headers.get("X-Playground-Token", "")
@@ -131,6 +171,7 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
             self.route("DELETE")
 
         def route(self, method):
+            self.body_read = False
             if not self.host_ok():
                 return self.problem(421, "the playground answers on its loopback address only")
             path = urllib.parse.urlsplit(self.path).path
@@ -152,6 +193,9 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
                 return self.problem(422, str(e))
             except KeyError as e:
                 return self.problem(404, f"not found: {e.args[0] if e.args else ''}")
+            except Exception:   # answer, and keep serving; the trace goes to the terminal, not to the page
+                traceback.print_exc(file=sys.stderr)
+                return self.problem(500, "the playground failed on this request; the terminal shows why")
 
         def static(self, name, ctype):
             with open(os.path.join(HERE, "static", name), "rb") as f:
@@ -248,13 +292,23 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
             comp = b.get("component") or None
             if not name and not comp:
                 raise ValueError("name a target, a component directory, or both")
+            if name is not None and not isinstance(name, str):
+                raise ValueError("target is a saved target's name")
+            if comp is not None and not isinstance(comp, str):
+                raise ValueError("component is a directory on this machine")
             t = store.load_target(name) if name else None
             if comp and not os.path.isdir(comp):
                 raise ValueError(f"not a directory on this machine: {comp}")
             role = b.get("role") or "engineer"
-            by = str(b.get("by") or "")
-            if by and not Rp.PERSON.match(by):
+            if role not in runner.ROLES:
+                raise ValueError(f"role is one of {', '.join(runner.ROLES)}")
+            by = Rp.normalise_person(b.get("by") or "")
+            if by and not Rp.is_person(by):
                 raise ValueError('the tester is "Name <address>"')
+            if not isinstance(b.get("suites") or [], list):
+                raise ValueError("suites is a list of suite files or suites")
+            if b.get("probes") is not None and not isinstance(b.get("probes"), (str, list)):
+                raise ValueError("probes is a list of probe ids, or a word such as all or security")
             suites = []
             for s in b.get("suites") or []:
                 suites.append(S.load(s if isinstance(s, dict) else str(s)))
@@ -270,7 +324,11 @@ def make_server(data_dir: str, port: int = 8765, host: str = "127.0.0.1", token:
 
             return self.json(202, {"job": jobs.start(work)})
 
-    httpd = ThreadingHTTPServer((host, port), Handler)
+    try:
+        httpd = (ThreadingHTTPServerV6 if ":" in host else ThreadingHTTPServer)((host, port), Handler)
+    except OSError:
+        store.db.close()
+        raise
     httpd.token = token
     httpd.store = store
     return httpd
@@ -281,9 +339,14 @@ def main(port: int = 8765, data_dir: str | None = None, host: str = "127.0.0.1")
         print("serve: the playground listens on loopback only; reach it from elsewhere through an SSH tunnel", file=sys.stderr)
         return 3
     data_dir = data_dir or os.path.join(os.path.expanduser("~"), ".aiplayground")
-    httpd = make_server(data_dir, port, host)
+    try:
+        httpd = make_server(data_dir, port, host)
+    except OSError as e:   # the port is taken, or this machine has no such address (IPv6 switched off)
+        print(f"serve: cannot listen on {host} port {port}: {e.strerror or e}", file=sys.stderr)
+        return 2
     real_port = httpd.server_address[1]
-    print(f"AI Playground {__version__}: http://127.0.0.1:{real_port}/#token={httpd.token}", flush=True)
+    shown = "[::1]" if host == "::1" else "127.0.0.1"
+    print(f"AI Playground {__version__}: http://{shown}:{real_port}/#token={httpd.token}", flush=True)
     print(f"data: {httpd.store.dir}   (Ctrl-C to stop)", flush=True)
     try:
         httpd.serve_forever()

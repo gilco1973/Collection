@@ -9,7 +9,12 @@ Verdicts:
   blocked       a critical or high finding failed and nobody has triaged it
   needs-review  a finding needs a person: a medium or low failure, a `review` result, or a probe that could not run
   clear         everything that applies held (or was triaged by a named person)
-  incomplete    the solution could not be reached, so nothing was judged
+  incomplete    the solution could not be reached, or nothing that applies was checked, so nothing was judged
+
+Integrity: a report's id is a hash of everything the run recorded (with a random nonce, so two identical runs never
+share an id), and every triage entry carries the hash of the one before it (the first, the report's id). `load`
+refuses a report whose id or triage chain no longer matches. Without a key this detects an edit; it does not stop a
+determined forger, who is the reason the sign-offs are recorded elsewhere by a named person.
 """
 from __future__ import annotations
 
@@ -19,13 +24,22 @@ import html
 import json
 import os
 import re
+import secrets as _secrets
 
 from . import __version__
 
 STATUS_ORDER = ("fail", "review", "error", "pass", "skipped")
 SEVERITY_ORDER = ("critical", "high", "medium", "low", "info")
 DECISIONS = ("accepted-risk", "false-positive", "fixed-retest")
-PERSON = re.compile(r"^[^<>@\n]{2,80}<[^<>@\s]+@[^<>@\s]+>$")
+PERSON = re.compile(r"[^<>@\n]{2,80}<[^<>@\s]+@[^<>@\s]+>\Z")
+ADDRESS = re.compile(r"<([^<>]*)>")
+NOTHING_CHECKED = "nothing applicable was checked: choose probes or cases that apply to this solution"
+NO_TESTER = "the run names no tester; a critical or high finding is triaged on a run with a named tester"
+SELF_TRIAGE = ("a critical or high finding is accepted as a risk or called a false positive by someone other than "
+               "the person who ran the test")
+# what the run recorded is sealed by the id; these are the id itself, the triage (sealed by its own chain) and what
+# is recomputed from the rest
+UNSEALED = ("id", "triage", "triage_head", "summary", "verdict", "verdict_reason", "onboarding")
 MAX_TEXT = 2000
 
 
@@ -44,6 +58,23 @@ def scrub(value, secrets: list):
     if isinstance(value, dict):
         return {k: scrub(v, secrets) for k, v in value.items()}
     return value
+
+
+def normalise_person(by) -> str:
+    """One space between words, no leading or trailing space: `Name <address>` as it is recorded."""
+    return " ".join(str(by or "").split())
+
+
+def is_person(by) -> bool:
+    return bool(PERSON.match(normalise_person(by)))
+
+
+def identity(by) -> str:
+    """Who a `Name <address>` is, for comparing two of them: the address, lower-cased; '' when there is none."""
+    by = normalise_person(by)
+    if not PERSON.match(by):
+        return ""
+    return ADDRESS.search(by).group(1).strip().lower()
 
 
 def resolved_ids(report: dict) -> dict:
@@ -69,6 +100,8 @@ def verdict(report: dict) -> tuple:
     if waiting:
         return "needs-review", f"{len(waiting)} finding(s) wait for a person: " + ", ".join(r["id"] for r in waiting[:6])
     judged = sum(1 for r in report["results"] if r["status"] != "skipped")
+    if not judged:
+        return "incomplete", NOTHING_CHECKED
     return "clear", f"all {judged} applicable checks held" + (f"; {len(done)} triaged by a named person" if done else "")
 
 
@@ -84,9 +117,34 @@ def summarise(report: dict) -> dict:
     return {"by_status": by_status, "failed_by_severity": by_sev, "latency": latency}
 
 
+def _digest(value) -> str:
+    canonical = json.dumps(json.loads(json.dumps(value)), sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def report_id(report: dict) -> str:
-    core = {k: report[k] for k in ("started", "target", "component", "results")}
-    return "pg-" + hashlib.sha256(json.dumps(core, sort_keys=True).encode()).hexdigest()[:16]
+    """A hash of everything the run recorded: who, as what role, when, against what, the results, and the nonce."""
+    return "pg-" + _digest({k: v for k, v in report.items() if k not in UNSEALED})[:16]
+
+
+def triage_hash(entry: dict) -> str:
+    return _digest({k: v for k, v in entry.items() if k != "hash"})
+
+
+def verify(rep: dict) -> dict:
+    """Refuse a report edited after it was written: its id, then its triage chain."""
+    if not rep.get("nonce"):
+        raise ValueError("the report carries no nonce: it was written by an older playground or edited; run it again")
+    if rep.get("id") != report_id(rep):
+        raise ValueError("the report was edited after it was written; its id no longer matches")
+    head = rep["id"]
+    for t in rep.get("triage") or []:
+        if not isinstance(t, dict) or t.get("prev") != head:
+            raise ValueError("the report's triage log was edited after it was written; its hash chain is broken")
+        head = triage_hash(t)
+    if rep.get("triage_head", rep["id"]) != head:
+        raise ValueError("the report's triage log was edited after it was written; its hash chain is broken")
+    return rep
 
 
 def build(results: list, *, target: dict | None, component: dict | None, tester: dict, started: str, suites: list,
@@ -102,11 +160,13 @@ def build(results: list, *, target: dict | None, component: dict | None, tester:
         "probes": probes,
         "suites": suites,
         "results": scrub(sorted((r.to_json() for r in results), key=lambda r: (STATUS_ORDER.index(r["status"]), SEVERITY_ORDER.index(r["severity"]))), list(secrets)),
+        "nonce": _secrets.token_hex(16),
         "triage": [],
     }
     if incomplete:
         rep["incomplete"] = incomplete
     rep["id"] = report_id(rep)
+    rep["triage_head"] = rep["id"]
     refresh(rep)
     return rep
 
@@ -122,8 +182,9 @@ def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> di
     """Record one person's decision on one finding; the verdict is recomputed, the results are untouched."""
     if decision not in DECISIONS:
         raise ValueError(f"decision is one of {', '.join(DECISIONS)}")
-    if not PERSON.match(by or ""):
+    if not is_person(by):
         raise ValueError('by names a person: "Name <address>"')
+    by = normalise_person(by)
     if not reason or len(reason.strip()) < 10:
         raise ValueError("reason says why, in a sentence (at least 10 characters)")
     hit = next((r for r in rep["results"] if r["id"] == result_id), None)
@@ -131,10 +192,16 @@ def triage(rep: dict, result_id: str, decision: str, by: str, reason: str) -> di
         raise ValueError(f"no result {result_id} in this report")
     if hit["status"] not in ("fail", "review", "error"):
         raise ValueError(f"{result_id} is {hit['status']}; only a failure, a review or an error is triaged")
-    tester = (rep.get("tester") or {}).get("by", "")
-    if decision == "accepted-risk" and hit["severity"] in ("critical", "high") and tester and tester == by:
-        raise ValueError("a critical or high risk is accepted by someone other than the person who ran the test")
-    rep["triage"].append({"result_id": result_id, "decision": decision, "by": by, "reason": reason.strip(), "at": now()})
+    if decision in ("accepted-risk", "false-positive") and hit["severity"] in ("critical", "high"):
+        tester = identity((rep.get("tester") or {}).get("by", ""))
+        if not tester:
+            raise ValueError(NO_TESTER)
+        if tester == identity(by):
+            raise ValueError(SELF_TRIAGE)
+    head = rep.get("triage_head") or rep["id"]
+    entry = {"result_id": result_id, "decision": decision, "by": by, "reason": reason.strip(), "at": now(), "prev": head}
+    rep.setdefault("triage", []).append(entry)
+    rep["triage_head"] = triage_hash(entry)
     return refresh(rep)
 
 
@@ -164,17 +231,33 @@ def excerpt(text: str, n: int = 400) -> str:
     return text if len(text) <= n else text[:n] + "…"
 
 
+def md_code(text: str) -> list:
+    """A block of untrusted text as an indented code block: every line is indented, so nothing in it (a fence, a
+    heading, an image) can end the block and become part of the report."""
+    return ["    " + line for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+
+
+def md_cell(text) -> str:
+    """Untrusted text in one Markdown table cell: one line, and a pipe cannot open another cell."""
+    return " ".join(str(text).split()).replace("\\", "\\\\").replace("|", "\\|")
+
+
+def md_line(text) -> str:
+    """Untrusted text inside one line of prose: no line break can start a heading or a block of its own."""
+    return " ".join(str(text).split())
+
+
 def to_markdown(rep: dict) -> str:
     t, c = rep.get("target") or {}, rep.get("component") or {}
     done = resolved_ids(rep)
     lines = [f"# AI Playground report {rep['id']}", "",
-             f"**Verdict: {rep['verdict']}.** {rep['verdict_reason']}.", ""]
+             f"**Verdict: {rep['verdict']}.** {md_line(rep['verdict_reason'])}.", ""]
     subject = []
     if t:
         subject.append(f"target `{t.get('name')}` ({t.get('kind')}, {t.get('environment')})")
     if c:
-        subject.append(f"component `{c.get('name')}` {c.get('version') or ''}")
-    lines += [f"Tested: {' and '.join(subject) or 'nothing'}. By {rep['tester'].get('by') or 'an unnamed tester'} as {rep['tester'].get('role', 'engineer')}, "
+        subject.append(f"component `{md_line(c.get('name')).replace('`', '')}` {md_line(c.get('version') or '')}")
+    lines += [f"Tested: {' and '.join(subject) or 'nothing'}. By {md_line(rep['tester'].get('by') or 'an unnamed tester')} as {md_line(rep['tester'].get('role', 'engineer'))}, "
               f"{rep['started']} to {rep['finished']}, playground {rep['playground_version']}.", ""]
     s = rep["summary"]
     lines += ["| Status | Count |", "| --- | --- |"] + [f"| {k} | {v} |" for k, v in s["by_status"].items() if v] + [""]
@@ -186,39 +269,39 @@ def to_markdown(rep: dict) -> str:
               f"- Tests green: {ob['tests_green']}", f"- Live example ran: {ob['live_example_ran']}", f"- Collection contract: {ob['contract']}",
               f"- Held under attack: {ob['held_under_attack']}", f"- Cite as: {ob['cite_as']}"]
     if ob["known_limits_to_add"]:
-        lines += ["- Accepted risks to add to the README's Known limits:"] + [f"  - {k}" for k in ob["known_limits_to_add"]]
+        lines += ["- Accepted risks to add to the README's Known limits:"] + [f"  - {md_line(k)}" for k in ob["known_limits_to_add"]]
     lines.append("")
     findings = [r for r in rep["results"] if r["status"] in ("fail", "review", "error")]
     if findings:
         lines += ["## Findings", ""]
         for r in findings:
             tri = done.get(r["id"])
-            tag = f" — triaged {tri['decision']} by {tri['by']}: {tri['reason']}" if tri else ""
-            lines += [f"### {r['status'].upper()} · {r['severity']} · {r['title']} (`{r['id']}`){tag}", "",
-                      f"{r['category']} {r['category_name']}. {r['summary']}.", ""]
+            tag = f" — triaged {tri['decision']} by {md_line(tri['by'])}: {md_line(tri['reason'])}" if tri else ""
+            lines += [f"### {r['status'].upper()} · {r['severity']} · {md_line(r['title'])} (`{r['id']}`){tag}", "",
+                      f"{r['category']} {r['category_name']}. {md_line(r['summary'])}.", ""]
             if r.get("recommendation"):
-                lines += [f"What to do: {r['recommendation']}", ""]
+                lines += [f"What to do: {md_line(r['recommendation'])}", ""]
             for e in r["evidence"][:2]:
                 if isinstance(e, dict) and "reply" in e:
                     rp = e["reply"]
-                    lines += ["```text", f"asked: {excerpt(e['prompt'], 300)}"]
+                    block = [f"asked: {excerpt(e['prompt'], 300)}"]
                     if e.get("context"):
-                        lines.append(f"context: {excerpt(e['context'], 300)}")
-                    lines.append(f"answer: {excerpt(rp.get('text') or '', 500)}" + (f"\nerror: {rp['error']}" if rp.get("error") else ""))
+                        block.append(f"context: {excerpt(e['context'], 300)}")
+                    block.append(f"answer: {excerpt(rp.get('text') or '', 500)}" + (f"\nerror: {rp['error']}" if rp.get("error") else ""))
                     if rp.get("tool_calls"):
-                        lines.append("tool calls: " + json.dumps(rp["tool_calls"])[:400])
-                    lines += ["```", ""]
+                        block.append("tool calls: " + json.dumps(rp["tool_calls"])[:400])
+                    lines += md_code("\n".join(block)) + [""]
                 elif isinstance(e, dict):
-                    lines += ["```json", json.dumps(e, indent=1)[:800], "```", ""]
+                    lines += md_code(json.dumps(e, indent=1)[:800]) + [""]
     held = [r for r in rep["results"] if r["status"] == "pass"]
     if held:
-        lines += ["## Held", ""] + [f"- `{r['id']}` {r['title']}: {r['summary']}" for r in held] + [""]
+        lines += ["## Held", ""] + [f"- `{r['id']}` {md_line(r['title'])}: {md_line(r['summary'])}" for r in held] + [""]
     skipped = [r for r in rep["results"] if r["status"] == "skipped"]
     if skipped:
-        lines += ["## Not applicable", ""] + [f"- `{r['id']}`: {r['summary']}" for r in skipped] + [""]
+        lines += ["## Not applicable", ""] + [f"- `{r['id']}`: {md_line(r['summary'])}" for r in skipped] + [""]
     if rep.get("triage"):
         lines += ["## Triage log", "", "| Finding | Decision | By | Reason | When |", "| --- | --- | --- | --- | --- |"]
-        lines += [f"| `{t['result_id']}` | {t['decision']} | {t['by']} | {t['reason']} | {t['at']} |" for t in rep["triage"]] + [""]
+        lines += [f"| `{md_cell(t['result_id'])}` | {md_cell(t['decision'])} | {md_cell(t['by'])} | {md_cell(t['reason'])} | {md_cell(t['at'])} |" for t in rep["triage"]] + [""]
     return "\n".join(lines)
 
 
@@ -313,11 +396,16 @@ def save(rep: dict, out_dir: str) -> dict:
 
 
 def load(path: str) -> dict:
+    """A saved report, its id and triage chain checked, and its verdict recomputed from what it recorded."""
     with open(path, encoding="utf-8") as f:
         rep = json.load(f)
-    if rep.get("kind") != "ai-playground-report":
+    if not isinstance(rep, dict) or rep.get("kind") != "ai-playground-report":
         raise ValueError(f"{path} is not a playground report")
-    return rep
+    try:
+        verify(rep)
+    except ValueError as e:
+        raise ValueError(f"{path}: {e}") from None
+    return refresh(rep)
 
 
 def compare(a: dict, b: dict) -> list:

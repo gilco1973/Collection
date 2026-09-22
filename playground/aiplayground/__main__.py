@@ -42,16 +42,33 @@ def say(*a):
     print(*a, flush=True)
 
 
+DEMO_MCP_PATH_LINE = "sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))"
+
+
 def cmd_init(a):
+    """The example target files and what they point at (the demo tool server, the sample component); a file that
+    is already there is left alone."""
     os.makedirs(a.dir, exist_ok=True)
     copied = []
     for f in sorted(os.listdir(EXAMPLES)):
+        src, dest = os.path.join(EXAMPLES, f), os.path.join(a.dir, f)
+        if os.path.exists(dest) or f == "__pycache__":
+            continue
         if f.endswith(".json"):
-            dest = os.path.join(a.dir, f)
-            if os.path.exists(dest):
-                continue
-            shutil.copyfile(os.path.join(EXAMPLES, f), dest)
-            copied.append(f)
+            shutil.copyfile(src, dest)
+        elif f == "demo_mcp.py":
+            # the copy lives outside the playground: point it at the playground that wrote it
+            with open(src, encoding="utf-8") as fh:
+                text = fh.read()
+            text = text.replace(DEMO_MCP_PATH_LINE, f"sys.path.insert(0, {os.path.dirname(HERE)!r})  # the playground that ran init")
+            with open(dest, "w", encoding="utf-8") as fh:
+                fh.write(text)
+            os.chmod(dest, 0o755)
+        elif os.path.isdir(src) and os.path.exists(os.path.join(src, "component.json")):
+            shutil.copytree(src, dest, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        else:
+            continue
+        copied.append(f)
     say(f"wrote {len(copied)} file(s) to {a.dir}: {', '.join(copied) or 'nothing new'}")
     say("next: edit a target file, then  python3 -m aiplayground check <target.json>")
     return 0
@@ -133,15 +150,23 @@ def progress(done, total, label):
             sys.stderr.write("\n")
 
 
+def tester(a) -> str:
+    by = Rp.normalise_person(a.by or "")
+    if by and not Rp.is_person(by):
+        raise ValueError('--by names the tester: "Name <address>"')
+    return by
+
+
 def cmd_run(a):
+    by = tester(a)
     t = C.load(a.target) if a.target else None
     rep = runner.run(t, probes=a.probes, suites=a.suite or [], component_dir=a.component, run_component=not a.no_run,
-                     by=a.by or "", role=a.role, progress=progress)
+                     by=by, role=a.role, progress=progress)
     return finish(rep, a)
 
 
 def cmd_check_component(a):
-    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=a.by or "", role=a.role)
+    rep = runner.run(None, component_dir=a.dir, run_component=not a.no_run, by=tester(a), role=a.role)
     return finish(rep, a)
 
 
@@ -149,7 +174,7 @@ def cmd_triage(a):
     rep = Rp.load(a.report)
     Rp.triage(rep, a.result, a.decision, a.by, a.reason)
     paths = Rp.save(rep, os.path.dirname(os.path.abspath(a.report)))
-    say(f"recorded: {a.decision} on {a.result} by {a.by}; verdict now {rep['verdict']}")
+    say(f"recorded: {a.decision} on {a.result} by {rep['triage'][-1]['by']}; verdict now {rep['verdict']}")
     say(f"report: {paths['html']}")
     return 0
 

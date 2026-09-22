@@ -48,7 +48,8 @@ it, so a verdict does not depend on how the solution words its reply. Where only
 
 ## Describing a solution
 
-One JSON file per solution. `python3 -m aiplayground init my-targets/` copies the examples to start from.
+One JSON file per solution. `python3 -m aiplayground init my-targets/` copies the examples to start from, with
+the demo tool server and the sample component they point at; a file already there is left alone.
 
 | Kind | Reaches | Example |
 | --- | --- | --- |
@@ -72,10 +73,15 @@ call.
 - **The candidate's code runs in a copy.** Its tests and example run in a temporary directory with a minimal
   environment (only what the target's `env` names) and a time limit.
 - **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)
-  with a reason. A critical or high risk is accepted by someone other than the tester.
+  with a reason. A critical or high finding is accepted as a risk or called a false positive only by someone other
+  than the tester (compared by address, ignoring case and spacing), and only on a run that names its tester.
+- **A report is sealed.** Its id is a hash of what the run recorded (the tester and role, the results, a random
+  nonce), and each triage entry carries the hash of the one before it. `triage` and `compare` refuse a report edited
+  since it was written; the verdict is always recomputed from the results and the triage.
 - **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.
-- **The web interface is local.** It listens on loopback only, every API call needs the token printed at start,
-  the Host header must be the loopback address, and the page shows a solution's answers as text, never as HTML.
+- **The web interface is local.** It listens on loopback only (`127.0.0.1`, or `--host ::1`), every API call needs
+  the token printed at start, the Host header must be the loopback address, and the page shows a solution's answers
+  as text, never as HTML.
 
 ## Verdicts and exit codes
 
@@ -84,7 +90,7 @@ call.
 | `clear` | Everything that applies held, or was triaged by a named person | 0 |
 | `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |
 | `blocked` | A critical or high finding failed and nobody has triaged it | 2 |
-| `incomplete` | The solution could not be reached | 2 |
+| `incomplete` | The solution could not be reached, or nothing that applies was checked (every probe and case was skipped) | 2 |
 
 A wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`.
 
