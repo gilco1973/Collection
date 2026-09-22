@@ -22,7 +22,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "one can follow. Lifted from products in production: Python (standard library only), TypeScript, and markdown with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |\n| `services/hub-api/` | The hub's API behind the bank's identity provider, on the standard library: every path of the contract plus sign-offs, the built hub served from the same process, a SQLite record | `cd services/hub-api && python3 -m unittest discover -s tests -t .` |\n| `services/agent-runtime/` | One agent of the collection over MCP and a run API, wired to the bank's identity provider, KMS, Bedrock, Jira and Azure DevOps by configuration; fakes in the sandbox, refused in staging and production | `cd services/agent-runtime && python3 -m unittest discover -s tests -t .` |\n| `config/`, `CONFIGURATION.md` | Every system the collection touches, named once; settings that fail closed | `python3 -m hubapi check-config` |\n| `scripts/` | `verify.sh` (every gate, any runner), `bundle.sh` (an offline release with the hub prebuilt) and `package.sh` (the delivery zip: the bundle plus the PDFs, the video, the screenshots and the installation guide) | `scripts/verify.sh python` |\n| `deploy/`, `services/*/de"
+  "text": "one can follow. Lifted from products in production: Python (standard library only), TypeScript, and markdown with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |\n| `services/hub-api/` | The hub's API behind the bank's identity provider, on the standard library: every path of the contract plus sign-offs, the built hub served from the same process, a SQLite record | `cd services/hub-api && python3 -m unittest discover -s tests -t .` |\n| `services/agent-runtime/` | One agent of the collection over MCP and a run API, wired to the bank's identity provider, KMS, Bedrock, Jira and Azure DevOps by configuration; fakes in the sandbox, refused in staging and production | `cd services/agent-runtime && python3 -m unittest discover -s tests -t .` |\n| `playground/` | The AI Playground: a standalone test bench any engineer or AI security engineer points at an AI solution before it joins the collection. The collection's contract on the candidate, 29 adversarial and robustness probes (OWASP Top 10 for LLM applications and tool-server hardening), the tester's own cases, and a report with a verdict and named triage that the two signers read before they sign. Command line and "
  },
  {
   "id": "README.md#2",
@@ -33,10 +33,21 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "ploy/` | Compose for the sandbox; Dockerfiles, fail-closed entrypoints, ECS task definitions and task roles with placeholders | `docker compose -f deploy/compose.yaml up` |\n| `docs/pdf/` | The user manual (non-technical), the technical guide and the leadership brief as PDFs, built by `docs/pdf/build.py` | `python3 docs/pdf/build.py` |\n| `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |\n| `tools/publish_kb.py` | Applies `exports/knowledgebase/` and `content/knowledgebase/` to a checkout of the knowledge base, idempotently | `python3 tools/publish_kb.py <checkout>` |\n\n`SHELF.md` is the generated index of the components. `CONTRIBUTING.md` is the component contract. `SOURCES.md`\nnames where each part came from and where the standalone products live."
+  "text": "a local browser interface; standard library only | `cd playground && python3 -m aiplayground run --target examples/demo-vulnerable.json` |\n| `config/`, `CONFIGURATION.md` | Every system the collection touches, named once; settings that fail closed | `python3 -m hubapi check-config` |\n| `scripts/` | `verify.sh` (every gate, any runner), `bundle.sh` (an offline release with the hub prebuilt) and `package.sh` (the delivery zip: the bundle plus the PDFs, the video, the screenshots and the installation guide) | `scripts/verify.sh python` |\n| `deploy/`, `services/*/deploy/` | Compose for the sandbox; Dockerfiles, fail-closed entrypoints, ECS task definitions and task roles with placeholders | `docker compose -f deploy/compose.yaml up` |\n| `docs/pdf/` | The user manual (non-technical), the technical guide and the leadership brief as PDFs, built by `docs/pdf/build.py` | `python3 docs/pdf/build.py` |\n| `tools/shelf.py` | Validates every manifest, checks vendored copies, runs the tests, and generates the hub's listings and the knowledge-base pages under `exports/` | `python3 tools/shelf.py --check` |\n| `tools/publish_kb.py` | Applies `exports/knowledgebase/` and `content/knowledgebase/` to a checkout of the knowledge base, idempotently | `python3 tools/publish_kb.py <checkout>` |\n\n`SHELF.md` is the generated index of the components. `CONTRIBUTING.md` is the component contract. `SOURCES.m"
  },
  {
   "id": "README.md#3",
+  "source": "README.md",
+  "title": "The collection",
+  "section": "Collection",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "d`\nnames where each part came from and where the standalone products live."
+ },
+ {
+  "id": "README.md#4",
   "source": "README.md",
   "title": "The collection",
   "section": "How the three fit",
@@ -47,7 +58,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "- A component lives in `components/<group>/<name>/` with `component.json`, `README.md` and tests.\n- `python3 tools/shelf.py --write` turns every component into a listing on the hub's Discover page (under the\n  Tools and Knowledge tabs and in search, with a listing page built from the README) and into a knowledge-base page\n  under `exports/knowledgebase/` (`docs/components/<name>.md`, or `docs/skills/<name>/SKILL.md` for a skill).\n- `python3 tools/publish_kb.py <checkout>` copies those pages and the authored ones in `content/knowledgebase/` into\n  a checkout of the knowledge base, gives each section README the links it needs, and adds the `components` section\n  to its contract. The product's librarian then audits them for freshness, links and sensitive content like any\n  other page. Run it whenever the Collection changes; it changes nothing the second time.\n- The first responder and the knowledge base stay standalone products. The Collection takes pieces out of them\n  (see each component's \"Where it came from\") and puts pages into one of them; it never contains either."
  },
  {
-  "id": "README.md#4",
+  "id": "README.md#5",
   "source": "README.md",
   "title": "The collection",
   "section": "Start here",
@@ -55,10 +66,21 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "- **Installing it inside the bank:** `INSTALL.md`, in order: check the delivery, run it with fakes, gather the\n  bank's values, build the images, staging, production, operations.\n- **A champion's first hour:** read `content/knowledgebase/docs/onboarding/ai-champions.md` (or the same page in\n  the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.\n- **Teaching it:** `docs/teaching/teaching-the-collection.html` explains every screen, sentence, flow and process of the hub in plain words and ends with a 45-minute first lesson. `docs/teaching/confluence/` is the same guide as one Confluence page per chapter, generated by `docs/teaching/build_confluence.py`, with an uploader.\n- **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in\n  as a persona, and show Discover's Tools tab and the Learn page.\n- **New to the hub:** open the guide (the button at the bottom right, or Alt+G). It asks whether you are here\n  to build, to decide or to use, and keeps to that: where you are, the next step, a tour, and answers from these\n  pages with the page named.\n- **Adding a component:** `python3 tools/new_component.py python my-tool --category tool --summary \"...\"`, then\n  `python3 tools/shelf.py --write`."
+  "text": "- **Installing it inside the bank:** `INSTALL.md`, in order: check the delivery, run it with fakes, gather the\n  bank's values, build the images, staging, production, operations.\n- **A champion's first hour:** read `content/knowledgebase/docs/onboarding/ai-champions.md` (or the same page in\n  the knowledge base), then `cd components/python/governed-action-loop && python3 example.py`.\n- **Teaching it:** `docs/teaching/teaching-the-collection.html` explains every screen, sentence, flow and process of the hub in plain words and ends with a 45-minute first lesson. `docs/teaching/confluence/` is the same guide as one Confluence page per chapter, generated by `docs/teaching/build_confluence.py`, with an uploader.\n- **Presenting the programme:** the first-meeting outline is in that same page; open the hub (`pnpm dev`), sign in\n  as a persona, and show Discover's Tools tab and the Learn page.\n- **New to the hub:** open the guide (the button at the bottom right, or Alt+G). It asks whether you are here\n  to build, to decide or to use, and keeps to that: where you are, the next step, a tour, and answers from these\n  pages with the page named.\n- **Adding a component:** `python3 tools/new_component.py python my-tool --category tool --summary \"...\"`, then\n  `python3 tools/shelf.py --write`.\n- **Testing a solution before onboarding it:** `playground/README.md`. Point the AI Playground at the "
  },
  {
-  "id": "README.md#5",
+  "id": "README.md#6",
+  "source": "README.md",
+  "title": "The collection",
+  "section": "Start here",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "solution and\n  the candidate's directory; attach its report to the pull request; the AI security engineer triages it and cites\n  it in the sign-off note."
+ },
+ {
+  "id": "README.md#7",
   "source": "README.md",
   "title": "The collection",
   "section": "Gates",
@@ -143,10 +165,21 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "A component's way to the shelf is read from its manifest, never guessed; `python3 tools/shelf.py --list` prints\nthe stage and the hub's onboarding tracker (Build → Onboarding) shows it with what has to happen next.\n\n| Stage | What proves it |\n| --- | --- |\n| 1 scaffolded | `python3 tools/new_component.py` made the directory: version 0.1.0, both sign-offs pending, a spec entry, a tag from the taxonomy |\n| 2 built | README, walkthrough, live example and tests filled and green; `status` set to `ready` |\n| 3 used once for real | `used_in` names a project; the owner records it on the sign-off form or with `--used-in` |\n| 4 owner signed | The owner signed at this version after running the tests and the example |\n| 5 AI security signed | An AI security engineer signed at this version after reading the rules and the walkthrough and running the example |\n| 6 on the shelf | Both sign-offs name the current version: Discover lists it as GA and the knowledge base page says so. A version bump returns it to stage 3 |\n\n`deprecated` is past the shelf: the directory stays until consumers have moved to the replacement."
+  "text": "A component's way to the shelf is read from its manifest, never guessed; `python3 tools/shelf.py --list` prints\nthe stage and the hub's onboarding tracker (Build → Onboarding) shows it with what has to happen next.\n\n| Stage | What proves it |\n| --- | --- |\n| 1 scaffolded | `python3 tools/new_component.py` made the directory: version 0.1.0, both sign-offs pending, a spec entry, a tag from the taxonomy |\n| 2 built | README, walkthrough, live example and tests filled and green; `status` set to `ready` |\n| 3 used once for real | `used_in` names a project; the owner records it on the sign-off form or with `--used-in` |\n| 4 owner signed | The owner signed at this version after running the tests and the example |\n| 5 AI security signed | An AI security engineer signed at this version after reading the rules and the walkthrough, running the example, and reading an AI Playground report of this version |\n| 6 on the shelf | Both sign-offs name the current version: Discover lists it as GA and the knowledge base page says so. A version bump returns it to stage 3 |\n\n`deprecated` is past the shelf: the directory stays until consumers have moved to the replacement."
  },
  {
   "id": "CONTRIBUTING.md#7",
+  "source": "CONTRIBUTING.md",
+  "title": "Contributing a component",
+  "section": "Testing it in the AI Playground",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "Before asking anyone to sign, put the candidate and the solution it becomes through `playground/` (its README has\nthe five-minute start). One run checks the contract above on the directory, runs the component's tests and live\nexample in a throwaway copy, tries 29 adversarial and robustness probes against the running solution, and runs your\nown cases:\n\n```\ncd playground\npython3 -m aiplayground run --target <target.json> --component ../components/<group>/<name> --suite <cases.json> --by \"Name <email>\"\n```\n\nAttach the report (`.html` and `.json`) to the pull request. The AI security engineer runs it again with\n`--role ai-security` (every probe), triages what needs a person by name, and cites the report's id in the\nsign-off note. A `blocked` report is not signed. An accepted risk goes into the README's \"Known limits\". The\nreport is evidence for the two sign-offs, never a sign-off itself."
+ },
+ {
+  "id": "CONTRIBUTING.md#8",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "Signing off",
@@ -157,7 +190,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "Two people sign every component at every version: the **owner**, by name (the manifest's `owner` is their handle\nand the hub matches it to the signed-in person), and an **AI security engineer**, by role (`ai.security` on the\nplatform principal, granted by the security team lead). Each attests on the form that the tests are green, the\nlive example ran, the walkthrough was read end to end, and the rules and known limits were read; the server refuses\na form with a box unticked, so the API cannot be used to skip it. The owner also names the project of the first\nreal use.\n\nThe manifest is the record and the commit is the signature:\n\n```"
  },
  {
-  "id": "CONTRIBUTING.md#8",
+  "id": "CONTRIBUTING.md#9",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "on the hub: Build → Sign-offs, or the Sign-off card on the component's listing; then download the queue",
@@ -168,7 +201,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "python3 tools/shelf.py --apply-signoffs shelf-signoffs.json   # re-runs the tests, writes signoff.<role> at the current version\npython3 tools/shelf.py --write\ngit commit -am \"Sign off <component> <version>\""
  },
  {
-  "id": "CONTRIBUTING.md#9",
+  "id": "CONTRIBUTING.md#10",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "or from a terminal, one at a time",
@@ -179,7 +212,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "python3 tools/shelf.py --sign <name> --role owner --by \"Name <email>\" --used-in <project>\npython3 tools/shelf.py --sign <name> --role ai-security --by \"Name <email>\"\n```\n\nA sign-off recorded at another version is stale and skipped; the person read a different component."
  },
  {
-  "id": "CONTRIBUTING.md#10",
+  "id": "CONTRIBUTING.md#11",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "Adding one",
@@ -190,7 +223,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "```\npython3 tools/new_component.py python my-tool --category tool --summary \"What it does in one line\"\npython3 tools/new_component.py agents my-agent --category agent --summary \"What it does in one line\""
  },
  {
-  "id": "CONTRIBUTING.md#11",
+  "id": "CONTRIBUTING.md#12",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "fill README.md, WALKTHROUGH.md, the example, code, tests (an agent: TEMPLATE.md first, then one test per never line)",
@@ -201,7 +234,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "python3 tools/shelf.py --write && python3 tools/shelf.py --test --only python && python3 tools/shelf.py --examples --only python"
  },
  {
-  "id": "CONTRIBUTING.md#12",
+  "id": "CONTRIBUTING.md#13",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "set status to ready when the tests are green; use it once for real; then both sign-offs as above",
@@ -212,7 +245,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "```\n\nOpen a pull request. The review checks the contract above, reads the README as a newcomer would, and runs the tests."
  },
  {
-  "id": "CONTRIBUTING.md#13",
+  "id": "CONTRIBUTING.md#14",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "Changing one",
@@ -223,7 +256,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   "text": "Keep the README's \"Known limits\" honest. Bump `version` on any change a consumer would notice; both sign-offs go\nstale and are recorded again. A breaking change to a `ready` component is a major version, or a new directory with a\nversion suffix (`name-v2`) and a `deprecated` status on the old one, so consumers who copied it are not surprised."
  },
  {
-  "id": "CONTRIBUTING.md#14",
+  "id": "CONTRIBUTING.md#15",
   "source": "CONTRIBUTING.md",
   "title": "Contributing a component",
   "section": "Style",
@@ -630,7 +663,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "leadership"
   ],
   "kind": "page",
-  "text": "One repository with three parts and two deployables. `components/` holds 29 AI components in six categories\n(agent, harness, tool, integration, pattern, skill), each self-contained with a manifest, tests, a walkthrough and\na live example. `hub/` is the employee AI hub front end. `services/hub-api` is the hub's API behind the bank's\nidentity provider; `services/agent-runtime` serves one agent of the collection over MCP and a run API. The\nknowledge base and the first responder are standalone products; this repository lifts pieces from them and\npublishes pages into the knowledge base."
+  "text": "One repository with three parts and two deployables. `components/` holds 29 AI components in six categories\n(agent, harness, tool, integration, pattern, skill), each self-contained with a manifest, tests, a walkthrough and\na live example. `hub/` is the employee AI hub front end. `services/hub-api` is the hub's API behind the bank's\nidentity provider; `services/agent-runtime` serves one agent of the collection over MCP and a run API. The\nknowledge base and the first responder are standalone products; this repository lifts pieces from them and\npublishes pages into the knowledge base. `playground/` is the AI Playground, a standalone test bench (standard\nlibrary only, imports nothing from the rest) that engineers and AI security engineers point at a solution before\nit is onboarded: the contract, 29 probes, the tester's own cases, and a report the signers read."
  },
  {
   "id": "HANDOVER.md#1",
@@ -654,7 +687,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "leadership"
   ],
   "kind": "page",
-  "text": "- The manifest is the record of a sign-off and the commit is the signature; the hub only records requests.\n- Fakes exist for the sandbox and are refused by configuration in staging and production.\n- Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.\n- The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.\n- Categories, not directories, say what a component is; `agents/`, `python/`, `typescript/`, `skills/` are groups.\n- Operations live in the services, not beside them: `/ready` for the load balancer, request ids end to end, per-person limits, a versioned record with `backup` and `prune` commands, the chain exported on an interval. RUNBOOK.md is the page to have open.\n- The guide in the hub answers only from the repository's own pages (`POST /guide/ask`); adding a page or a README changes what it can say, nothing else does."
+  "text": "- The manifest is the record of a sign-off and the commit is the signature; the hub only records requests.\n- An AI Playground report is evidence for a sign-off, never one: it has no path to the manifest. Its probes judge by markers they plant, not by wording; what only a person can judge is `review`.\n- Fakes exist for the sandbox and are refused by configuration in staging and production.\n- Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.\n- The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.\n- Categories, not directories, say what a component is; `agents/`, `python/`, `typescript/`, `skills/` are groups.\n- Operations live in the services, not beside them: `/ready` for the load balancer, request ids end to end, per-person limits, a versioned record with `backup` and `prune` commands, the chain exported on an interval. RUNBOOK.md is the page to have open.\n- The guide in the hub answers only from the repository's own pages (`POST /guide/ask`); adding a page or a README changes what it can say, nothing else does."
  },
  {
   "id": "HANDOVER.md#3",
@@ -667,6 +700,204 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   ],
   "kind": "page",
   "text": "Every component's `owner` field; the enablement lead runs the programme; the AI security engineers sign.\n`PRODUCTION-READINESS.md` names an owner per open item."
+ },
+ {
+  "id": "playground/README.md#0",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "AI Playground",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "A test bench for any AI solution on its way into the collection. An engineer points it at the solution (a chat\nAPI, an agent behind a gateway, a Python function, a command, an MCP tool server) and at the candidate component's\ndirectory. It checks the candidate against the collection's contract, puts the solution through a library of\nadversarial and robustness probes, runs the engineer's own cases, and writes a report with a verdict. An AI\nsecurity engineer reads that report, triages what needs a person, and cites it in the sign-off note.\n\nThe report is evidence, never a sign-off. Sign-offs are still recorded by a named person with\n`python3 tools/shelf.py --sign`, as `CONTRIBUTING.md` says.\n\nIt is standalone: Python 3.10 or later, standard library only, nothing to install, and nothing it imports from the\nrest of the repository. Copy the `playground/` directory anywhere and it works."
+ },
+ {
+  "id": "playground/README.md#1",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "1. The sample candidate: its contract, its tests, every probe, and its own cases. Ends CLEAR.",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "python3 -m aiplayground run --target examples/python-function.json --component examples/runbook-answerer \\\n  --suite examples/runbook-suite.json --by \"Your Name <you@example.com>\""
+ },
+ {
+  "id": "playground/README.md#2",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "2. A solution that gives way, to see a BLOCKED report and what each finding says.",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "python3 -m aiplayground run --target examples/demo-vulnerable.json"
+ },
+ {
+  "id": "playground/README.md#3",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "3. A tool server that gives way, probed as an AI security engineer (every probe).",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "python3 -m aiplayground run --target examples/mcp-stdio.json --suite examples/tools-suite.json --role ai-security"
+ },
+ {
+  "id": "playground/README.md#4",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "4. The browser interface: open the link it prints (it carries the access token).",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "python3 -m aiplayground serve\n```\n\nEach run prints the verdict, the findings, and the path of an HTML report under `./playground-reports/` (with the\nsame report as Markdown and JSON beside it)."
+ },
+ {
+  "id": "playground/README.md#5",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "What it checks",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "| Part | What | Where |\n| --- | --- | --- |\n| The collection's contract | The manifest, the README's headings, sign-offs untouched, self-contained imports, no secrets, no real ids or addresses, the agent's template carries no money tool, and the component's own tests and live example run in a throwaway copy | `aiplayground/component.py` |\n| Probes | 29 probes in the OWASP Top 10 for LLM applications: prompt injection (direct, in a document, in a record, encoded, obfuscated, role-play, split), disclosure (a secret in the instructions, the instructions themselves, a credential or personal data in a source), output handling (a remote image that sends data out, active content), excessive agency (money, a destructive action requested by a document), grounding, robustness (oversized, empty, unusual input, a burst), and tool-server hardening (schemas, poisoned descriptions, unknown tools, bad arguments, injection strings, an oversized argument, write annotations, survival) | `aiplayground/probes.py`, [PROBES.md](PROBES.md) |\n| Your cases | What the solution is for: a question and what a good answer contains, cites or refuses; a tool call and what it returns. `repeat` and `pass_rate` for answers that vary | `aiplayground/suites.py`, `examples/runbook-suite.json` |\n\nEvery probe plants something unique (a marker, a canary, a fake card number) and judges the answer by looking for\nit, so a"
+ },
+ {
+  "id": "playground/README.md#6",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "What it checks",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": " verdict does not depend on how the solution words its reply. Where only a person can judge, the result is\n`review`, never a guess."
+ },
+ {
+  "id": "playground/README.md#7",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "Describing a solution",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "One JSON file per solution. `python3 -m aiplayground init my-targets/` copies the examples to start from.\n\n| Kind | Reaches | Example |\n| --- | --- | --- |\n| `http` | A chat API. `preset` is `openai-chat`, `anthropic-messages` or `simple-json`, or give `body` (a template with `{{prompt}}`, `{{context}}`, `{{system}}`, `{{messages}}`, `{{model}}`) and `response` (where the answer, tool calls and citations are) | `examples/openai-chat.json`, `examples/simple-json.json` |\n| `python` | A function in the candidate's directory, called in a fresh interpreter per question | `examples/python-function.json` |\n| `command` | A program that reads `{\"prompt\",\"system\",\"context\"}` on stdin and prints the answer | |\n| `mcp-stdio` | An MCP server started as a command | `examples/mcp-stdio.json` |\n| `mcp-http` | An MCP server over Streamable HTTP | `examples/mcp-http.json` |\n| `demo` | The bundled demo assistants, `safe` or `vulnerable` | `examples/demo-safe.json` |\n\n`capabilities` lists what the solution claims: `cites-sources` turns on the grounding probes, `masks-pii` makes a\nleaked card number a failure instead of a review. `timeout_s`, `concurrency` and `max_response_bytes` bound every\ncall."
+ },
+ {
+  "id": "playground/README.md#8",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "Rules it enforces",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "- **Never production.** `environment` must be `sandbox`, `dev`, `test` or `staging`; probes are adversarial by design.\n- **Only hosts you name.** A target outside loopback must be listed in `allow_hosts` (exact, or `*.domain`).\n- **Credentials are names.** A secret is written `${env:NAME}` and read from the environment when a request is\n  sent; a credential in a URL is refused; reports replace any credential value that comes back with `[secret]`.\n- **The candidate's code runs in a copy.** Its tests and example run in a temporary directory with a minimal\n  environment (only what the target's `env` names) and a time limit.\n- **A person decides what a probe cannot.** `review` results, and triage by a named person (`Name <address>`)\n  with a reason. A critical or high risk is accepted by someone other than the tester.\n- **The report is not a sign-off.** Its `onboarding` block says so and gives the line to cite.\n- **The web interface is local.** It listens on loopback only, every API call needs the token printed at start,\n  the Host header must be the loopback address, and the page shows a solution's answers as text, never as HTML."
+ },
+ {
+  "id": "playground/README.md#9",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "Verdicts and exit codes",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "| Verdict | When | `run` exits |\n| --- | --- | --- |\n| `clear` | Everything that applies held, or was triaged by a named person | 0 |\n| `needs-review` | A medium or low failure, a `review`, or a probe that could not run | 0, or 1 with `--fail-on needs-review` |\n| `blocked` | A critical or high finding failed and nobody has triaged it | 2 |\n| `incomplete` | The solution could not be reached | 2 |\n\nA wrong command is 3. In CI: `python3 -m aiplayground run --target t.json --component . --fail-on needs-review`."
+ },
+ {
+  "id": "playground/README.md#10",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "What is inside",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "| Path | What |\n| --- | --- |\n| `aiplayground/config.py` | The target file: kinds, presets, environments, the host allow-list, `${env:NAME}` |\n| `aiplayground/targets.py` | One adapter per kind; every failure becomes a reply with `error` set |\n| `aiplayground/probes.py` | The probe library and how probes are chosen |\n| `aiplayground/suites.py` | Your cases and their expectations |\n| `aiplayground/component.py` | The collection's contract on a directory |\n| `aiplayground/runner.py` | One run: contract, probes, suites, into one report |\n| `aiplayground/report.py` | Verdicts, triage, and the JSON, Markdown and HTML reports |\n| `aiplayground/store.py`, `server.py`, `static/` | The browser interface and its record (`~/.aiplayground` by default) |\n| `aiplayground/demo.py` | The safe and vulnerable demos, as a chat API and an MCP server |\n| `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |\n| `tests/` | `python3 -m unittest discover -s tests -t .` |\n| `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |"
+ },
+ {
+  "id": "playground/README.md#11",
+  "source": "playground/README.md",
+  "title": "The AI Playground",
+  "section": "Known limits",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "- The probes are a floor, not a proof: a solution that passes them can still be steered by an attack they do not\n  try. Add cases for what your solution touches, and keep the report's findings in the README's \"Known limits\".\n- Detection is by planted markers and patterns. A solution that paraphrases a secret instead of repeating it\n  (the canary spelled out in words) is not caught; an AI security engineer reads the evidence.\n- One turn per probe: multi-turn attacks (building trust over several messages) are not tried yet.\n- MCP over HTTP is JSON and SSE responses to POST; server-initiated requests (elicitation) are declined.\n- The browser interface is for one person on one machine; it is not a shared service."
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#0",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "Walkthrough: onboarding a solution with the AI Playground",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "Two people use the playground on the way to the shelf: the engineer who built the solution, and the AI security\nengineer who signs it. Each path below ends where the collection's own process takes over (`CONTRIBUTING.md`).\nEvery command runs from the `playground/` directory."
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#1",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "The engineer",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "1. **Describe the solution.** Copy an example that matches how it is reached:\n\n   ```sh\n   python3 -m aiplayground init my-targets\n   ```\n\n   Edit one file: `name`, `environment` (never production), how to reach it (`url` and a `preset`, a `command`,\n   or `path` and `callable`), and `capabilities` for what it claims (`cites-sources`, `masks-pii`). A credential is\n   `${env:NAME}`; export `NAME` in the shell that runs the playground. A host outside loopback goes in `allow_hosts`.\n\n2. **Check the file** (nothing is sent):\n\n   ```sh\n   python3 -m aiplayground check my-targets/openai-chat.json\n   ```\n\n3. **Try it by hand.** Look at what the solution really returns before automating:\n\n   ```sh\n   python3 -m aiplayground ask my-targets/openai-chat.json \"What do we do when the inbound file is late?\"\n   python3 -m aiplayground tools my-targets/mcp-stdio.json          # a tool server\n   ```\n\n4. **Write your cases.** A suite says what the solution is for; start from `examples/runbook-suite.json`. A case is\n   a `prompt` (or a `tool` with `arguments`) and an `expect`: `contains`, `contains_any`, `not_contains`, `regex`,\n   `cites`, `refuses`, `calls_tool`, `calls_no_tool`, `max_latency_ms`, `json`, `error`. Use `repeat` and\n   `pass_rate` where the answer varies.\n\n5. **Run everything against the candidate component:**\n\n   ```sh\n   python3 -m aiplayground run --target my-targets/openai-ch"
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#2",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "The engineer",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "at.json --component ../components/python/my-thing \\\n     --suite my-suite.json --by \"Your Name <you@example.com>\"\n   ```\n\n6. **Fix and compare.** Fix what failed, run again, and compare the two reports:\n\n   ```sh\n   python3 -m aiplayground compare playground-reports/<before>.json playground-reports/<after>.json\n   ```\n\n7. **Hand over.** When the verdict is `clear` (or `needs-review` with nothing you can fix), attach the report\n   (`.html` and `.json`) to the pull request and ask the owner and an AI security engineer to sign."
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#3",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "The AI security engineer",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "1. **Read the engineer's report first.** The verdict line, then \"For the sign-off\", then every finding with its\n   evidence.\n\n2. **Run every probe yourself**, against the same target file:\n\n   ```sh\n   python3 -m aiplayground run --target their-target.json --component ../components/python/their-thing \\\n     --role ai-security --by \"Your Name <you@example.com>\"\n   ```\n\n   `--role ai-security` selects every probe, including the tool-server set.\n\n3. **Triage what needs a person.** For each `fail`, `review` or `error`:\n\n   ```sh\n   python3 -m aiplayground triage playground-reports/<id>.json --result leak-pii-context \\\n     --decision accepted-risk --by \"Your Name <you@example.com>\" \\\n     --reason \"Records reach it already masked by the data guard; the probe's record is unmasked on purpose.\"\n   ```\n\n   `accepted-risk` needs a reason, and a critical or high risk is accepted by someone other than the tester.\n   `false-positive` says the probe was wrong. `fixed-retest` reopens a finding after a fix. An accepted risk is\n   listed under \"Known limits to add\": the owner copies it into the component's README.\n\n4. **Sign, outside the playground.** The report's \"Cite as\" line goes in the sign-off note:\n\n   ```sh\n   python3 tools/shelf.py --sign <component> --role ai-security --by \"Your Name <you@example.com>\"\n   ```"
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#4",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "In a pipeline",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "```sh\npython3 -m aiplayground run --target ci-target.json --component . --suite cases.json --fail-on needs-review --out reports/\n```\n\nExit 0 is clear, 1 needs review (only with `--fail-on needs-review`), 2 blocked or unreachable, 3 a wrong command.\nKeep `reports/` as the build's artefact."
+ },
+ {
+  "id": "playground/WALKTHROUGH.md#5",
+  "source": "playground/WALKTHROUGH.md",
+  "title": "Onboarding a solution with the AI Playground",
+  "section": "In a browser",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "page",
+  "text": "```sh\npython3 -m aiplayground serve            # prints http://127.0.0.1:8765/#token=...\n```\n\nSet your name and role at the top right; they are recorded on runs and triage. Solutions, Try it, Run checks,\nReports (with compare), and the Probe library are the same functions as the commands above. Runs, reports and\ntarget files are kept in `~/.aiplayground` (`--data` to change it)."
  },
  {
   "id": "content/knowledgebase/docs/best-practices/action-tiers-and-confirmation.md#0",
@@ -1485,7 +1716,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "leadership"
   ],
   "kind": "knowledge",
-  "text": "Six stages, each read from the component's manifest, never guessed. The tracker shows every component's stage and\nwhat has to happen next.\n\n1. **Scaffolded**: the scaffold made the directory with version 0.1.0, both sign-offs pending, a specification entry and a tag from the taxonomy.\n2. **Built**: README, walkthrough, live example and tests are filled and green; the status is ready.\n3. **Used once for real**: the manifest names the project it ran in; the owner records it on the sign-off form.\n4. **Owner signed**: the owner signed at this version after running the tests and the example.\n5. **AI security signed**: an AI security engineer signed at this version after reading the rules and the walkthrough and running the example.\n6. **On the shelf**: both sign-offs name the current version; the hub lists it as generally available and this knowledge base says so on its page. A version bump returns it to stage 3.\n\nDeprecated is past the shelf: the directory stays until consumers have moved to the replacement."
+  "text": "Six stages, each read from the component's manifest, never guessed. The tracker shows every component's stage and\nwhat has to happen next.\n\n1. **Scaffolded**: the scaffold made the directory with version 0.1.0, both sign-offs pending, a specification entry and a tag from the taxonomy.\n2. **Built**: README, walkthrough, live example and tests are filled and green; the status is ready.\n3. **Used once for real**: the manifest names the project it ran in; the owner records it on the sign-off form.\n4. **Owner signed**: the owner signed at this version after running the tests and the example.\n5. **AI security signed**: an AI security engineer signed at this version after reading the rules and the walkthrough, running the example, and reading a [playground report](testing-an-ai-solution.md) of this version.\n6. **On the shelf**: both sign-offs name the current version; the hub lists it as generally available and this knowledge base says so on its page. A version bump returns it to stage 3.\n\nDeprecated is past the shelf: the directory stays until consumers have moved to the replacement."
  },
  {
   "id": "content/knowledgebase/docs/onboarding/component-onboarding.md#3",
@@ -1546,6 +1777,72 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
   ],
   "kind": "knowledge",
   "text": "- The tracker's counts at each meeting: how many on the shelf, how many waiting on an owner, how many on AI security.\n- The list of AI security engineers and their reviewing load; two is the minimum so no component waits on one person.\n- This page, reviewed each quarter with the contributing guide it mirrors."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#0",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "Testing an AI solution before it is onboarded",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "Before a component is signed, the solution it becomes is put through the playground: the collection's test bench,\nkept beside the components in the repository. One run answers three questions a signer would otherwise answer by\nreading code: does the candidate meet the collection's contract, does the running solution hold under attack, and\ndoes it do its job. The answer is a report with a verdict, read by both signers before they sign.\n\nThe report is evidence, never a sign-off. [Onboarding components](component-onboarding.md) is still the process:\ntwo named people sign each version, and the manifest records it."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#1",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "Who runs it, and when",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "- **The engineer** runs it while building, and attaches the last report to the pull request that asks for sign-off.\n- **The AI security engineer** runs it again with every probe, triages what needs a person, and cites the report's id in the sign-off note.\n- **Anyone** can run it on a solution that is not a component yet, to see where it stands before writing a brief."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#2",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "What one run does",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "1. **The contract**: the manifest, the README's headings, sign-offs untouched, imports that stay inside the component, no secrets, no real identifiers or addresses, no money tool in an agent's template, and the component's own tests and live example run in a throwaway copy.\n2. **The probes**: prompt injection (direct, hidden in a document or a record, encoded, obfuscated, role-play, split), disclosure (a secret in the instructions, the instructions themselves, a credential or personal data in a source), output handling (a remote image that sends data out, active content), excessive agency (moving money, a destructive action a document asks for), grounding, robustness, and, for tool servers, schemas, poisoned descriptions, bad and hostile arguments, and whether the server survives.\n3. **Your cases**: what the solution is for, as questions (or tool calls) and what a good answer contains, cites or refuses.\n\nEach probe plants something unique, such as a marker, a canary or a fake card number, and judges the answer by\nlooking for it. The wording of the answer never decides a verdict. Where only a person can judge, the result is\nmarked for review rather than guessed."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#3",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "The rules it keeps",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "- **Never production.** The target must be a sandbox, development, test or staging environment; probes are adversarial.\n- **Only hosts you name.** Anything beyond the local machine must be listed in the target's allowed hosts.\n- **Credentials are names.** A secret is written as the name of an environment variable; any value that comes back is replaced in the report.\n- **A person decides what a probe cannot.** Triage records a named person, a decision and a reason; a critical or high risk is accepted by someone other than the tester."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#4",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "Reading the verdict",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "| Verdict | Meaning | What happens next |\n| --- | --- | --- |\n| clear | Everything that applies held, or was triaged by a named person | Ask for the two sign-offs |\n| needs review | A medium or low failure, a result marked for review, or a probe that could not run | Fix it, or have it triaged, then ask |\n| blocked | A critical or high finding failed and nobody has triaged it | Not signed; fix it and run again |\n| incomplete | The solution could not be reached | Check the target and run again |\n\nAn accepted risk does not disappear: the report lists it under the known limits to add, and the owner copies it\ninto the component's README, where the next reader finds it."
+ },
+ {
+  "id": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md#5",
+  "source": "content/knowledgebase/docs/onboarding/testing-an-ai-solution.md",
+  "title": "Testing an AI solution before it is onboarded",
+  "section": "Checks before asking for a sign-off",
+  "audience": [
+   "engineer"
+  ],
+  "kind": "knowledge",
+  "text": "- The last report is clear, or every open finding is triaged by name.\n- The report is of the version being signed.\n- Accepted risks are in the README's known limits.\n- The report's id is in the pull request, for the AI security engineer to cite."
  },
  {
   "id": "components/agents/incident-first-read-agent/README.md#0",

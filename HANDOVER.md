@@ -7,7 +7,9 @@ One repository with three parts and two deployables. `components/` holds 29 AI c
 a live example. `hub/` is the employee AI hub front end. `services/hub-api` is the hub's API behind the bank's
 identity provider; `services/agent-runtime` serves one agent of the collection over MCP and a run API. The
 knowledge base and the first responder are standalone products; this repository lifts pieces from them and
-publishes pages into the knowledge base.
+publishes pages into the knowledge base. `playground/` is the AI Playground, a standalone test bench (standard
+library only, imports nothing from the rest) that engineers and AI security engineers point at a solution before
+it is onboarded: the contract, 29 probes, the tester's own cases, and a report the signers read.
 
 ## Where to start
 
@@ -20,6 +22,7 @@ publishes pages into the knowledge base.
 ## Decisions worth knowing
 
 - The manifest is the record of a sign-off and the commit is the signature; the hub only records requests.
+- An AI Playground report is evidence for a sign-off, never one: it has no path to the manifest. Its probes judge by markers they plant, not by wording; what only a person can judge is `review`.
 - Fakes exist for the sandbox and are refused by configuration in staging and production.
 - Services vendor component files (`services/vendor.json`) the way components vendor from each other; a change is made in the component, then copied.
 - The hub's mock API and the hub-api service implement the same contract; the browser flow was proven against both.

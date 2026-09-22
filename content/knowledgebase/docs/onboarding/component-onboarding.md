@@ -2,7 +2,7 @@
 title: Onboarding components and the people who sign them
 owner: ai-platform-enablement
 status: active
-reviewed: '2026-09-20'
+reviewed: '2026-09-22'
 tags: [onboarding, governance, security, agents]
 audience: [engineer, leadership]
 ---
@@ -35,7 +35,7 @@ what has to happen next.
 2. **Built**: README, walkthrough, live example and tests are filled and green; the status is ready.
 3. **Used once for real**: the manifest names the project it ran in; the owner records it on the sign-off form.
 4. **Owner signed**: the owner signed at this version after running the tests and the example.
-5. **AI security signed**: an AI security engineer signed at this version after reading the rules and the walkthrough and running the example.
+5. **AI security signed**: an AI security engineer signed at this version after reading the rules and the walkthrough, running the example, and reading a [playground report](testing-an-ai-solution.md) of this version.
 6. **On the shelf**: both sign-offs name the current version; the hub lists it as generally available and this knowledge base says so on its page. A version bump returns it to stage 3.
 
 Deprecated is past the shelf: the directory stays until consumers have moved to the replacement.

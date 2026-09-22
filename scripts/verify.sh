@@ -3,6 +3,7 @@
 #   scripts/verify.sh            # everything
 #   scripts/verify.sh python     # the shelf, the vendoring, every Python component and service (no Node needed)
 #   scripts/verify.sh hub        # the hub only (Node 22, pnpm 10)
+#   scripts/verify.sh playground # the AI Playground only (Python; its browser check needs Node and Chromium)
 # Exit code: the first gate that fails. Output: one line per gate.
 set -eu
 cd "$(dirname "$0")/.."
@@ -25,6 +26,16 @@ if [ "$what" = all ] || [ "$what" = python ]; then
   gate "hub-api: check-config refuses fakes in production";     (cd services/hub-api && ! HUB_ENV=production HUB_AUTH=mock python3 -m hubapi check-config >/dev/null)
   gate "agent-runtime: check-config refuses fakes in production"; (cd services/agent-runtime && ! AGENT_ENV=production python3 -m agentrt check-config >/dev/null)
   if [ -d hub/dist ]; then gate "container trees: assemble, start, health, refuse fakes"; scripts/smoke-container-tree.sh >/dev/null; fi
+fi
+if [ "$what" = all ] || [ "$what" = python ] || [ "$what" = playground ]; then
+  gate "playground: tests";                                     (cd playground && python3 -m unittest discover -s tests -t .)
+  gate "playground: the five-minute start ends clear";          (cd playground && out="$(mktemp -d)" && code=0 && { python3 -m aiplayground run --target examples/python-function.json --component examples/runbook-answerer --suite examples/runbook-suite.json --out "$out" --fail-on needs-review >/dev/null || code=$?; } && rm -rf "$out" && [ "$code" = 0 ])
+  gate "playground: the vulnerable demo is blocked";            (cd playground && out="$(mktemp -d)" && code=0 && { python3 -m aiplayground run --target examples/demo-vulnerable.json --out "$out" >/dev/null || code=$?; } && rm -rf "$out" && [ "$code" = 2 ])
+fi
+if [ "$what" = all ] || [ "$what" = playground ]; then
+  if [ -d hub/node_modules/playwright-core ] && { [ -n "${CHROMIUM_PATH:-}" ] || [ -d "${PLAYWRIGHT_BROWSERS_PATH:-/nonexistent}" ] || [ -d "${HOME:-/nonexistent}/.cache/ms-playwright" ]; }; then
+    gate "playground: the page in a browser";                   scripts/smoke-playground-browser.sh >/dev/null
+  fi
 fi
 if [ "$what" = all ] || [ "$what" = typescript ]; then
   gate "components: typescript tests and examples";             python3 tools/shelf.py --test --only typescript && python3 tools/shelf.py --examples --only typescript

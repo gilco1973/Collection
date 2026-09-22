@@ -30,6 +30,7 @@ jobs:
         with: { node-version: "22", cache: pnpm, cache-dependency-path: hub/pnpm-lock.yaml }
       - run: cd hub && pnpm install --frozen-lockfile && pnpm exec playwright-core install --with-deps chromium   # the Chromium for scripts/smoke-oidc.sh (playwright-core's own installer, the version hub/pnpm-lock.yaml pins)
       - run: scripts/verify.sh hub
+      - run: scripts/verify.sh playground   # the AI Playground's tests, its five-minute start, and its page in the same Chromium
   bundle:
     runs-on: ubuntu-latest
     needs: [python, hub]

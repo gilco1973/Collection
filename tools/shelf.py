@@ -32,7 +32,8 @@ GUIDE_TS = os.path.join(ROOT, "hub", "src", "api", "mock", "guide.ts")
 # The pages the hub's guide answers from: the repository's own documents, split by heading into passages.
 GUIDE_DOCS = [("README.md", "The collection", ("engineer",)), ("CONTRIBUTING.md", "Contributing a component", ("engineer",)), ("CONFIGURATION.md", "Configuring for the bank", ("engineer",)),
               ("PRODUCTION-READINESS.md", "Production readiness", ("engineer", "leadership")), ("RUNBOOK.md", "Runbook", ("engineer",)), ("SECURITY.md", "Security notes", ("engineer", "leadership")),
-              ("HANDOVER.md", "Handover", ("engineer", "leadership"))]
+              ("HANDOVER.md", "Handover", ("engineer", "leadership")), ("playground/README.md", "The AI Playground", ("engineer",)),
+              ("playground/WALKTHROUGH.md", "Onboarding a solution with the AI Playground", ("engineer",))]
 KB_EXPORT = os.path.join(ROOT, "exports", "knowledgebase")
 KB_TAXONOMY = os.path.join(ROOT, "tools", "kb-taxonomy.json")
 

@@ -29,6 +29,7 @@ stages:
           - script: cd hub && pnpm install --frozen-lockfile && pnpm exec playwright-core install --with-deps chromium
             displayName: the Chromium for scripts/smoke-oidc.sh (playwright-core's own installer, the version hub/pnpm-lock.yaml pins)
           - script: scripts/verify.sh hub
+          - script: scripts/verify.sh playground   # the AI Playground's tests, its five-minute start, and its page in the same Chromium
   - stage: release
     dependsOn: verify
     jobs:

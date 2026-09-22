@@ -80,10 +80,27 @@ the stage and the hub's onboarding tracker (Build → Onboarding) shows it with 
 | 2 built | README, walkthrough, live example and tests filled and green; `status` set to `ready` |
 | 3 used once for real | `used_in` names a project; the owner records it on the sign-off form or with `--used-in` |
 | 4 owner signed | The owner signed at this version after running the tests and the example |
-| 5 AI security signed | An AI security engineer signed at this version after reading the rules and the walkthrough and running the example |
+| 5 AI security signed | An AI security engineer signed at this version after reading the rules and the walkthrough, running the example, and reading an AI Playground report of this version |
 | 6 on the shelf | Both sign-offs name the current version: Discover lists it as GA and the knowledge base page says so. A version bump returns it to stage 3 |
 
 `deprecated` is past the shelf: the directory stays until consumers have moved to the replacement.
+
+## Testing it in the AI Playground
+
+Before asking anyone to sign, put the candidate and the solution it becomes through `playground/` (its README has
+the five-minute start). One run checks the contract above on the directory, runs the component's tests and live
+example in a throwaway copy, tries 29 adversarial and robustness probes against the running solution, and runs your
+own cases:
+
+```
+cd playground
+python3 -m aiplayground run --target <target.json> --component ../components/<group>/<name> --suite <cases.json> --by "Name <email>"
+```
+
+Attach the report (`.html` and `.json`) to the pull request. The AI security engineer runs it again with
+`--role ai-security` (every probe), triages what needs a person by name, and cites the report's id in the
+sign-off note. A `blocked` report is not signed. An accepted risk goes into the README's "Known limits". The
+report is evidence for the two sign-offs, never a sign-off itself.
 
 ## Signing off
 

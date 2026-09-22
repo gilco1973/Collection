@@ -12,6 +12,7 @@ meeting every two weeks, each carrying one initiative built from what is here an
 | `components/` | 29 self-contained AI components in six categories: an agent (template, tools, harness), the harnesses (the action loop and an MCP server in front of it), tools (including a read-only MCP server over the shelf for coding assistants), integrations (Jira, Azure DevOps, Teams, Bedrock, AWS SigV4, OIDC, and the gateway for an external MCP server), patterns, and skills anyone can follow. Lifted from products in production: Python (standard library only), TypeScript, and markdown with templates and scripts. Each has a version, two sign-offs (owner and AI security engineer) bound to that version, a five-minute README, a step-by-step walkthrough, a live example, a manifest and tests | `python3 tools/shelf.py --test && python3 tools/shelf.py --examples` |
 | `services/hub-api/` | The hub's API behind the bank's identity provider, on the standard library: every path of the contract plus sign-offs, the built hub served from the same process, a SQLite record | `cd services/hub-api && python3 -m unittest discover -s tests -t .` |
 | `services/agent-runtime/` | One agent of the collection over MCP and a run API, wired to the bank's identity provider, KMS, Bedrock, Jira and Azure DevOps by configuration; fakes in the sandbox, refused in staging and production | `cd services/agent-runtime && python3 -m unittest discover -s tests -t .` |
+| `playground/` | The AI Playground: a standalone test bench any engineer or AI security engineer points at an AI solution before it joins the collection. The collection's contract on the candidate, 29 adversarial and robustness probes (OWASP Top 10 for LLM applications and tool-server hardening), the tester's own cases, and a report with a verdict and named triage that the two signers read before they sign. Command line and a local browser interface; standard library only | `cd playground && python3 -m aiplayground run --target examples/demo-vulnerable.json` |
 | `config/`, `CONFIGURATION.md` | Every system the collection touches, named once; settings that fail closed | `python3 -m hubapi check-config` |
 | `scripts/` | `verify.sh` (every gate, any runner), `bundle.sh` (an offline release with the hub prebuilt) and `package.sh` (the delivery zip: the bundle plus the PDFs, the video, the screenshots and the installation guide) | `scripts/verify.sh python` |
 | `deploy/`, `services/*/deploy/` | Compose for the sandbox; Dockerfiles, fail-closed entrypoints, ECS task definitions and task roles with placeholders | `docker compose -f deploy/compose.yaml up` |
@@ -49,6 +50,9 @@ names where each part came from and where the standalone products live.
   pages with the page named.
 - **Adding a component:** `python3 tools/new_component.py python my-tool --category tool --summary "..."`, then
   `python3 tools/shelf.py --write`.
+- **Testing a solution before onboarding it:** `playground/README.md`. Point the AI Playground at the solution and
+  the candidate's directory; attach its report to the pull request; the AI security engineer triages it and cites
+  it in the sign-off note.
 
 ## Gates
 
