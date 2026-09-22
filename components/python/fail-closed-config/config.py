@@ -41,19 +41,29 @@ class Settings:
     signing_key_name: str = "app/catalog-signing"
     max_turn_tokens: int = 60000
     prefix: str = field(default="APP_", repr=False)
+    parse_errors: list = field(default_factory=list, repr=False)   # numbers that were not numbers; reported by validate(), never a traceback
 
     @classmethod
     def from_env(cls, prefix: str = "APP_") -> "Settings":
         e = lambda k, d=None: _env(prefix + k, d)
+        errors: list[str] = []
+
+        def num(k: str, default: int) -> int:
+            """A number from the environment; a value that is not one is a problem named by its variable (never by its value)."""
+            try:
+                return int(e(k, str(default)))
+            except (TypeError, ValueError):
+                errors.append(f"{prefix}{k} must be an integer"); return default
+
         return cls(mode=e("MODE", "fake"), env=e("ENV", "sandbox"), db_path=e("DB", ":memory:"), public_base_url=e("PUBLIC_URL", "http://localhost:8080"),
                    idp_issuer=e("IDP_ISSUER", ""), idp_audience=e("IDP_AUDIENCE", ""), team_gate_group_ids=_list(e("TEAM_GATE_GROUP_IDS")),
                    operator_group_id=e("OPERATOR_GROUP_ID", ""), observability_targets=_list(e("OBSERVABILITY_TARGETS")),
                    internal_secret_name=e("INTERNAL_SECRET_NAME", "app/internal-issuer"), signing_key_name=e("SIGNING_KEY_NAME", "app/catalog-signing"),
-                   max_turn_tokens=int(e("MAX_TURN_TOKENS", "60000")), prefix=prefix)
+                   max_turn_tokens=num("MAX_TURN_TOKENS", 60000), prefix=prefix, parse_errors=errors)
 
     def validate(self) -> list[str]:
         """Every problem, named by its environment variable, without its value."""
-        p, P = [], self.prefix
+        p, P = list(self.parse_errors), self.prefix
         if self.mode not in ("fake", "live"): p.append(f"{P}MODE must be fake or live")
         if self.env not in ("sandbox", "staging", "production"): p.append(f"{P}ENV must be sandbox, staging or production")
         if self.mode == "fake" and self.env == "production": p.append("fake mode is refused in production")
@@ -77,7 +87,7 @@ class Settings:
         """Presence and shape only, never a value: safe to print at start and in a doctor command."""
         out = {}
         for f in fields(self):
-            if f.name == "prefix": continue
+            if f.name in ("prefix", "parse_errors"): continue
             v = getattr(self, f.name)
             out[f.name] = ("unset" if v in ("", (), None) else (f"set ({len(v)} items)" if isinstance(v, tuple) else "set")) if f.name not in ("mode", "env") else v
         return out

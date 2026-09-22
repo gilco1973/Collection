@@ -105,6 +105,16 @@ class ThirdReview(unittest.TestCase):
             self.assertEqual(DG.mask(text, "model")[0], want, text)
         self.assertEqual(DG.after_call({"notes": "\x001\x00 jane@example.com"}, {"notes": True}).masked_for_model, {"notes": "\x001\x00 [EMAIL]"})
 
+    def test_dates_are_never_a_phone_number_and_masking_is_linear(self):
+        import time
+        for text in ("window 2026-09-21 - 2026-09-22", "deploys 2026-09-21 2026-09-20", "finished 2026-09-21 (2026-09-20 before)",
+                     "at 2026-09-21T14:12:00Z\n2026-09-20T14:12:00Z", "errors per attempt:\n1\n2\n3\n4\n5\n6"):
+            self.assertEqual(DG.mask(text, "model"), (text, []), repr(text))
+        self.assertEqual(DG.mask("call +1 (555) 123-4567 today", "model")[0], "call [PHONE] today")
+        text = "2026-09-21 12345678901 " * (300_000 // 23)
+        t0 = time.time(); out, found = DG.mask(text, "model"); took = time.time() - t0
+        self.assertLess(took, 1.0, f"300 KB of date and account pairs took {took:.1f} s"); self.assertEqual(set(found), {"account"}); self.assertIn("2026-09-21 [ACCOUNT]", out)
+
     def test_a_lone_surrogate_is_refused_by_the_catalog_not_raised_by_the_hash(self):
         from actionloop import catalog as C
         bad = json.loads('{"key": "\\ud800"}')

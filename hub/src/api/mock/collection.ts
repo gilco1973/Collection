@@ -24,7 +24,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.2",
+        "text": "v1.0.3",
         "kind": "mono"
       },
       {
@@ -57,7 +57,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.1.1",
+        "text": "v1.1.2",
         "kind": "mono"
       },
       {
@@ -189,7 +189,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -288,7 +288,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -387,7 +387,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -684,7 +684,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -717,7 +717,7 @@ export const COLLECTION_LISTINGS: ConsumerSummary[] = [
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -984,7 +984,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.2",
+        "text": "v1.0.3",
         "kind": "mono"
       },
       {
@@ -1180,7 +1180,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.2",
+        "version": "1.0.3",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -1207,7 +1207,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.1.1",
+        "text": "v1.1.2",
         "kind": "mono"
       },
       {
@@ -1430,7 +1430,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.1.1",
+        "version": "1.1.2",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2084,7 +2084,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -2147,7 +2147,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
       }
     ],
     "does": [
-      "A JSON logger that lets only identifiers through. Long strings are withheld, anything that looks like a secret or an email is masked, lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log line ever reaches a log line; the chained record is the record, the logs carry ids."
+      "A JSON logger that lets only identifiers through. A string that is not id-shaped (free text, a token with a space, an address) is withheld whole, never a prefix; lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log line ever reaches a log line; the chained record is the record, the logs carry ids."
     ],
     "catalog": {
       "name": "ids-only-logging · component.json",
@@ -2251,7 +2251,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -2664,7 +2664,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -2850,7 +2850,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.1",
+        "version": "1.0.2",
         "state": "current",
         "date": "2026-09-20"
       }
@@ -3281,7 +3281,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.1",
+        "text": "v1.0.2",
         "kind": "mono"
       },
       {
@@ -3462,7 +3462,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.1",
+        "version": "1.0.2",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -5173,7 +5173,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -5340,7 +5340,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -5367,7 +5367,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
         "kind": "mono"
       },
       {
-        "text": "v1.0.0",
+        "text": "v1.0.1",
         "kind": "mono"
       },
       {
@@ -5534,7 +5534,7 @@ export const COLLECTION_DETAILS: Record<string, ConsumerDetail> = {
     ],
     "versions": [
       {
-        "version": "1.0.0",
+        "version": "1.0.1",
         "state": "current",
         "date": "2026-09-19"
       }
@@ -6946,7 +6946,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "incident-first-read-agent",
     "title": "Incident first read agent",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "category": "agent",
     "language": "python",
     "owner": "gil.klainert",
@@ -6980,7 +6980,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "governed-action-loop",
     "title": "Governed action loop",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "category": "harness",
     "language": "python",
     "owner": "gil.klainert",
@@ -7116,7 +7116,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "ids-only-logging",
     "title": "Ids-only logging",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "tool",
     "language": "python",
     "owner": "gil.klainert",
@@ -7218,7 +7218,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "shelf-mcp-server",
     "title": "Shelf mcp server",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "category": "tool",
     "language": "python",
     "owner": "gil.klainert",
@@ -7320,7 +7320,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "untrusted-input-guard",
     "title": "Untrusted input guard",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "category": "tool",
     "language": "python",
     "owner": "gil.klainert",
@@ -7626,7 +7626,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "fail-closed-config",
     "title": "Fail closed config",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "pattern",
     "language": "python",
     "owner": "gil.klainert",
@@ -7660,7 +7660,7 @@ export const COLLECTION_SHELF: ShelfRecord[] = [
   {
     "name": "prompt-pills-onboarding",
     "title": "Prompt pills onboarding",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "pattern",
     "language": "python",
     "owner": "gil.klainert",

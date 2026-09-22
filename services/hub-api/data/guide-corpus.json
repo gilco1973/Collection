@@ -411,10 +411,22 @@
     "leadership"
    ],
    "kind": "page",
-   "text": "a pnpm store for the hub job (platform team) |\n| Knowledge base: pages published into the product, its checks at zero | DONE | `tools/publish_kb.py`, `kb-librarian check` on a checkout | The pages published into the bank's knowledge base checkout (enablement lead) |\n| MCP: a tool server with elicitation and 403 on taint, a gateway for external servers, a read-only shelf server | DONE | the three components' tests, including the HTTP transport end to end | The official MCP conformance suite run against the tool server with a reviewed expected-failures file (PLT-HAR-33) (platform team) |\n| Model risk | OPEN | the think step records the engine, stage and token counts on the chain; the hub's feedback question is stored per turn | The judge and labels for the first read; the inference profile approved (model risk) |\n| Operations: readiness routes for the load balancer, request ids end to end, per-person rate limits, a versioned record that refuses a newer schema, online backups, the chain exported from inside the task | DONE | `services/*/tests/test_ops.py`; `scripts/smoke-container-tree.sh` hits `/ready` in both trees | The backup job and the alarm on `/ready` created on the bank's account (integrations engineer) |\n| Demonstration video tooling (`demo/`) | OPTIONAL | needs ffmpeg and Chromium; excluded from the bundle | — |"
+   "text": "a package registry reachable from it: the hub job's `pnpm install` and the TypeScript components' `npm ci` need the bank's npm mirror (platform team) |\n| Knowledge base: pages published into the product, its checks at zero | DONE | `tools/publish_kb.py`, `kb-librarian check` on a checkout | The pages published into the bank's knowledge base checkout (enablement lead) |\n| MCP: a tool server with elicitation and 403 on taint, a gateway for external servers, a read-only shelf server | DONE | the three components' tests, including the HTTP transport end to end | The official MCP conformance suite run against the tool server with a reviewed expected-failures file (PLT-HAR-33) (platform team) |\n| Model risk | OPEN | the think step records the engine, stage and token counts on the chain; the hub's feedback question is stored per turn | The judge and labels for the first read; the inference profile approved (model risk) |\n| Operations: readiness routes for the load balancer, request ids end to end, per-person rate limits, a versioned record that refuses a newer schema, online backups, the chain exported from inside the task | DONE | `services/*/tests/test_ops.py`; `scripts/smoke-container-tree.sh` hits `/ready` in both trees | The backup job and the alarm on `/ready` created on the bank's account (integrations engineer) |\n| Demonstration video tooling (`demo/`) | OPTIONAL | needs ffmpe"
   },
   {
    "id": "PRODUCTION-READINESS.md#5",
+   "source": "PRODUCTION-READINESS.md",
+   "title": "Production readiness",
+   "section": "Production readiness: the collection",
+   "audience": [
+    "engineer",
+    "leadership"
+   ],
+   "kind": "page",
+   "text": "g and Chromium; excluded from the bundle | — |"
+  },
+  {
+   "id": "PRODUCTION-READINESS.md#6",
    "source": "PRODUCTION-READINESS.md",
    "title": "Production readiness",
    "section": "What \"production ready\" means here",
@@ -445,7 +457,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "- Hub: `GET /api/health` → `{\"status\":\"ok\",\"build\",\"env\",\"auth\",\"assistant\",\"components\",\"record\"}`. `record: \"memory\"` in staging or production is a misconfiguration; the entrypoint should have refused it.\n- Agent: `GET /health` → the wiring by name (`identity`, `signing`, `engine`, `targets` as class names) and `records`, the chain's length after a verify. A fake class name in production is a misconfiguration.\n- Readiness, for the load balancer and the task health check: `GET /api/ready` and `GET /ready` answer 200 with each check named (`record`, `identity`, `catalog`, and the hub's `guide`) or 503 with the failing check's exception class. A task that is up but not ready is taken out of rotation, not restarted; the usual cause is the identity provider's key set being unreachable.\n- Every response carries `X-Request-Id`: the hub's own id when it sent one, else one minted by the service. A person's support line quotes it; every log line for that request carries `rid=<id>`.\n- Limits: `429 Too many requests` with `Retry-After` when one person exceeds `HUB_RATE_PER_MINUTE` or `AGENT_RUNS_PER_MINUTE`. A person seeing it steadily is a runaway client, not a capacity problem."
+   "text": "- Hub: `GET /api/health` → `{\"status\":\"ok\",\"build\",\"env\",\"auth\",\"assistant\",\"components\",\"record\"}`. `record: \"memory\"` in staging or production is a misconfiguration; the entrypoint should have refused it.\n- Agent: `GET /health` → `{\"status\":\"ok\",\"agent\",\"env\",\"build\",\"identity\",\"signing\",\"engine\",\"targets\",\"records\"}`: `identity`, `signing` and `engine` are the settings' values (`fake`/`oidc`, `local`/`kms`, `rules`/`bedrock`), `targets` maps each target to its connector's class name, and `records` is the chain's length after a verify. A fake value or class name in production is a misconfiguration.\n- Readiness, for the load balancer and the task health check: `GET /api/ready` and `GET /ready` answer 200 with each check named (`record`, `identity`, `catalog`, and the hub's `guide`) or 503 with the failing check's exception class. A task that is up but not ready is taken out of rotation, not restarted; the usual cause is the identity provider's key set being unreachable.\n- Every response carries `X-Request-Id`: the hub's own id when it sent one, else one minted by the service. A person's support line quotes it; every log line for that request carries `rid=<id>`.\n- Limits: `429 Too many requests` with `Retry-After` when one person exceeds `HUB_RATE_PER_MINUTE` or `AGENT_RUNS_PER_MINUTE`. A person seeing it steadily is a runaway client, not a capacity problem."
   },
   {
    "id": "RUNBOOK.md#2",
@@ -489,7 +501,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": "a credential | Rotate it in the secrets provider under the same name; nothing restarts, the next call reads the new value (a five-minute cache) |\n| Apply the retention now | `python3 -m hubapi prune` inside the task; `serve` does the same once a day. Conversations past `HUB_CONVERSATION_RETENTION_DAYS` go, with their feedback rows, and replays older than `HUB_IDEMPOTENCY_TTL_S`; the command prints both counts; nothing else is touched. `serve` runs it a minute after start, then daily |\n| Back up the record | `python3 -m hubapi backup /var/hub/backup.db` and `python3 -m agentrt backup /var/agent/backup.db` inside the task (SQLite's online backup: consistent while serving), then copy the file off the volume; restore by stopping the task and putting the file back as the record (remove `<record>-wal` and `<record>-shm` first, see \"The record is broken\"). `hubapi backup` opens the source read-only and refuses a `HUB_DB` that is not an existing file, so a typo never backs up an empty record or migrates the live one. A record from a newer build refuses to open under an older one (the hub's refusal is the `record:` line above); restore before rolling back |\n| Export the chain | `python3 -m agentrt export-audit` inside the task, or set `AGENT_AUDIT_EXPORT_INTERVAL_S` and the task exports itself (a failed export is logged and retried at the next interval; the chain stays local meanwhile);"
+   "text": "a credential | Rotate it in the secrets provider under the same name; nothing restarts, the next call reads the new value (a five-minute cache) |\n| Apply the retention now | `python3 -m hubapi prune` inside the task; `serve` does the same once a day. Conversations past `HUB_CONVERSATION_RETENTION_DAYS` go, with their feedback rows, and replays older than `HUB_IDEMPOTENCY_TTL_S`; the command prints both counts; nothing else is touched. `serve` runs it a minute after start, then daily |\n| Back up the record | `python3 -m hubapi backup /var/hub/backup.db` and `python3 -m agentrt backup /var/agent/backup.db` inside the task (SQLite's online backup: consistent while serving), then copy the file off the volume; restore by stopping the task and putting the file back as the record (remove `<record>-wal` and `<record>-shm` first, see \"The record is broken\"). `hubapi backup` opens the source read-only and refuses a `HUB_DB` that is not an existing file, so a typo never backs up an empty record or migrates the live one. A record from a newer build refuses to open under an older one, and both `backup` commands refuse it with the same `record:` line (a copy the build cannot read is not a backup it could restore); restore before rolling back |\n| Export the chain | `python3 -m agentrt export-audit` inside the task, or set `AGENT_AUDIT_EXPORT_INTERVAL_S` and the task exports itself (a failed e"
   },
   {
    "id": "RUNBOOK.md#6",
@@ -500,7 +512,7 @@
     "engineer"
    ],
    "kind": "page",
-   "text": " `latest.json` in the bucket points at the newest object |"
+   "text": "xport is logged and retried at the next interval; the chain stays local meanwhile); `latest.json` in the bucket points at the newest object |"
   },
   {
    "id": "RUNBOOK.md#7",
@@ -1983,7 +1995,7 @@
     "engineer"
    ],
    "kind": "component",
-   "text": "A JSON logger that lets only identifiers through. Long strings are withheld, anything that looks like a secret or an\nemail is masked, lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log\nline ever reaches a log line; the chained record is the record, the logs carry ids."
+   "text": "A JSON logger that lets only identifiers through. A string that is not id-shaped (free text, a token with a space,\nan address) is withheld whole, never a prefix; lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log\nline ever reaches a log line; the chained record is the record, the logs carry ids."
   },
   {
    "id": "components/python/ids-only-logging/README.md#1",
@@ -2027,7 +2039,7 @@
     "engineer"
    ],
    "kind": "component",
-   "text": "Strings above 96 characters are cut with a count; `bearer …`, `token=`, `key=`, `password=` and email addresses are\nreplaced; lists and dicts are capped at 20 entries; nested values are redacted recursively."
+   "text": "A string passes only when it is id-shaped: letters, digits and `._:/@-`, at most 64 characters (`ses_1`, `agent:x`,\n`v1.2`); everything else, an address included, becomes `[withheld]` with no prefix of the text. Keys go through the\nsame rule; lists and dicts are capped at 20 entries; nested values are redacted recursively."
   },
   {
    "id": "components/python/ids-only-logging/README.md#5",

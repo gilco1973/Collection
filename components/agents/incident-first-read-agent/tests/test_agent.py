@@ -105,3 +105,12 @@ class Recency(unittest.TestCase):
         self.assertTrue(any(c["text"].startswith(f"deploy 4822: {RECENT_DEPLOY_MARKER}") for c in r["first_read"]["claims"]))
         r = self.run_with("checkout", {"run_id": 4821, "service": "checkout", "minutes_before_trigger": 31, "notes": "recent"})
         self.assertEqual(r["proposal"]["kind"], "none"); self.assertFalse(any(RECENT_DEPLOY_MARKER in c["text"] for c in r["first_read"]["claims"]))
+
+    def test_a_deploy_that_finished_after_the_trigger_is_not_recent(self):
+        from engine import RECENT_DEPLOY_MARKER
+        for minutes in (-1, -600):
+            r = self.run_with("checkout", {"run_id": 4823, "service": "checkout", "minutes_before_trigger": minutes, "notes": "shipped after the alert"})
+            self.assertEqual(r["proposal"]["kind"], "none", minutes); self.assertIn("inconclusive", r["first_read"]["hypothesis"])
+            self.assertFalse(any(RECENT_DEPLOY_MARKER in c["text"] for c in r["first_read"]["claims"]), minutes)
+        r = self.run_with("checkout", {"run_id": 4824, "service": "checkout", "minutes_before_trigger": 0, "notes": "at the trigger"})
+        self.assertEqual(r["proposal"]["kind"], "rollback", "finished at the trigger itself is recent")

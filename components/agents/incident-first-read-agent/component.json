@@ -1,6 +1,6 @@
 {
   "name": "incident-first-read-agent",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "category": "agent",
   "language": "python",
   "summary": "An agent, complete: a template (role, stages, tools by tier, never list), tools reached only through the harness, a cited first read, one W1 proposal to confirm",

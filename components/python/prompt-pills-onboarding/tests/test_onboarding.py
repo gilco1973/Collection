@@ -18,6 +18,12 @@ class Onboarding(unittest.TestCase):
         self.assertNotIn("mitigate", json.dumps(card)); self.assertIn("payments-api", card["body"][1]["text"])
         self.assertTrue(card["actions"][-1]["url"].endswith("/help")); self.assertLessEqual(len(submits), 6)
 
+    def test_a_context_missing_a_placeholder_still_makes_a_card(self):
+        card = EXAMPLE.welcome_card({}, "https://app.example")
+        json.dumps(card); self.assertIn("the service", card["body"][1]["text"], "an unknown placeholder reads as prose, like the guide")
+        card = EXAMPLE.welcome_card({"incident": "inc_1"}, "https://app.example", roles=[], increment=2)
+        self.assertTrue(all(a["data"]["incident"] == "inc_1" for a in card["actions"] if a["type"] == "Action.Submit"))
+
     def test_hint_and_guide(self):
         self.assertIn("@Bot help", EXAMPLE.first_time_hint("Dana"))
         g = EXAMPLE.guide_html()

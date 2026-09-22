@@ -55,6 +55,21 @@ class Masking(unittest.TestCase):
             self.assertEqual(mask(text, "model")[0], want, text)
         self.assertEqual(mask("cust 2024-11-05.1234567890@mail.example", "log")[0], "cust [email:***]")
 
+    def test_dates_are_never_the_middle_of_a_phone_number_and_a_column_is_not_one(self):
+        for text in ("window 2026-09-21 - 2026-09-22", "deploys 2026-09-21 2026-09-20", "finished 2026-09-21 (2026-09-20 before)",
+                     "at 2026-09-21T14:12:00Z\n2026-09-20T14:12:00Z", "errors per attempt:\n1\n2\n3\n4\n5\n6", "retries 3 (2)\n   backoff 4"):
+            self.assertEqual(mask(text, "model"), (text, []), repr(text))
+        self.assertEqual(mask("call +1 (555) 123-4567 today", "model")[0], "call [PHONE] today", "a phone number on one line still is one")
+        self.assertEqual(mask("call +1 (555)\n123-4567 today", "model")[0], "call +1 (555)\n123-4567 today", "never across a line")
+
+    def test_masking_is_linear_in_the_text(self):
+        import time
+        text = ("2026-09-21 12345678901 " * (300_000 // 23))
+        t0 = time.time(); out, found = mask(text, "model"); took = time.time() - t0
+        self.assertLess(took, 1.0, f"300 KB of date and account pairs took {took:.1f} s")
+        self.assertEqual(set(found), {"account"}); self.assertNotIn("12345678901", out); self.assertIn("2026-09-21 [ACCOUNT]", out)
+        t0 = time.time(); mask("a@b.co " * (300_000 // 7), "model"); self.assertLess(time.time() - t0, 1.0)
+
     def test_a_nul_byte_in_upstream_text_is_a_character_not_a_placeholder(self):
         for text in ("\x005\x00", "x\x0099\x00y", "\x000\x00 2026-09-21 \x001\x00"):
             self.assertEqual(mask(text, "model"), (text, []), repr(text))

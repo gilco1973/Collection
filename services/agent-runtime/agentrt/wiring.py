@@ -6,7 +6,7 @@ signing key (local or KMS), the think step (rules or Bedrock), and each target (
 the hooks and the record are the same objects in both.
 """
 from __future__ import annotations
-import json, os, sqlite3, time, urllib.request, threading
+import json, os, pathlib, sqlite3, time, urllib.request, threading
 from dataclasses import dataclass
 from . import vendor  # noqa: F401  (puts the vendored files on the path)
 from actionloop import catalog as C, policy as P, signing
@@ -83,7 +83,9 @@ def open_record(path: str, factory=None, readonly: bool = False):
     """The record's connection, with its version checked: a record written by a newer build is refused with a
     named error instead of being read wrong; a new record is stamped with this build's version."""
     if readonly:
-        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False)
+        # the path as a file URI (a `?`, a `%` or a `#` in it is escaped, never read as the query): mode=ro opens
+        # the record as it is and creates nothing, not even an empty file at a typo
+        conn = sqlite3.connect(pathlib.Path(path).resolve().as_uri() + "?mode=ro", uri=True, check_same_thread=False)
     else:
         conn = sqlite3.connect(path, check_same_thread=False, factory=factory) if factory else sqlite3.connect(path, check_same_thread=False)
     v = int(conn.execute("PRAGMA user_version").fetchone()[0])
@@ -93,6 +95,28 @@ def open_record(path: str, factory=None, readonly: bool = False):
     if v < RECORD_SCHEMA and not readonly:
         conn.execute(f"PRAGMA user_version = {RECORD_SCHEMA}"); conn.commit()
     return conn
+
+
+@dataclass
+class RecordOnly:
+    """The record and its switches, nothing else: what `stop` and `resume` need."""
+    settings: object
+    template: dict
+    consumer: str
+    conn: sqlite3.Connection
+    audit: AuditChain
+    kills: KillSwitches
+    sessions: SessionStore
+
+
+def open_switches(s) -> RecordOnly:
+    """The kill switches over the record alone: no identity provider, no signing key, no target is built, so the
+    switch can be thrown while the provider or KMS is down. The consumer name comes from the template, as `build`
+    names it for the harness."""
+    tpl = load_template(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "TEMPLATE.md"))
+    conn = open_record(s.db_path, factory=SerialConnection)
+    audit = AuditChain(conn)
+    return RecordOnly(s, tpl, f"agent:{tpl['name']}", conn, audit, KillSwitches(conn, audit), SessionStore(conn))
 
 
 class UrllibHttp:

@@ -61,7 +61,8 @@ class FirstReadAgent:
         if minutes is None or deploy.get("run_id") is None:
             ctx.add("deploy", NO_DEPLOY_REF, f"no finished deploy of {deploy.get('service')} is on record. {deploy.get('notes', '')}", "deploys")
         else:
-            marker = f"{RECENT_DEPLOY_MARKER} " if minutes <= RECENT_MINUTES else ""
+            recent = 0 <= minutes <= RECENT_MINUTES  # a deploy that finished after the trigger (a negative value) cannot have caused it
+            marker = f"{RECENT_DEPLOY_MARKER} " if recent else ""
             ctx.add("deploy", str(deploy.get("run_id")), f"{marker}deploy #{deploy.get('run_id')} of {deploy.get('service')} finished {minutes} minutes before the trigger. {deploy.get('notes', '')}", "deploys")
         first = self.engine.answer("first-read", ctx)
         proposal = self.engine.answer("propose", ctx) if "propose" in self.template["stages"] else None

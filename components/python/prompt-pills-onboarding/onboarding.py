@@ -44,7 +44,7 @@ class Bot:
     def welcome_card(self, context: dict, base_url: str, roles: list | None = None, increment: int = 3) -> dict:
         """An Adaptive Card: three things to know, starter pills by category (up to six as buttons), the roles, the guide link."""
         t = lambda text, **kw: {"type": "TextBlock", "text": text, "wrap": True, **kw}
-        body = [t(f"How to work with {self.name} here", size="Medium", weight="Bolder"), t(self.what_it_is.format(**context)), t("**Three things to know**", spacing="Medium"),
+        body = [t(f"How to work with {self.name} here", size="Medium", weight="Bolder"), t(self.what_it_is.format_map(_Defaults(context))), t("**Three things to know**", spacing="Medium"),
                 t("\n".join(f"{i}. {x}" for i, x in enumerate(self.three_things, 1))), t("**Try one of these**", spacing="Medium")]
         actions = []
         pills = self.visible_pills(roles or [], increment)

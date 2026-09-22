@@ -198,14 +198,14 @@ def serve_stdio(server: ShelfServer, inp=None, out=None) -> None:
                 more = raw.readline(MAX_LINE_BYTES)
                 if not more: break
                 line = line[-1:] + more[-1:]  # drain; keep only the tail to see the newline
-            line = line.decode("utf-8", "replace")
+            line = "<line too long>" if too_long else line.decode("utf-8", "replace")  # the tail that was kept may be blank: the answer does not depend on it
         else:
             too_long = len(line) > MAX_LINE_BYTES
+        if too_long:  # before the blank-line skip: a refused line is always answered
+            out.write(P.dumps(P.error(None, P.RpcError(P.PARSE_ERROR, f"line above {MAX_LINE_BYTES} bytes"))) + "\n"); out.flush(); continue
         if not line.strip():
             continue
         try:
-            if too_long:
-                raise P.RpcError(P.PARSE_ERROR, f"line above {MAX_LINE_BYTES} bytes")
             msg = P.parse(line)
         except P.RpcError as e:
             out.write(P.dumps(P.error(None, e)) + "\n"); out.flush(); continue

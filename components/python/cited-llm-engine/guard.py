@@ -21,7 +21,7 @@ PII_PATTERNS = {  # the most specific shapes first: a social security number is 
     "email": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
     "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
     "account": re.compile(r"\b\d{8,17}\b"),
-    "phone": re.compile(r"\+?\d[\d\s().-]{8,}\d"),
+    "phone": re.compile(r"\+?\d[\d \t().-]{8,}\d"),  # never across a line: a column of numbers is not a phone number
 }
 
 # Generic instruction-like markers (from the data guard) plus the ones found in incident text and code.
@@ -64,30 +64,38 @@ def code_injection_score(text: str) -> float:
 # yyyymmdd.r pipeline run names (the eight digits are a date; "12345678.1" is an account): evidence, not PII.
 KEEP = re.compile(r"(?<![A-Za-z0-9@])\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?(?![A-Za-z0-9@])"
                   r"|(?<![\d.])(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\.\d{1,3}(?![\d.])")
-_BLANK = "#"  # in no PII class: a span one class matched is invisible to the next (a social security number is not also a phone number)
+_BLANK = "#"  # in no PII class and no KEEP shape: a span already matched is invisible to the next pattern
+
+
+def _blank(work: list, a: int, b: int) -> None:
+    work[a:b] = _BLANK * (b - a)
+
+
+TEXT_CLASSES = ("email",)  # shapes that may contain a kept span (a date in an address): matched before the kept spans are blanked
 
 
 def _pii_spans(text: str) -> list:
-    """Every PII match as (start, end, class) on the original text, class by class in `PII_PATTERNS` order, each
-    class matched with the earlier classes' spans blanked out."""
-    spans, work = [], text
-    for cls, pat in PII_PATTERNS.items():
-        hits = [(m.start(), m.end()) for m in pat.finditer(work)]
-        spans += [(a, b, cls) for a, b in hits]
+    """Every PII match as (start, end, class) on the original text, sorted by position and never overlapping.
+    The text classes run first, on the original text; then the kept spans (dates, run names) are blanked, so a
+    number class never spans two dates; then the number classes, in `PII_PATTERNS` order, each matched with
+    everything found so far blanked out (a social security number is not also a phone number). Linear in the
+    text: one blank per match, one join per class."""
+    work, spans = list(text), []
+
+    def run(cls: str) -> None:
+        hits = [m.span() for m in PII_PATTERNS[cls].finditer("".join(work))]
+        spans.extend((a, b, cls) for a, b in hits)
         for a, b in hits:
-            work = work[:a] + _BLANK * (b - a) + work[b:]
-    return spans
+            _blank(work, a, b)
 
-
-def _kept_spans(text: str, pii: list) -> list:
-    """KEEP matches that stand on their own: one that is part of a larger PII match (a date inside an address) is
-    not kept; one that merely contains a PII-shaped run (the eight digits of a run name) is."""
-    out = []
+    for cls in TEXT_CLASSES:
+        run(cls)
     for m in KEEP.finditer(text):
-        ka, kb = m.span()
-        if all(b <= ka or a >= kb or (ka <= a and b <= kb) for a, b, _ in pii):
-            out.append((ka, kb))
-    return out
+        _blank(work, *m.span())
+    for cls in PII_PATTERNS:
+        if cls not in TEXT_CLASSES:
+            run(cls)
+    return sorted(spans)
 
 
 def mask(text: str, audience: str) -> tuple[str, list]:
@@ -95,12 +103,10 @@ def mask(text: str, audience: str) -> tuple[str, list]:
     Timestamps and pipeline run names are kept: they are the evidence an answer is about. Spans are computed
     on the original text and the output is assembled from it, so no placeholder is ever substituted into the
     text (a NUL byte in upstream text is just a character)."""
-    pii = _pii_spans(text)
-    kept = _kept_spans(text, pii)
-    masked = [(a, b, cls) for a, b, cls in pii if not any(ka <= a and b <= kb for ka, kb in kept)]
+    masked = _pii_spans(text)  # sorted, disjoint, and outside every kept span: one sweep assembles the output
     found = [cls for c in PII_PATTERNS for a, b, cls in masked if cls == c]
     out, pos = [], 0
-    for a, b, cls in sorted(masked):
+    for a, b, cls in masked:
         v = text[a:b]
         out.append(text[pos:a])
         out.append(f"[{cls.upper()}]" if audience == "model" else f"[{cls}:***]" if audience == "log" else f"[{cls}:…{v[-4:]}]")

@@ -8,7 +8,7 @@ audience: [engineer]
 ---
 # shelf-mcp-server
 
-> A component of the collection: `components/python/shelf-mcp-server/` in the repository (category tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §7.4, §4.11 (PLT-CAT-5, PLT-HAR-33); the replacement test is under Known limits. Version 1.0.1; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
+> A component of the collection: `components/python/shelf-mcp-server/` in the repository (category tool, python, status ready). Copy it from there; this page is its README, published by the shelf tool. It is an interim implementation of the platform design specification §7.4, §4.11 (PLT-CAT-5, PLT-HAR-33); the replacement test is under Known limits. Version 1.0.2; sign-off: owner pending; AI security pending; walkthrough `WALKTHROUGH.md`; live example `example.py`.
 
 
 A read-only MCP server over the shelf: list, get, search and stage tools and every README, walkthrough and

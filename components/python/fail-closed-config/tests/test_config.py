@@ -19,6 +19,17 @@ class Config(unittest.TestCase):
         self.assertEqual(s.validate(), []); self.assertIs(s.require_valid(), s)
         self.assertEqual(s.diagnostics()["team_gate_group_ids"], "set (1 items)"); self.assertNotIn("g2", str(s.diagnostics()))
 
+    def test_a_number_that_is_not_one_is_a_named_problem_not_a_traceback(self):
+        os.environ["APP_MAX_TURN_TOKENS"] = "6O000"
+        try:
+            s = config.Settings.from_env()   # never raises: the problem is reported with every other one
+            self.assertEqual(s.max_turn_tokens, 60000); self.assertEqual(s.parse_errors, ["APP_MAX_TURN_TOKENS must be an integer"])
+            out = io.StringIO(); self.assertEqual(config.check_config(out=out), 2)
+            self.assertIn("config: APP_MAX_TURN_TOKENS must be an integer", out.getvalue()); self.assertNotIn("6O000", out.getvalue(), "never the value")
+            self.assertNotIn("parse_errors", s.diagnostics())
+        finally:
+            os.environ.pop("APP_MAX_TURN_TOKENS", None)
+
     def test_from_env_and_check_config(self):
         env = {"APP_MODE": "live", "APP_ENV": "staging", "APP_DB": "/var/app/app.db", "APP_PUBLIC_URL": "https://x", "APP_IDP_ISSUER": "https://i", "APP_IDP_AUDIENCE": "a",
                "APP_TEAM_GATE_GROUP_IDS": "g1, g2", "APP_OPERATOR_GROUP_ID": "", "APP_OBSERVABILITY_TARGETS": "elastic"}

@@ -11,7 +11,8 @@ from agentrt.wiring import build
 class Ops(unittest.TestCase):
     def setUp(self):
         self.w = build(Settings(runs_per_minute=2))
-        self.httpd = serve(self.w, "127.0.0.1", 0, "https://agents.example/mcp"); threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        # verify_interval_s=0: readiness walks the chain on every probe here, so a tampered record is seen at once (the throttle has its own test)
+        self.httpd = serve(self.w, "127.0.0.1", 0, "https://agents.example/mcp", verify_interval_s=0.0); threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
         self.base = f"http://127.0.0.1:{self.httpd.server_address[1]}"
 
     def tearDown(self):

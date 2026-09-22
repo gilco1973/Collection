@@ -66,6 +66,29 @@ class ReadOnlyShelf(unittest.TestCase):
 
 
 class HostileInput(unittest.TestCase):
+    def test_a_line_over_the_limit_is_refused_whatever_byte_the_drain_keeps(self):
+        import io, json
+        from server import MAX_LINE_BYTES, Shelf, ShelfServer, serve_stdio, find_root
+
+        class Raw:
+            def __init__(s, b): s.b = io.BytesIO(b)
+            def readline(s, n=-1): return s.b.readline(n)
+
+        class In:
+            def __init__(s, b): s.buffer = Raw(b)
+
+        srv = ShelfServer(Shelf(find_root(None)))
+        head = b'{"jsonrpc":"2.0","id":1,"method":"ping","params":{"pad":"'
+        after = b'{"jsonrpc":"2.0","id":2,"method":"ping"}\n'
+        for label, line in (("byte 1_000_001 is a space", head + b"a" * (MAX_LINE_BYTES - len(head)) + b" " + b"a" * 400_000 + b'"}}\n'),
+                            ("ends in spaces", head + b"a" * 1_500_000 + b'"}}   \n'), ("ends in a letter", head + b"a" * 1_500_000 + b'"}}xxx\n')):
+            if "1_000_001" in label: self.assertEqual(line[MAX_LINE_BYTES:MAX_LINE_BYTES + 1], b" ")
+            out = io.StringIO(); serve_stdio(srv, In(line + after), out)
+            answers = [json.loads(l) for l in out.getvalue().splitlines()]
+            self.assertEqual(len(answers), 2, label)
+            self.assertEqual((answers[0]["id"], answers[0]["error"]["code"]), (None, P.PARSE_ERROR), label)
+            self.assertEqual(answers[1], {"jsonrpc": "2.0", "id": 2, "result": {}}, "the loop goes on after the refusal")
+
     def test_wrong_shapes_are_errors_and_the_loop_survives_bad_bytes(self):
         import io, json
         from server import Shelf, ShelfServer, serve_stdio, find_root

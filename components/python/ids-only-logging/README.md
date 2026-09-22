@@ -1,7 +1,7 @@
 # ids-only-logging
 
-A JSON logger that lets only identifiers through. Long strings are withheld, anything that looks like a secret or an
-email is masked, lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log
+A JSON logger that lets only identifiers through. A string that is not id-shaped (free text, a token with a space,
+an address) is withheld whole, never a prefix; lists and dicts are truncated. By construction, no ticket body, question, answer or upstream log
 line ever reaches a log line; the chained record is the record, the logs carry ids.
 
 ## Five-minute start
@@ -10,7 +10,7 @@ line ever reaches a log line; the chained record is the record, the logs carry i
 import logs
 logs.setup("INFO")                                   # JSON lines on stdout; pass a stream for tests
 logs.log("turn.done", incident="inc_1", session="ses_9", stop="turn.complete", text="a 4,000-character answer ...")
-# {"event": "turn.done", "incident": "inc_1", "session": "ses_9", "stop": "turn.complete", "text": "a 4,000-character an…[4000 chars withheld]", "ts": ...}
+# {"event": "turn.done", "incident": "inc_1", "session": "ses_9", "stop": "turn.complete", "text": "[withheld]", "ts": ...}
 ```
 
 ```
@@ -32,8 +32,9 @@ distinctive text into the system under test and assert it is absent from the cap
 
 ## Rules it enforces
 
-Strings above 96 characters are cut with a count; `bearer …`, `token=`, `key=`, `password=` and email addresses are
-replaced; lists and dicts are capped at 20 entries; nested values are redacted recursively.
+A string passes only when it is id-shaped: letters, digits and `._:/@-`, at most 64 characters (`ses_1`, `agent:x`,
+`v1.2`); everything else, an address included, becomes `[withheld]` with no prefix of the text. Keys go through the
+same rule; lists and dicts are capped at 20 entries; nested values are redacted recursively.
 
 ## Where it came from
 
