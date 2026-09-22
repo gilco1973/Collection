@@ -6,9 +6,10 @@ what is missing, what leaks, what does not run. The manifest rules are a port of
 (the playground imports nothing from `tools/`): what the shelf accepts passes here and what it refuses fails here.
 
 Running the component's own tests and example is NOT a sandbox. The command runs in a throwaway copy of the
-directory, as the tester's own user, with a minimal environment (PATH and the locale; HOME, TMPDIR and the XDG
-directories point into the throwaway directory, so the tester's credentials files and variables are not handed
-over), in a process group of its own that is killed when the time limit expires and again when the command ends.
+directory (inside a checkout of the collection, with copies of the checkout's components/ and tools/ around it: see
+place_copy), as the tester's own user, with a minimal environment (PATH, the locale and the proxy, CA and registry
+settings a package install needs; HOME, TMPDIR and the XDG directories point into the throwaway directory, so the
+tester's credentials files and other variables are not handed over), in a process group of its own that is killed when the time limit expires and again when the command ends.
 That keeps an honest candidate from touching the source tree or leaving processes behind; it does not stop hostile
 code, which can read and write anything the tester's user can (the source directory included, found for example
 through /proc) and can leave its process group. For code you do not trust, run the playground itself in a
@@ -189,7 +190,8 @@ def manifest_problems(m, root: str) -> tuple:
     code = m.get("language") in CODE_LANGUAGES
     name = os.path.basename(os.path.abspath(root))
     if "name" in m and m["name"] != name:
-        p.append(f"`name` is {m['name']!r}, the directory is {name!r}")
+        p.append(f"`name` is {m['name']!r}, the directory is {name!r} (in a container or CI checkout, mount or copy the component "
+                 f"at a directory named {m['name']!r})")
     if "category" in m and m["category"] not in CATEGORIES:
         p.append(f"`category` is one of {', '.join(CATEGORIES)}")
     if "language" in m and m["language"] not in LANGUAGES:
@@ -553,14 +555,25 @@ def check_symlinks(root: str) -> Result:
     return R("symlinks", title, "medium", "pass", f"{count} symlink(s), none pointing outside the component" if count else "no symlinks")
 
 
+# What a component's install and tests need to reach a package registry from a corporate network: the proxy, the
+# CA bundle that trusts it, and the registry or index the organisation mirrors. Passed through as the tester has them.
+# A proxy URL can carry a proxy credential; the command needs the network it names, so it is handed over.
+NETWORK_VARS = ("HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
+                "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE", "NODE_EXTRA_CA_CERTS",
+                "PIP_CERT", "PIP_INDEX_URL", "NPM_CONFIG_REGISTRY", "npm_config_registry", "npm_config_cafile", "NPM_CONFIG_CAFILE",
+                "npm_config_proxy", "npm_config_https_proxy", "npm_config_noproxy")
+
+
 def run_env(work: str) -> dict:
-    """The command's whole environment: PATH and the locale, with HOME, the temporary and the XDG directories inside
-    the throwaway directory. Nothing else of the tester's environment is passed."""
-    env = {k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT") if k in os.environ}
+    """The command's whole environment: PATH, the locale and the network settings (NETWORK_VARS), with HOME, the
+    temporary and XDG directories and npm's cache inside the throwaway directory. Nothing else of the tester's
+    environment is passed: no credentials variable, and no ~/.npmrc, ~/.config/pip or ~/.netrc (HOME moved)."""
+    env = {k: os.environ[k] for k in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT") + NETWORK_VARS if k in os.environ}
     home, tmp = os.path.join(work, "home"), os.path.join(work, "tmp")
     dirs = {"HOME": home, "TMPDIR": tmp, "TEMP": tmp, "TMP": tmp, "XDG_CONFIG_HOME": os.path.join(home, ".config"),
             "XDG_CACHE_HOME": os.path.join(home, ".cache"), "XDG_DATA_HOME": os.path.join(home, ".local", "share"),
-            "XDG_STATE_HOME": os.path.join(home, ".local", "state"), "XDG_RUNTIME_DIR": os.path.join(work, "run")}
+            "XDG_STATE_HOME": os.path.join(home, ".local", "state"), "XDG_RUNTIME_DIR": os.path.join(work, "run"),
+            "npm_config_cache": os.path.join(home, ".npm")}
     for d in dirs.values():
         os.makedirs(d, mode=0o700, exist_ok=True)
     env.update(dirs)
@@ -624,6 +637,54 @@ def kill_marked(marker: str) -> None:
             continue
 
 
+# What of the collection's checkout a component may read when it sits in one (the shelf-mcp-server lists the
+# other components; a contract-minded test reads tools/). Copied, never linked, next to the candidate's copy.
+CHECKOUT_PARTS = ("components", "tools")
+
+
+def place_copy(root: str, work: str) -> str:
+    """Copy the candidate into the throwaway directory and return the copy's path.
+
+    Outside a checkout of the collection: `<work>/<directory name>`. Inside one (see checkout()): a component may
+    read its checkout (shelf-mcp-server walks up to the nearest components/ and lists the other components), so a
+    lone copy fails although the component is green in place. The copy then goes to `<work>/checkout/<its path in
+    the checkout>`, and the checkout's components/ and tools/ are copied beside it at their own places, so what
+    the component finds by walking up is the same tree it finds in place.
+
+    Why copies and not symlinks to the source: the command runs as the tester's user, and a link would let an
+    honest test that writes next to itself (a cache, a report) write into the source tree, which the throwaway
+    copy exists to prevent. Why not run in place: same reason. The cost is small: those two directories are a
+    couple of megabytes without node_modules, caches and virtualenvs (SKIP_DIRS), which are never copied. Only
+    those two parts are mirrored; anything else of the checkout (hub/, services/) is not visible to the command.
+    """
+    root = os.path.abspath(root)
+    candidate_ignore = shutil.ignore_patterns(*SKIP_DIRS - {"dist"})
+    home = checkout(root)
+    rel = os.path.relpath(root, home) if home else None
+    if not rel or rel == os.curdir or rel.startswith(os.pardir):
+        copy = os.path.join(work, os.path.basename(root))
+        shutil.copytree(root, copy, symlinks=True, ignore=candidate_ignore)
+        return copy
+    mirror = os.path.join(work, "checkout")
+    skip = shutil.ignore_patterns(*SKIP_DIRS)
+
+    def others(directory, names):
+        """The shared parts without the candidate itself (it is copied on its own, with its own ignore rule)."""
+        return {n for n in names if os.path.join(directory, n) == root} | set(skip(directory, names))
+
+    for part in CHECKOUT_PARTS:
+        src = os.path.join(home, part)
+        if os.path.isdir(src) and not within(src, root):
+            try:
+                shutil.copytree(src, os.path.join(mirror, part), symlinks=True, ignore=others)
+            except OSError:       # an unreadable sibling file: the rest is copied, and the candidate still is
+                pass
+    copy = os.path.join(mirror, rel)
+    os.makedirs(os.path.dirname(copy), exist_ok=True)
+    shutil.copytree(root, copy, symlinks=True, ignore=candidate_ignore)
+    return copy
+
+
 def run_in_copy(root: str, command: str, timeout: int) -> tuple:
     """Run a command in a throwaway copy of the component; (exit code or None on timeout, seconds, last lines).
 
@@ -632,8 +693,7 @@ def run_in_copy(root: str, command: str, timeout: int) -> tuple:
     start = time.monotonic()
     code, out = None, ""
     try:
-        copy = os.path.join(work, os.path.basename(os.path.abspath(root)))
-        shutil.copytree(root, copy, symlinks=True, ignore=shutil.ignore_patterns(*SKIP_DIRS - {"dist"}))
+        copy = place_copy(root, work)
         env = run_env(work)
         marker = secrets.token_hex(12)
         env[RUN_MARKER] = marker

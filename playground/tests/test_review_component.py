@@ -85,17 +85,18 @@ class Containment(unittest.TestCase):
     def test_home_tmp_and_xdg_point_into_the_throwaway_directory(self):
         with tempdir() as d:
             root = candidate(d)
-            code, _, tail = K.run_in_copy(root, "pwd; env", timeout=30)
+            code, _, tail = K.run_in_copy(root, "pwd; env | tr '\\n' '\\t'", timeout=30)   # one line: the output keeps 25
             self.assertEqual(code, 0, tail)
             lines = tail.splitlines()
-            work = os.path.dirname(lines[0])
-            env = dict(line.split("=", 1) for line in lines[1:] if "=" in line)
-            for k in ("HOME", "TMPDIR", "TEMP", "TMP", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR"):
+            work = lines[0][: lines[0].index(os.sep, lines[0].index(os.sep + "playground-") + 1)]   # the throwaway root (mkdtemp's)
+            env = dict(item.split("=", 1) for item in lines[1].split("\t") if "=" in item)
+            for k in ("HOME", "TMPDIR", "TEMP", "TMP", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR", "npm_config_cache"):
                 self.assertTrue(env.get(k, "").startswith(work + os.sep), f"{k}={env.get(k)}")
             if os.environ.get("HOME"):
-                self.assertNotIn(os.environ["HOME"] + "\n", tail + "\n")
+                self.assertNotIn("=" + os.environ["HOME"] + "\t", lines[1])
             allowed = {"PATH", "LANG", "LC_ALL", "SYSTEMROOT", "PYTHONDONTWRITEBYTECODE", K.RUN_MARKER, "PWD", "SHLVL", "_", "OLDPWD",
-                       "HOME", "TMPDIR", "TEMP", "TMP", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR"}
+                       "HOME", "TMPDIR", "TEMP", "TMP", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR",
+                       "npm_config_cache", *K.NETWORK_VARS}   # the proxy and CA settings pass through (review 2)
             self.assertEqual(set(env) - allowed, set())
             self.assertFalse(os.path.exists(work), "the throwaway directory is removed")
 

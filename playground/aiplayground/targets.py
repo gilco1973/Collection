@@ -227,8 +227,9 @@ class HttpAdapter(Adapter):
 
 
 class CommandAdapter(Adapter):
-    """One process per question: a JSON line on stdin ({prompt, system, context}), the answer on stdout (JSON with
-    `output` or `text`, or plain text)."""
+    """One process per question: a JSON line on stdin ({prompt, system, context}), the answer on stdout: a JSON object
+    with `output`, `text` or `tool_calls` (the last such line wins; log lines around it are ignored), or plain text
+    (all of stdout is the answer then)."""
 
     def argv(self) -> list:
         return list(self.target.command)
@@ -250,11 +251,13 @@ class CommandAdapter(Adapter):
         data = answer_line(out)
         if data is None:
             try:
-                data = json.loads(out)
+                whole = json.loads(out)
             except ValueError:
-                return Reply(status=0, text=out, raw=out[:4096], latency_ms=ms)
-        if not isinstance(data, dict):
-            return Reply(status=0, text=as_text(data), raw=out[:4096], latency_ms=ms)
+                whole = None
+            if isinstance(whole, (str, int, float, list)) and not isinstance(whole, bool):
+                return Reply(status=0, text=as_text(whole), raw=out[:4096], latency_ms=ms)
+            # Not an answer object anywhere: the whole output is the text, so a marker in it is still found.
+            return Reply(status=0, text=out, raw=out[:4096], latency_ms=ms)
         return Reply(status=0, text=as_text(data.get("output", data.get("text"))), tool_calls=normalise_tool_calls(data.get("tool_calls")),
                      citations=data.get("citations") or [], raw=out[:4096], latency_ms=ms)
 
@@ -262,17 +265,27 @@ class CommandAdapter(Adapter):
         return None
 
 
+ANSWER_KEYS = ("output", "text", "tool_calls")
+
+
 def answer_line(out: str):
-    """The answer when the last non-empty line of the output is a JSON object: whatever the solution (or a child
-    process of it) printed before that is noise, not the answer. None otherwise."""
-    lines = [line for line in out.splitlines() if line.strip()]
-    if len(lines) < 2:
-        return None
+    """The answer object in a command's output: the last line (or the whole output, pretty-printed) that parses to
+    a JSON object carrying `output`, `text` or `tool_calls`. A line after it (a structured log record, `{"level":
+    "info", ...}`) and a line before it (progress, a child process) are noise, never the answer: reading a trailing
+    log line as the answer would hide the answer's text and tool calls from every probe. None when there is no such
+    object; the caller then reads the whole output as text."""
+    for line in reversed([line for line in out.splitlines() if line.strip()]):
+        try:
+            data = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(data, dict) and any(k in data for k in ANSWER_KEYS):
+            return data
     try:
-        data = json.loads(lines[-1])
+        data = json.loads(out)
     except ValueError:
         return None
-    return data if isinstance(data, dict) else None
+    return data if isinstance(data, dict) and any(k in data for k in ANSWER_KEYS) else None
 
 
 class PythonAdapter(CommandAdapter):
