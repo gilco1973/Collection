@@ -12,6 +12,9 @@ gate() { printf '== %s\n' "$1"; }
 if [ "$what" = all ] || [ "$what" = python ]; then
   gate "shelf: manifests, vendored copies, exports current";   python3 tools/shelf.py --check
   gate "tools: unit tests";                                     python3 -m unittest discover -s tools/tests -t .
+  if python3 -c "import PIL" 2>/dev/null; then
+    gate "teaching guide: confluence pages current, uploader tests"; python3 docs/teaching/build_confluence.py --check && python3 -W ignore::ResourceWarning -m unittest discover -s docs/teaching/tests -t .
+  fi
   gate "services: vendored files identical";                    python3 services/vendor.py --check
   gate "components: python tests";                              python3 tools/shelf.py --test --only python
   gate "components: skills";                                    python3 tools/shelf.py --test --only skills

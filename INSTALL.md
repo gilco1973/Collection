@@ -16,6 +16,7 @@ The zip unpacks to one directory, `collection-<sha>/`, which is the repository i
 | `deliverables/user-manual.pdf`, `technical-guide.pdf`, `leadership-brief.pdf` | The three documents, current for this build |
 | `deliverables/collection-walkthrough.mp4` (+ `.en.vtt`) | The walkthrough video, just under nine minutes, captions burned in |
 | `deliverables/teaching-the-collection.html` | The teaching guide: every screen, every on-screen sentence, every flow and process in plain words, with a 45-minute first lesson. Opens in any browser |
+| `deliverables/confluence/` | The teaching guide split into one Confluence page per chapter, with the images as attachments and `upload.py` to put them into a space; `README.md` there says how |
 | `deliverables/screenshots/` | The hub and the guide as they render in this build |
 | `INSTALL.md` (this page), `HANDOVER.md`, `DELIVERY.txt` | How to install it; how the parts fit and who owns what; the build's sha and date |
 

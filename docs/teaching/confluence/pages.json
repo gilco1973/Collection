@@ -1,0 +1,188 @@
+{
+  "source": "docs/teaching/teaching-the-collection.html",
+  "index": {
+    "title": "Teaching the Collection",
+    "slug": "index",
+    "storage": "pages/index.xml",
+    "markdown": "markdown/index.md",
+    "attachments": []
+  },
+  "pages": [
+    {
+      "order": 1,
+      "title": "The words you will meet",
+      "slug": "00-the-words-you-will-meet",
+      "storage": "pages/00-the-words-you-will-meet.xml",
+      "markdown": "markdown/00-the-words-you-will-meet.md",
+      "attachments": []
+    },
+    {
+      "order": 2,
+      "title": "1. Signing in",
+      "slug": "01-signing-in",
+      "storage": "pages/01-signing-in.xml",
+      "markdown": "markdown/01-signing-in.md",
+      "attachments": [
+        "attachments/01-signing-in/01-signing-in-01.jpg"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "2. The top bar and the footer",
+      "slug": "02-the-top-bar-and-the-footer",
+      "storage": "pages/02-the-top-bar-and-the-footer.xml",
+      "markdown": "markdown/02-the-top-bar-and-the-footer.md",
+      "attachments": [
+        "attachments/02-the-top-bar-and-the-footer/02-the-top-bar-and-the-footer-01.jpg"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "3. Discover",
+      "slug": "03-discover",
+      "storage": "pages/03-discover.xml",
+      "markdown": "markdown/03-discover.md",
+      "attachments": [
+        "attachments/03-discover/03-discover-01.jpg"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "4. A listing page",
+      "slug": "04-a-listing-page",
+      "storage": "pages/04-a-listing-page.xml",
+      "markdown": "markdown/04-a-listing-page.md",
+      "attachments": [
+        "attachments/04-a-listing-page/04-a-listing-page-01.jpg"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "5. The employee assistant",
+      "slug": "05-the-employee-assistant",
+      "storage": "pages/05-the-employee-assistant.xml",
+      "markdown": "markdown/05-the-employee-assistant.md",
+      "attachments": [
+        "attachments/05-the-employee-assistant/05-the-employee-assistant-01.jpg"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "6. My workspace",
+      "slug": "06-my-workspace",
+      "storage": "pages/06-my-workspace.xml",
+      "markdown": "markdown/06-my-workspace.md",
+      "attachments": [
+        "attachments/06-my-workspace/06-my-workspace-01.jpg"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "7. Build: the intake brief",
+      "slug": "07-build-the-intake-brief",
+      "storage": "pages/07-build-the-intake-brief.xml",
+      "markdown": "markdown/07-build-the-intake-brief.md",
+      "attachments": [
+        "attachments/07-build-the-intake-brief/07-build-the-intake-brief-01.jpg",
+        "attachments/07-build-the-intake-brief/07-build-the-intake-brief-02.jpg",
+        "attachments/07-build-the-intake-brief/07-build-the-intake-brief-03.jpg",
+        "attachments/07-build-the-intake-brief/07-build-the-intake-brief-04.jpg",
+        "attachments/07-build-the-intake-brief/07-build-the-intake-brief-05.jpg"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "8. Build: sign-offs",
+      "slug": "08-build-sign-offs",
+      "storage": "pages/08-build-sign-offs.xml",
+      "markdown": "markdown/08-build-sign-offs.md",
+      "attachments": [
+        "attachments/08-build-sign-offs/08-build-sign-offs-01.jpg"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "9. Build: onboarding",
+      "slug": "09-build-onboarding",
+      "storage": "pages/09-build-onboarding.xml",
+      "markdown": "markdown/09-build-onboarding.md",
+      "attachments": [
+        "attachments/09-build-onboarding/09-build-onboarding-01.jpg"
+      ]
+    },
+    {
+      "order": 11,
+      "title": "10. Learn",
+      "slug": "10-learn",
+      "storage": "pages/10-learn.xml",
+      "markdown": "markdown/10-learn.md",
+      "attachments": [
+        "attachments/10-learn/10-learn-01.jpg"
+      ]
+    },
+    {
+      "order": 12,
+      "title": "11. Settings",
+      "slug": "11-settings",
+      "storage": "pages/11-settings.xml",
+      "markdown": "markdown/11-settings.md",
+      "attachments": [
+        "attachments/11-settings/11-settings-01.jpg"
+      ]
+    },
+    {
+      "order": 13,
+      "title": "12. The guide",
+      "slug": "12-the-guide",
+      "storage": "pages/12-the-guide.xml",
+      "markdown": "markdown/12-the-guide.md",
+      "attachments": [
+        "attachments/12-the-guide/12-the-guide-01.jpg",
+        "attachments/12-the-guide/12-the-guide-02.jpg",
+        "attachments/12-the-guide/12-the-guide-03.jpg",
+        "attachments/12-the-guide/12-the-guide-04.jpg"
+      ]
+    },
+    {
+      "order": 14,
+      "title": "13. Search",
+      "slug": "13-search",
+      "storage": "pages/13-search.xml",
+      "markdown": "markdown/13-search.md",
+      "attachments": [
+        "attachments/13-search/13-search-01.jpg"
+      ]
+    },
+    {
+      "order": 15,
+      "title": "14. Messages you may see",
+      "slug": "14-messages-you-may-see",
+      "storage": "pages/14-messages-you-may-see.xml",
+      "markdown": "markdown/14-messages-you-may-see.md",
+      "attachments": [
+        "attachments/14-messages-you-may-see/14-messages-you-may-see-01.jpg"
+      ]
+    },
+    {
+      "order": 16,
+      "title": "15. The processes, end to end",
+      "slug": "15-the-processes-end-to-end",
+      "storage": "pages/15-the-processes-end-to-end.xml",
+      "markdown": "markdown/15-the-processes-end-to-end.md",
+      "attachments": [
+        "attachments/15-the-processes-end-to-end/15-the-processes-end-to-end-01-19cce4f2.png",
+        "attachments/15-the-processes-end-to-end/15-the-processes-end-to-end-02-6983e8e2.png",
+        "attachments/15-the-processes-end-to-end/15-the-processes-end-to-end-03-3f63829d.png",
+        "attachments/15-the-processes-end-to-end/15-the-processes-end-to-end-04-206ae7dc.png"
+      ]
+    },
+    {
+      "order": 17,
+      "title": "16. A 45-minute first lesson",
+      "slug": "16-a-45-minute-first-lesson",
+      "storage": "pages/16-a-45-minute-first-lesson.xml",
+      "markdown": "markdown/16-a-45-minute-first-lesson.md",
+      "attachments": []
+    }
+  ]
+}

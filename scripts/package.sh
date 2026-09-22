@@ -1,6 +1,6 @@
 #!/bin/sh
 # The delivery zip: the release bundle's tree (source, the prebuilt hub, deploy files, documentation) at the top,
-# with deliverables/ (the three PDFs, the walkthrough video, the teaching guide, the screenshots) beside it, a
+# with deliverables/ (the three PDFs, the walkthrough video, the teaching guide and its Confluence pages, the screenshots) beside it, a
 # DELIVERY.txt, and one MANIFEST.sha256 over every file in the zip. INSTALL.md and HANDOVER.md are at the top
 # because the repository keeps them there.
 #   scripts/package.sh [output dir]      -> release/collection-<sha>.zip and .sha256
@@ -25,9 +25,10 @@ for f in demo/out/collection-walkthrough.mp4 demo/out/collection-walkthrough.en.
   [ -f "$f" ] && cp "$f" "$top/deliverables/" || echo "note: $f is not built; the zip ships without it (demo/README.md says how to build it)"
 done
 for f in docs/pdf/img/*.png; do cp "$f" "$top/deliverables/screenshots/"; done
+cp -R docs/teaching/confluence "$top/deliverables/confluence"      # the teaching guide as Confluence pages, with the uploader
 [ -d demo/shots ] && cp demo/shots/*.png "$top/deliverables/screenshots/" 2>/dev/null || true
 printf '%s\n' "collection $sha, packaged $(date -u +%Y-%m-%dT%H:%M:%SZ)" "" \
-  "Start with INSTALL.md. The repository is this directory (scripts/, services/, hub/ ...); the PDFs, the video, the teaching guide and the screenshots are in deliverables/." \
+  "Start with INSTALL.md. The repository is this directory (scripts/, services/, hub/ ...); the PDFs, the video, the teaching guide (and its Confluence pages) and the screenshots are in deliverables/." \
   "MANIFEST.sha256 covers every file here, deliverables included: sha256sum -c --quiet MANIFEST.sha256" > "$top/DELIVERY.txt"
 # One manifest over everything in the zip (the bundle's own manifest covered only the repository tree; this one replaces it).
 (cd "$top" && find . -type f ! -name MANIFEST.sha256 -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > MANIFEST.sha256)
