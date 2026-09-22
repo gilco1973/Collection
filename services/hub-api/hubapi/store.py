@@ -38,7 +38,11 @@ class Store:
         self.lock = threading.RLock()
         self.ttl = idempotency_ttl_s
         self._prunes = 0
-        self.migrate()
+        try:
+            self.migrate()
+        except StoreError:
+            self.conn.close()   # a refused record is left as found: no `-wal`/`-shm` of ours beside it
+            raise
         # One process owns the file: a placeholder (status 0) still here at start was claimed by a call that never
         # answered (the process died mid-call); left alone it would answer 409 in_progress until the TTL prunes it.
         with self.lock:
@@ -81,6 +85,9 @@ class Store:
         live record; whatever schema version the file is at is what the copy carries. Returns the pages copied."""
         src = sqlite3.connect(f"file:{src_path}?mode=ro", uri=True)
         try:
+            v = int(src.execute("PRAGMA user_version").fetchone()[0])
+            if v > SCHEMA_VERSION:   # the same refusal as serve: a copy of a record this build cannot read is not a backup it could restore
+                raise StoreError(f"the record is at schema version {v}; this build knows {SCHEMA_VERSION}. Restore the record or roll the build forward")
             dest = sqlite3.connect(dest_path)
             try:
                 src.backup(dest)

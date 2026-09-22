@@ -6,7 +6,8 @@
     python3 -m agentrt backup <path>    # a consistent copy of the record (SQLite online backup) for the bank's backup job
     python3 -m agentrt stop <scope> <target> --by <person>     # a kill switch: run, board or consumer; recorded on the chain
     python3 -m agentrt resume <scope> <target> --by <person>   # a vote to clear it (the consumer scope needs two people)
-A record from a newer build, a missing record, or a failed export is one named line and exit 2 (1 for a broken chain).
+A record from a newer build or a failed export is one named line and exit 2 (1 for a broken chain). A missing record
+is created by verify-record and serve (the first start); only backup refuses it, with a named line and exit 2.
 """
 from __future__ import annotations
 import json, logging, os, sys
@@ -69,7 +70,8 @@ def main(argv=None) -> int:
         who = Human(argv[argv.index("--by") + 1], argv[argv.index("--by") + 1], ("operator",))
         target = w.harness.consumer if argv[1] == "consumer" and argv[2] in ("-", "self") else argv[2]  # the harness checks "agent:<name>", not the template name
         try:
-            active = w.kills.stop(argv[1], target, who) if cmd == "stop" else w.kills.clear(argv[1], target, who)
+            (w.kills.stop if cmd == "stop" else w.kills.clear)(argv[1], target, who)
+            active = w.kills.is_stopped(argv[1], target)   # the switch's state after the vote, not the vote's return value (clear() answers "still active" to a lone vote on a switch that was never on)
         except Exception as e:  # noqa: BLE001 - an unknown scope
             print(f"{cmd} refused: {type(e).__name__}: {e}"); return 2
         print(f"{argv[1]} {target}: {'stopped' if active else 'running'} (recorded on the chain, by {who.id})"); return 0

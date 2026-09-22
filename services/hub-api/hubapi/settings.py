@@ -136,7 +136,7 @@ class Settings:
         if self.assistant == "http" and not self.assistant_url: p.append(f"{P}ASSISTANT_URL is required with the http assistant")
         if self.assistant == "bedrock":
             if not self.bedrock_region: p.append(f"{P}BEDROCK_REGION (or AWS_REGION) is required with the bedrock assistant")
-            if not self.bedrock_model_id: p.append(f"{P}BEDROCK_MODEL_ID is required with the bedrock assistant")
+            if not (self.bedrock_model_id or self.bedrock_inference_profile_arn): p.append(f"{P}BEDROCK_MODEL_ID or {P}BEDROCK_INFERENCE_PROFILE_ARN is required with the bedrock assistant")
         if self.live:
             if self.db_path == ":memory:": p.append(f"{P}DB must be a file path in staging and production (the record must survive a restart)")
             if not self.public_url.startswith("https://"): p.append(f"{P}PUBLIC_URL must be https in staging and production")

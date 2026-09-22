@@ -28,7 +28,7 @@ of the same API contract.
   silent renew, callback route, return-to), or dev personas in mock mode.
 - **Authorization** comes from the platform. `GET /me` returns the principal (roles,
   ladder, channel, teams, entitlements, preferences) and is the only authority; the
-  front end's `permits()` is a closed set of eleven actions used to *show* and
+  front end's `permits()` is a closed set of twelve actions used to *show* and
   *attempt*, never to decide. Access on every listing is resolved server-side per
   person (`open` / `request` / `view` / `contract`) and rendered as such.
 - **One HTTP client** (`src/api/client.ts`): bearer token, `X-Request-Id`, W3C

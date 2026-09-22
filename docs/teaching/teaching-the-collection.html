@@ -214,7 +214,7 @@
       <h3 id="request-flow">Ask for access, step by step</h3>
       <ol class="steps">
         <li><div><b>On the card or its listing, press "Request access" (or "Request ladder" for more autonomy).</b><span class="why">The hub only routes the ask; the platform's policy decides.</span></div></li>
-        <li><div><b>See the toast <span class="t">Request sent.</span> and the button change to "Requested".</b><span class="why">If you asked for a ladder above your own ceiling, you see instead: <span class="t">Your own ladder is L1; ask your lead to raise it first.</span></span></div></li>
+        <li><div><b>See the toast <span class="t">Request sent.</span> and the button change to "Requested".</b><span class="why">If you asked for a ladder above your own ceiling, you see instead: <span class="t">Your own ladder is L1; ask your lead to raise it first.</span> If you already have it: <span class="t">Already yours</span> · <span class="t">You already have access to …; open it from Discover.</span> If you asked before and it is still pending: <span class="t">Already asked</span> · <span class="t">Your request for … is with your lead; there is nothing to send again.</span> Nothing is sent twice.</span></div></li>
         <li><div><b>Follow it under My workspace → Your requests.</b><span class="why">Each request shows pending, granted or denied, with a note like "with your lead".</span></div></li>
       </ol>
     </section>
@@ -294,6 +294,7 @@
       <div class="scroll"><table class="ui">
         <tr><th>You see</th><th>It means</th></tr>
         <tr><td><span class="t">Start an intake brief</span> · <span class="t">A one-page brief is the whole intake. Everything after it is generated from what you file here.</span> · <span class="t">about 15 minutes · saved as you go</span> · <span class="t">Start a brief</span></td><td>The first screen when you have no draft. The six sections are listed with one line each. Pressing Start creates the draft and opens section 1.</td></tr>
+        <tr><td><span class="t">A brief names the team that owns it. You are in no team yet; ask your lead to add you, then start here.</span></td><td>In place of Start a brief, when the platform lists you in no team. A brief cannot be created without the team that owns it; once your lead has added you, the button is back.</td></tr>
         <tr><td>The rail on the left: six numbered sections, ticks on the ones done</td><td>Where you are. You may go back to any section. When you come back to Build later, your latest draft reopens at the section you left it on, not at section 1.</td></tr>
         <tr><td><span class="t">Back</span> · <span class="t">Save draft</span> · <span class="t">Continue to …</span></td><td>Continue checks the section and moves on. Save draft is for leaving; the brief also saves itself about a second after every change.</td></tr>
         <tr><td>Save states: <span class="t">saved</span> · <span class="t">saving…</span> · <span class="t">unsaved changes</span></td><td>Shown near the title. Nothing is lost if you close the tab once it says saved.</td></tr>
@@ -307,7 +308,7 @@
       <h3 id="brief-sections">The six sections, field by field</h3>
       <div class="cards">
         <div class="card"><b>1. Use case <span class="chip">name, problem, channel</span></b>
-          <span class="t">Name</span>: one line, in the words of the desk that will use it. <span class="t">The problem today</span>: what happens now, by hand, and how long it takes. <span class="t">Channel</span>: who talks to it (operator, customer, partner, batch); customer and partner channels open on road R3. <span class="t">Team</span>: the team that owns it and its cost centre.</div>
+          <span class="t">Name</span>: one line, in the words of the desk that will use it. <span class="t">The problem today</span>: what happens now, by hand, and how long it takes. <span class="t">Channel</span>: who talks to it (operator, customer, partner, batch); customer and partner channels open on road R3. <span class="t">Team</span>: the team that owns it and its cost centre; when you are in no team the field says <span class="t">You are in no team yet. Ask your lead to add you; a brief needs the team that owns it.</span> and the section will not pass until you are.</div>
         <div class="card"><b>2. People <span class="chip">owner, expert, allowance</span></b>
           <span class="t">Business owner</span>: accountable for the outcome; signs the monthly review. <span class="t">Product owner</span>: runs the build and the sandbox with the embedded engineer. <span class="t">Domain expert</span>: labels the evaluation cases. <span class="t">Labelling allowance</span>: hours a week the expert gives; under one hour stalls the corpus gate.</div>
         <div class="card"><b>3. Data and tools <span class="chip">systems, tools, classes, tier</span></b>
@@ -330,7 +331,8 @@
         <tr><td>A greyed row: <span class="t">no recorded contract yet; a first consumer cannot name it</span></td><td>That system cannot be added until its owner records a contract. Dragging it does nothing.</td></tr>
         <tr><td><span class="t">Drop anything here</span> / <span class="t">Drop to add it to the brief</span></td><td>The whole right side is the drop zone; it lights up while you drag.</td></tr>
         <tr><td><span class="t">Tools 4 of 15</span> · <span class="t">Reused from what exists</span></td><td>Your tools against the 15-tool session ceiling, and the components and services you are building on. The × on any chip or row removes it.</td></tr>
-        <tr><td><span class="t">WHAT THIS MEANS</span>: <span class="t">Highest tier so far: W1 · the ceiling is Read, which does not cover it.</span> <span class="t">Set the ceiling to Write with confirmation</span></td><td>The consequences, live. One button per fix: raise the ceiling, tick the data classes the tools read. It also says whether a lead will have to file, how many tools you have left, and that a money tool is refused for a first consumer.</td></tr>
+        <tr><td><span class="t">WHAT THIS MEANS</span>: <span class="t">Highest tier so far: W1 · the ceiling is Read, which does not cover it.</span> <span class="t">Set the ceiling to Write with confirmation</span></td><td>The consequences, live. One button per fix: raise the ceiling, tick the internal and confidential classes the tools read. Restricted is never a tick away (next row). It also says whether a lead will have to file, how many tools you have left, and that a money tool is refused for a first consumer.</td></tr>
+        <tr><td><span class="t">… reads restricted data, which a first consumer cannot use</span>; <span class="t">remove it or take the use case to the platform team for a data-class exception</span></td><td>The one line with no fix button. A tool that reads restricted data cannot be in a first consumer's brief: remove the tool, or take the use case to the platform team for a data-class exception.</td></tr>
         <tr><td><span class="t">Required with any tool · the harness</span>: five locked rows, <span class="chip accent">required</span> and a 🔒: Governed action loop, Untrusted input guard, Cited LLM engine, Audit chain, Ids-only logging · <span class="t">Every tool runs inside the governed action loop; the guard, the engine, the chain and ids-only logging come with it.</span></td><td>The harness baseline. It appears as soon as the brief names a tool and cannot be removed. Filing writes it into the brief, on the hub and again on the platform, so no solution that calls a tool is ever recorded without its harness. In the palette these components read as <span class="t">required</span> rather than offering Add. The review page lists them under <span class="t">harness</span>.</td></tr>
         <tr><td><span class="t">cos_get_case brought COS · case notes with it</span></td><td>Dropping a tool adds its system of record too, when that system has a contract.</td></tr>
         <tr><td><span class="t">Done</span></td><td>Closes the composer. Everything is already in the brief and saving itself.</td></tr>
@@ -338,7 +340,7 @@
       <ol class="steps">
         <li><div><b>In section 3, press "Browse the catalog".</b><span class="why">The composer opens over the brief.</span></div></li>
         <li><div><b>Drag a tool onto the right side, or press Add.</b><span class="why">Its system comes with it. The tier chip tells you what the tool may do.</span></div></li>
-        <li><div><b>Read "What this means" and press the fix buttons.</b><span class="why">The ceiling and the data classes are set for you; the road on the brief's right rail updates.</span></div></li>
+        <li><div><b>Read "What this means" and press the fix buttons.</b><span class="why">The ceiling and the internal and confidential classes are set for you; the road on the brief's right rail updates. A tool that reads restricted data has no button: remove it, or take the use case to the platform team.</span></div></li>
         <li><div><b>Add the components and services you build on.</b><span class="why">A signed one is review time saved; it appears under "Reused from what exists" in the brief and on the review page.</span></div></li>
         <li><div><b>Press Done and continue to section 4.</b><span class="why">Nothing else to save.</span></div></li>
       </ol>
@@ -483,6 +485,9 @@ git commit</code></li><li>The tool re-runs the tests first and refuses if they f
       <div class="scroll"><table class="ui">
         <tr><th>You see</th><th>It means, and what to do</th></tr>
         <tr><td><span class="t">Request sent.</span></td><td>Your access request is with your lead. Follow it in My workspace.</td></tr>
+        <tr><td><span class="t">Already yours</span> · <span class="t">You already have access to …; open it from Discover.</span></td><td>You asked for something your role already opens. Nothing was sent; open it from Discover.</td></tr>
+        <tr><td><span class="t">Already asked</span> · <span class="t">Your request for … is with your lead; there is nothing to send again.</span></td><td>Your earlier request is still pending. Nothing was sent again; follow it under My workspace → Your requests.</td></tr>
+        <tr><td><span class="t">A brief names the team that owns it. You are in no team yet; ask your lead to add you, then start here.</span> · <span class="t">You are in no team yet. Ask your lead to add you; a brief needs the team that owns it.</span></td><td>The Build page, and the brief's Team field, when the platform lists you in no team. Ask your lead to add you; the brief waits.</td></tr>
         <tr><td><span class="t">Recorded: owner sign-off on … 1.0.1.</span></td><td>Your sign-off is recorded on the hub. An engineer commits it.</td></tr>
         <tr><td><span class="t">Playground key rotated.</span> · <span class="t">The previous key stops working in 10 minutes.</span></td><td>Update the key where you use it.</td></tr>
         <tr><td><span class="t">Your session has ended. Sign in again to continue.</span></td><td>The token expired or was revoked. Sign in; you return to the same page.</td></tr>
@@ -494,6 +499,8 @@ git commit</code></li><li>The tool re-runs the tests first and refuses if they f
         <tr><td><span class="t">The platform hit a problem. It has been recorded; try again in a moment.</span> and a line such as <span class="t">HTTP 503 · request 7f3a…</span></td><td>Something on the platform failed. Quote the request id to support; it matches a line in the logs.</td></tr>
         <tr><td><span class="t">Loading the catalog…</span> · <span class="t">Opening the listing…</span> · <span class="t">Reading the shelf…</span> · <span class="t">Loading your briefs…</span> · <span class="t">Loading your workspace…</span> · <span class="t">Opening the assistant…</span></td><td>Waiting on the platform. If it lasts, the matching "could not be loaded" line appears with a request id.</td></tr>
         <tr><td><span class="t">The platform could not resolve your account.</span></td><td>You signed in, but the platform has no record for you. Your lead adds your group to the identity map.</td></tr>
+        <tr><td><span class="t">This conversation has reached 200 turns; start a new conversation.</span></td><td>The assistant's error banner shows the platform's sentence first. A conversation has a ceiling of 200 turns; press + for a fresh one, the old one stays in the list.</td></tr>
+        <tr><td><span class="t">Your role no longer opens this assistant.</span></td><td>The same banner, when an entitlement was removed since you opened the conversation. Ask for access from the assistant's listing.</td></tr>
       </table></div>
     </section>
 

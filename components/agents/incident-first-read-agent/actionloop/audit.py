@@ -2,7 +2,9 @@
 
 Each record carries whatever fields the caller passes (chain, tool, tier, decision, model context, taint,
 traceparent, session, trace and span ids), plus `prev` and `hash`. `verify()` walks the chain; `export()`
-writes JSON lines with the chain head as the evidence export for an operate report.
+writes JSON lines with the chain head as the evidence export for an operate report. The indexed columns (what
+`query()` filters on) are a copy of the hashed body's fields; both walks check the copy against the body, so an
+edit to a column is caught as surely as an edit to the body.
 """
 from __future__ import annotations
 import hashlib, json, sqlite3, time, threading
@@ -14,6 +16,20 @@ class AuditError(Exception):
 
 
 GENESIS = "sha256:" + "0" * 64
+COLUMNS = ("consumer", "env", "event", "tool", "tier", "decision", "deny_code")   # indexed beside the body; query() filters on them
+
+
+def _link(seq: int, prev: str, p: str, h: str, body: str, cols: tuple) -> None:
+    """One record's checks: the chain link, the hash over the body, and the indexed columns against the body."""
+    if p != prev:
+        raise AuditError(f"record {seq}: prev does not match the chain")
+    if "sha256:" + hashlib.sha256(body.encode()).hexdigest() != h:
+        raise AuditError(f"record {seq}: hash does not match its body")
+    fields = json.loads(body)
+    for name, value in zip(COLUMNS, cols):
+        expect = fields.get(name)
+        if (None if value is None else str(value)) != (None if expect is None else str(expect)):   # TEXT affinity: a number comes back as text
+            raise AuditError(f"record {seq}: column {name} does not match its body")
 
 
 class AuditChain:
@@ -53,11 +69,8 @@ class AuditChain:
     def verify(self) -> int:
         """Walk the chain; raise AuditError on the first broken link; return the number of records."""
         prev, n = GENESIS, 0
-        for seq, p, h, body in self.conn.execute("SELECT seq, prev, hash, body FROM audit ORDER BY seq"):
-            if p != prev:
-                raise AuditError(f"record {seq}: prev does not match the chain")
-            if "sha256:" + hashlib.sha256(body.encode()).hexdigest() != h:
-                raise AuditError(f"record {seq}: hash does not match its body")
+        for seq, p, h, body, *cols in self.conn.execute(f"SELECT seq, prev, hash, body, {', '.join(COLUMNS)} FROM audit ORDER BY seq"):
+            _link(seq, prev, p, h, body, tuple(cols))
             prev, n = h, n + 1
         return n
 
@@ -75,15 +88,12 @@ class AuditChain:
         """One read of the chain, verified in memory and written from that same read: the count, the head and the
         lines agree even while other threads append."""
         with self._lock:
-            rows = self.conn.execute("SELECT seq, prev, hash, body FROM audit ORDER BY seq").fetchall()
+            rows = self.conn.execute(f"SELECT seq, prev, hash, body, {', '.join(COLUMNS)} FROM audit ORDER BY seq").fetchall()
         prev, n = GENESIS, 0
-        for seq, p, h, body in rows:
-            if p != prev:
-                raise AuditError(f"record {seq}: prev does not match the chain")
-            if "sha256:" + hashlib.sha256(body.encode()).hexdigest() != h:
-                raise AuditError(f"record {seq}: hash does not match its body")
+        for seq, p, h, body, *cols in rows:
+            _link(seq, prev, p, h, body, tuple(cols))
             prev, n = h, n + 1
         with open(path, "w", encoding="utf-8") as f:
-            for _, _, _, body in rows:
-                f.write(body + "\n")
+            for row in rows:
+                f.write(row[3] + "\n")
         return {"records": n, "head": prev, "path": path, "signed": False, "note": "unsigned evidence export; anchor the head with a KMS signature in production"}

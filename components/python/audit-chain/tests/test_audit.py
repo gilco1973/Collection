@@ -18,6 +18,22 @@ class Chain(unittest.TestCase):
         self.conn.execute("UPDATE audit SET body = replace(body, 'allow', 'deny') WHERE seq=1"); self.conn.commit()
         with self.assertRaises(AuditError): self.a.verify()
 
+    def test_editing_an_indexed_column_is_caught_without_touching_the_hash(self):
+        self.a.record(consumer="c", event="decision", tool="a___b", tier="R", decision="deny", deny_code="policy.x"); self.a.record(consumer="c", event="stop")
+        self.assertEqual(self.a.verify(), 2)
+        self.conn.execute("UPDATE audit SET decision = 'allow' WHERE seq=1"); self.conn.commit()   # the body and its hash still agree; the column the harness filters on does not
+        with self.assertRaisesRegex(AuditError, "record 1: column decision"): self.a.verify()
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(AuditError, "record 1: column decision"): self.a.export(os.path.join(d, "chain.jsonl"))
+            self.assertFalse(os.path.exists(os.path.join(d, "chain.jsonl")), "nothing is exported from a record that does not verify")
+        self.conn.execute("UPDATE audit SET decision = 'deny' WHERE seq=1"); self.conn.commit()
+        self.assertEqual(self.a.verify(), 2, "the record is whole again once the column says what the body says")
+        for col, value in (("consumer", "other"), ("env", "prod"), ("event", "admit"), ("tool", "a___c"), ("tier", "W"), ("deny_code", None)):
+            self.conn.execute(f"UPDATE audit SET {col} = ? WHERE seq=1", (value,)); self.conn.commit()
+            with self.assertRaisesRegex(AuditError, f"record 1: column {col}"): self.a.verify()
+            self.conn.execute(f"UPDATE audit SET {col} = ? WHERE seq=1", (json.loads(self.conn.execute("SELECT body FROM audit WHERE seq=1").fetchone()[0]).get(col),)); self.conn.commit()
+        self.assertEqual(self.a.verify(), 2)
+
     def test_query_by_column_and_by_body_field(self):
         self.a.record(consumer="c", event="decision", tool="a___b", session="s1"); self.a.record(consumer="c", event="decision", tool="a___c", session="s2")
         self.assertEqual(len(self.a.query(tool="a___b")), 1); self.assertEqual(self.a.query(session="s2")[0]["tool"], "a___c")

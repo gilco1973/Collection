@@ -1,7 +1,7 @@
 # The same gates on Azure Pipelines: every job calls scripts/verify.sh, so the two runners cannot drift.
 trigger:
   branches: { include: ["*"] }
-pool: { vmImage: ubuntu-latest }   # or the bank's self-hosted pool; nothing here needs the public internet beyond the tool installers
+pool: { vmImage: ubuntu-latest }   # or the bank's self-hosted pool; beyond the tool installers, the hub job's `pnpm install` and the TypeScript components' `npm ci` need a package registry (the bank's npm mirror)
 stages:
   - stage: verify
     jobs:

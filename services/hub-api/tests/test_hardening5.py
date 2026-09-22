@@ -2,7 +2,8 @@
 that cannot be written after a stream never becomes a second response, the team lead who must file a write profile
 can see it, a placeholder left by a dead process is not a day of 409s, one ask per listing under concurrency and
 under a stray field, the identity map's own AI security group is honoured and its shape is typed, preferences keep
-their full shape, text fields are strings, and 'system prompt' is a concept the guide may be asked about."""
+their full shape, text fields are strings, 'system prompt' is a concept the guide may be asked about, and the bedrock
+assistant takes a model id or an inference profile."""
 import json, logging, os, re, socket, tempfile, threading, time, unittest
 from hubapi import app as A
 from hubapi.auth import IdentityMap, IdentityMapError, OidcAuth
@@ -248,3 +249,40 @@ class SystemPromptIsAConcept(unittest.TestCase):
         block = re.search(r"export const STRONG = \[(.*?)\];", src, re.S).group(1)
         strong = re.findall(r'"([^"]+)"', re.sub(r"//[^\n]*", "", block))   # the array's own strings, comments aside
         self.assertEqual(sorted(strong), sorted(STRONG_PHRASES), "hub/src/api/mock/guideRules.ts STRONG mirrors hubapi/guide.py STRONG_PHRASES")
+
+
+class BedrockModelOrProfile(unittest.TestCase):
+    """Item 11: the docs and the agent accept a model id or an inference profile ARN; the hub does too, and the
+    assistant it builds sends the profile when one is set."""
+    ARN = "arn:aws:bedrock:REGION:000000000000:application-inference-profile/PROFILE_ID"
+
+    def test_validate_wants_one_of_the_two_and_the_assistant_uses_the_profile(self):
+        from hubapi import assistant as AS
+        base = dict(assistant="bedrock", bedrock_region="REGION")
+        wanted = [p for p in Settings(**base).validate() if "BEDROCK_MODEL_ID" in p]
+        self.assertEqual(wanted, ["HUB_BEDROCK_MODEL_ID or HUB_BEDROCK_INFERENCE_PROFILE_ARN is required with the bedrock assistant"])
+        self.assertEqual([p for p in Settings(**base, bedrock_inference_profile_arn=self.ARN).validate() if "BEDROCK" in p], [], "the profile alone is enough")
+        self.assertEqual([p for p in Settings(**base, bedrock_model_id="MODEL_ID").validate() if "BEDROCK" in p], [], "so is the model id")
+        self.assertEqual(AS.build(Settings(**base, bedrock_inference_profile_arn=self.ARN), None).model_id, self.ARN)
+        self.assertEqual(AS.build(Settings(**base, bedrock_model_id="MODEL_ID", bedrock_inference_profile_arn=self.ARN), None).model_id, self.ARN, "the profile wins when both are set")
+        self.assertEqual(AS.build(Settings(**base, bedrock_model_id="MODEL_ID"), None).model_id, "MODEL_ID")
+
+
+class NewerRecordIsRefusedEverywhere(unittest.TestCase):
+    """Item 12: `backup` refuses a record from a newer build with the same `record:` line as `serve` and `prune` (a
+    copy this build cannot read is not a backup it could restore), and a refused open leaves no `-wal`/`-shm` behind."""
+
+    def test_backup_refuses_a_newer_record_and_a_refused_open_leaves_the_directory_as_found(self):
+        import sqlite3
+        from hubapi.store import StoreError
+        from tests.test_hardening2 import cli
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "hub.db"); c = sqlite3.connect(p, isolation_level=None); c.execute("PRAGMA user_version = 99"); c.close()
+            r = cli("backup", os.path.join(d, "copy.db"), HUB_DB=p)
+            self.assertEqual(r.returncode, 2, r.stderr[-300:]); self.assertIn("record: the record is at schema version 99", r.stdout); self.assertNotIn("Traceback", r.stderr)
+            self.assertFalse(os.path.exists(os.path.join(d, "copy.db")), "nothing was written")
+            with self.assertRaises(StoreError): Store(p)
+            self.assertEqual(sorted(os.listdir(d)), ["hub.db"], "a refused serve/prune leaves no -wal or -shm beside the record")
+            for cmd in (("prune",), ("serve",)):
+                r = cli(*cmd, HUB_DB=p, HUB_LISTEN_PORT="1"); self.assertEqual(r.returncode, 2, cmd)
+            self.assertEqual(sorted(os.listdir(d)), ["hub.db"])

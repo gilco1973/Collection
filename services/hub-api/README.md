@@ -22,7 +22,7 @@ single container with a record file.
 
 ```
 cd services/hub-api
-python3 -m unittest discover -s tests -t .                    # 16 tests: the contract, OIDC through a generated key, the assistants
+python3 -m unittest discover -s tests -t .                    # the suite: the contract, OIDC through a generated key, the assistants
 python3 -m hubapi check-config                                # exit 2 with every problem named, never a value
 HUB_STATIC_DIR=../../hub/dist-http python3 -m hubapi serve    # sandbox: mock personas, the fake assistant, a memory record
 ```

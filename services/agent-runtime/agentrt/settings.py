@@ -120,8 +120,8 @@ class Settings:
         if self.env not in ("sandbox", "staging", "production"): p.append(f"{P}ENV must be sandbox, staging or production")
         if self.jira_auth not in ("basic", "bearer"): p.append(f"{P}JIRA_AUTH must be basic or bearer")
         if "tickets" in self.targets and self.jira_auth == "basic" and not self.jira_user: p.append(f"{P}JIRA_USER is required with basic auth (the service account's email)")
-        bad = [f"{k}={v}" for k, v in self.deploys_pipelines.items() if not str(v).isdigit()]
-        if bad: p.append(f"{P}DEPLOYS_PIPELINES values must be pipeline ids (integers): {', '.join(bad)}")
+        bad = [k for k, v in self.deploys_pipelines.items() if not str(v).isdigit()]   # the keys only: a value is a secret-shaped thing nobody typed for a log line
+        if bad: p.append(f"{P}DEPLOYS_PIPELINES values must be pipeline ids (integers); not one for: {', '.join(bad)}")
         if self.name not in KNOWN_AGENTS: p.append(f"{P}NAME must be one of {KNOWN_AGENTS}")
         if self.identity not in ("fake", "oidc"): p.append(f"{P}IDENTITY must be fake or oidc")
         if self.signing not in ("local", "kms"): p.append(f"{P}SIGNING must be local or kms")

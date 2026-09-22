@@ -75,7 +75,8 @@ class Config(unittest.TestCase):
         finally:
             del os.environ["AGENT_LISTEN_PORT"]
         p = Settings(targets=("tickets",), jira_url="https://j", jira_auth="oauth", deploys_pipelines={"checkout": "PIPELINE_ID"}).validate()
-        self.assertTrue(any("JIRA_AUTH must be" in x for x in p)); self.assertTrue(any("pipeline ids" in x for x in p))
+        self.assertTrue(any("JIRA_AUTH must be" in x for x in p)); self.assertTrue(any("pipeline ids" in x and "checkout" in x for x in p))
+        self.assertFalse(any("PIPELINE_ID" in x for x in p), "the problem names the key, never the value")
         self.assertTrue(any("JIRA_USER is required" in x for x in Settings(targets=("tickets",), jira_url="https://j", jira_auth="basic").validate()))
 
 
@@ -145,6 +146,22 @@ class Record(unittest.TestCase):
                     self.assertEqual(main(["resume", "board", "incidents", "--by", "u_ops"]), 0)
                 self.assertIn("board incidents: running", out.getvalue())
                 self.assertEqual(main(["stop", "board"]), 2)
+                # The line is the switch's state, not the vote's: the consumer scope needs two people to stop and two to
+                # clear, so one person's vote either way leaves the switch where it was.
+                w = build(Settings(db_path=os.environ["AGENT_DB"])); me = w.harness.consumer; w.conn.close()
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out): self.assertEqual(main(["resume", "consumer", "self", "--by", "u_ops"]), 0)
+                self.assertIn(f"consumer {me}: running", out.getvalue(), "a vote to clear a switch that was never active does not report it stopped")
+                for who in ("u_ops", "u_sec"):
+                    out = io.StringIO()
+                    with contextlib.redirect_stdout(out): self.assertEqual(main(["stop", "consumer", "self", "--by", who]), 0)
+                self.assertIn(f"consumer {me}: stopped", out.getvalue(), "the second person's stop meets the quorum")
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out): self.assertEqual(main(["resume", "consumer", "self", "--by", "u_ops"]), 0)
+                self.assertIn(f"consumer {me}: stopped", out.getvalue(), "one vote of two: still stopped")
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out): self.assertEqual(main(["resume", "consumer", "self", "--by", "u_sec"]), 0)
+                self.assertIn(f"consumer {me}: running", out.getvalue())
             finally:
                 os.environ.clear(); os.environ.update(saved)
 
@@ -233,6 +250,10 @@ class ThirdReview(unittest.TestCase):
         idle.close(); half.close()
         c = http.client.HTTPConnection("127.0.0.1", self.httpd.server_address[1], timeout=5)
         c.request("GET", "/health"); c.getresponse().read()
+        for _ in range(50):  # the counter drops right after the last byte is written; give the handler thread its turn
+            with self.httpd.inflight_lock:
+                if self.httpd.inflight == 0: break
+            time.sleep(0.02)
         with self.httpd.inflight_lock:
             self.assertEqual(self.httpd.inflight, 0, "a keep-alive connection between requests is not in flight")
         c.close()
