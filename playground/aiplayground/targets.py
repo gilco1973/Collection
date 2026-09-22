@@ -7,6 +7,7 @@ probe run never stops on one bad answer.
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import queue
@@ -16,6 +17,7 @@ import sys
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 
@@ -35,6 +37,7 @@ class Reply:
     latency_ms: int = 0
     usage: dict = field(default_factory=dict)
     raw: str = ""                                    # the response as received, cut to 4 KB
+    result: object = field(default=None, repr=False, compare=False)   # MCP: the parsed JSON-RPC result, whole; not in to_json
 
     def ok(self) -> bool:
         return self.error is None
@@ -107,9 +110,11 @@ def as_text(value) -> str:
         return ""
     if isinstance(value, str):
         return value
-    if isinstance(value, list):   # a list of content blocks
-        return "".join(v.get("text", "") if isinstance(v, dict) else str(v) for v in value)
-    return json.dumps(value)
+    if isinstance(value, list):   # a list of content blocks; a block's text may be anything a solution sends
+        parts = (v.get("text") if isinstance(v, dict) else v for v in value)
+        return "".join(p if isinstance(p, str) else json.dumps(p, default=str) if isinstance(p, (list, dict)) else str(p)
+                       for p in parts if p is not None)
+    return json.dumps(value, default=str)
 
 
 def child_env(names) -> dict:
@@ -118,6 +123,31 @@ def child_env(names) -> dict:
     keep.update({n: os.environ[n] for n in names if n in os.environ})
     keep["PYTHONDONTWRITEBYTECODE"] = "1"
     return keep
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuses every redirect: following one would send the request (and its Authorization header) to a host that
+    was never checked against `allow_hosts`, and judge that host's answer as the solution's."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None   # the 3xx then surfaces as an HTTPError
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect)
+
+
+def redirect_reply(e: urllib.error.HTTPError, url: str, ms: int) -> Reply:
+    location = e.headers.get("Location", "") if e.headers else ""
+    host = urllib.parse.urlsplit(urllib.parse.urljoin(url, location)).hostname if location else None
+    return Reply(status=e.code, error=f"redirected to {host or 'an unnamed location'}: the playground does not follow redirects", latency_ms=ms)
+
+
+def send_failed(e: Exception, ms: int) -> Reply:
+    """A request that could not be sent or read. Never str(e) for a ValueError: http.client puts the offending header
+    value, a credential, in the message."""
+    if isinstance(e, ValueError):
+        return Reply(error="the request could not be sent: a header or the address is not valid", latency_ms=ms)
+    return Reply(error=f"the request failed: {type(e).__name__}", latency_ms=ms)
 
 
 # --- adapters ----------------------------------------------------------------------------------------------------
@@ -151,7 +181,9 @@ class HttpAdapter(Adapter):
         values = {"prompt": user if "{{context}}" not in json.dumps(t.body) else prompt, "system": sys_text, "context": context,
                   "messages": messages, "messages_no_system": [m for m in messages if m["role"] != "system"], "model": t.model}
         try:
-            body = C.resolve_secrets(fill(t.body, values))
+            # Secrets are resolved in the target's own template first, then the prompt's text is filled in: text from
+            # a prompt, a context or a system message is sent as written, never read as `${env:...}`.
+            body = fill(C.resolve_secrets(t.body), values)
             headers = C.resolve_secrets(dict(t.headers))
         except C.ConfigError as e:
             return Reply(error=str(e))
@@ -159,19 +191,27 @@ class HttpAdapter(Adapter):
 
     def _send(self, data: bytes, headers: dict) -> Reply:
         t = self.target
-        req = urllib.request.Request(t.url, data=data, method=t.method, headers=headers)
         start = time.monotonic()
         try:
-            with urllib.request.urlopen(req, timeout=t.timeout_s) as resp:
+            req = urllib.request.Request(t.url, data=data, method=t.method, headers=headers)
+            with _OPENER.open(req, timeout=t.timeout_s) as resp:
                 raw = resp.read(t.max_response_bytes + 1)
                 status = resp.status
         except urllib.error.HTTPError as e:
-            raw = e.read(4096)
-            return Reply(status=e.code, error=f"HTTP {e.code}", text=raw.decode("utf-8", "replace"), raw=raw[:4096].decode("utf-8", "replace"),
-                         latency_ms=int((time.monotonic() - start) * 1000))
+            ms = int((time.monotonic() - start) * 1000)
+            with e:
+                if 300 <= e.code < 400:
+                    return redirect_reply(e, t.url, ms)
+                try:
+                    raw = e.read(4096)
+                except (OSError, http.client.HTTPException):
+                    raw = b""
+            return Reply(status=e.code, error=f"HTTP {e.code}", text=raw.decode("utf-8", "replace"), raw=raw[:4096].decode("utf-8", "replace"), latency_ms=ms)
         except (urllib.error.URLError, OSError) as e:
             reason = getattr(e, "reason", e)
             return Reply(error=f"unreachable: {type(reason).__name__}: {reason}"[:300], latency_ms=int((time.monotonic() - start) * 1000))
+        except (ValueError, http.client.HTTPException) as e:
+            return send_failed(e, int((time.monotonic() - start) * 1000))
         ms = int((time.monotonic() - start) * 1000)
         if len(raw) > t.max_response_bytes:
             return Reply(status=status, error=f"the response is larger than {t.max_response_bytes} bytes", latency_ms=ms)
@@ -207,10 +247,12 @@ class CommandAdapter(Adapter):
         out = p.stdout[: t.max_response_bytes].decode("utf-8", "replace").strip()
         if p.returncode != 0:
             return Reply(status=p.returncode, error=f"exit {p.returncode}: {p.stderr.decode('utf-8', 'replace').strip()[-300:]}", text=out, latency_ms=ms)
-        try:
-            data = json.loads(out)
-        except ValueError:
-            return Reply(status=0, text=out, raw=out[:4096], latency_ms=ms)
+        data = answer_line(out)
+        if data is None:
+            try:
+                data = json.loads(out)
+            except ValueError:
+                return Reply(status=0, text=out, raw=out[:4096], latency_ms=ms)
         if not isinstance(data, dict):
             return Reply(status=0, text=as_text(data), raw=out[:4096], latency_ms=ms)
         return Reply(status=0, text=as_text(data.get("output", data.get("text"))), tool_calls=normalise_tool_calls(data.get("tool_calls")),
@@ -218,6 +260,19 @@ class CommandAdapter(Adapter):
 
     def cwd(self):
         return None
+
+
+def answer_line(out: str):
+    """The answer when the last non-empty line of the output is a JSON object: whatever the solution (or a child
+    process of it) printed before that is noise, not the answer. None otherwise."""
+    lines = [line for line in out.splitlines() if line.strip()]
+    if len(lines) < 2:
+        return None
+    try:
+        data = json.loads(lines[-1])
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
 
 
 class PythonAdapter(CommandAdapter):
@@ -248,10 +303,25 @@ def tool_reply(msg: dict, ms: int) -> Reply:
         return Reply(status=err.get("code"), error=f"JSON-RPC {err.get('code')}: {str(err.get('message'))[:300]}", raw=json.dumps(msg)[:4096], latency_ms=ms)
     result = msg.get("result") or {}
     text = as_text(result.get("content")) if isinstance(result, dict) else as_text(result)
-    r = Reply(status=0, text=text, raw=json.dumps(msg)[:4096], latency_ms=ms)
+    r = Reply(status=0, text=text, raw=json.dumps(msg)[:4096], latency_ms=ms, result=result)
     if isinstance(result, dict) and result.get("isError"):
         r.error = "tool error: " + text[:300]
     return r
+
+
+def listed_tools(r: Reply) -> list:
+    """The tools of a tools/list answer, from the parsed result (Reply.raw is cut to 4 KB)."""
+    if r.error:
+        raise RuntimeError(f"tools/list failed: {r.error}")
+    tools = r.result.get("tools") if isinstance(r.result, dict) else None
+    return [t for t in tools if isinstance(t, dict)] if isinstance(tools, list) else []
+
+
+class _Oversized:
+    """Queued by the reader in place of a line longer than the response cap (the line itself is discarded)."""
+
+
+STDERR_KEEP = 2048
 
 
 class McpStdioAdapter(Adapter):
@@ -265,6 +335,8 @@ class McpStdioAdapter(Adapter):
         self.proc = None
         self.started = False
         self.restarts = 0            # how often the server died during the run and was started again
+        self.stderr_tail = bytearray()
+        self.stderr_reader = None
 
     def _start(self):
         if self.started and self.proc is not None and self.proc.poll() is not None:
@@ -275,50 +347,142 @@ class McpStdioAdapter(Adapter):
         if self.started:
             return
         self.started = True
-        self.proc = subprocess.Popen(self.target.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=child_env(self.target.env))
-        threading.Thread(target=self._read, args=(self.proc, self.lines), daemon=True).start()
+        self.stderr_tail = bytearray()
+        self.proc = subprocess.Popen(self.target.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=child_env(self.target.env))
+        threading.Thread(target=self._read, args=(self.proc.stdout, self.lines, int(self.target.max_response_bytes)), daemon=True).start()
+        self.stderr_reader = threading.Thread(target=self._read_stderr, args=(self.proc.stderr, self.stderr_tail), daemon=True)
+        self.stderr_reader.start()
         init = self._call("initialize", {"protocolVersion": MCP_PROTOCOL, "capabilities": {}, "clientInfo": {"name": "ai-playground", "version": "1"}})
         if init.error:
             raise RuntimeError(f"initialize failed: {init.error}")
-        self._write({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
+        try:
+            self._write({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}}, time.monotonic() + self.target.timeout_s)
+        except (TimeoutError, OSError):
+            pass   # the next call finds the server dead or stuck and says so
 
     @staticmethod
-    def _read(proc, lines):
-        for line in proc.stdout:
-            lines.put(line)
-        lines.put(None)
+    def _read(pipe, lines, cap):
+        """Lines of the server's stdout, each read with a bound: a line longer than `cap` bytes is discarded as it
+        arrives and queued as _Oversized, so a flood never sits in memory. The reader owns the pipe and closes it."""
+        try:
+            while True:
+                line = pipe.readline(cap + 1)
+                if not line:
+                    break
+                if len(line) > cap and not line.endswith(b"\n"):
+                    while True:   # skip the rest of the line
+                        rest = pipe.readline(65536)
+                        if not rest or rest.endswith(b"\n"):
+                            break
+                    lines.put(_Oversized())
+                    continue
+                lines.put(line)
+        except (OSError, ValueError):
+            pass
+        finally:
+            lines.put(None)
+            try:
+                pipe.close()
+            except (OSError, ValueError):
+                pass
 
-    def _write(self, msg):
-        self.proc.stdin.write((json.dumps(msg) + "\n").encode("utf-8"))
-        self.proc.stdin.flush()
+    @staticmethod
+    def _read_stderr(pipe, tail):
+        """Keeps the last STDERR_KEEP bytes of the server's stderr: why it exited, when it does."""
+        try:
+            while True:
+                chunk = pipe.read1(4096)
+                if not chunk:
+                    break
+                tail.extend(chunk)
+                del tail[:-STDERR_KEEP]
+        except (OSError, ValueError):
+            pass
+        finally:
+            try:
+                pipe.close()
+            except (OSError, ValueError):
+                pass
+
+    def _stderr_line(self) -> str:
+        if self.stderr_reader is not None:
+            self.stderr_reader.join(0.5)   # the server has exited: let the last of its stderr arrive
+        lines = [line.strip() for line in bytes(self.stderr_tail).decode("utf-8", "replace").splitlines() if line.strip()]
+        return lines[-1][-200:] if lines else ""
+
+    def _exited(self, ms: int = 0) -> Reply:
+        last = self._stderr_line()
+        return Reply(error="the server has exited" + (f" (its last words on stderr: {last})" if last else ""), latency_ms=ms)
+
+    def _write(self, msg, deadline):
+        """Sends one message, bounded by the deadline. A server that stops reading would block a plain write for good,
+        so the write runs in a thread; when it is still stuck at the deadline the server is killed (the next call
+        starts a fresh one, counted in `restarts`) and TimeoutError is raised."""
+        proc, data, failed = self.proc, (json.dumps(msg) + "\n").encode("utf-8"), []
+
+        def write():
+            try:
+                proc.stdin.write(data)
+                proc.stdin.flush()
+            except (OSError, ValueError) as e:
+                failed.append(e)
+
+        writer = threading.Thread(target=write, daemon=True)
+        writer.start()
+        writer.join(max(0.0, deadline - time.monotonic()))
+        if writer.is_alive():
+            self._kill(proc)
+            writer.join(3)
+            raise TimeoutError
+        if failed:
+            raise BrokenPipeError
+
+    @staticmethod
+    def _kill(proc):
+        try:
+            proc.kill()
+            proc.wait(timeout=3)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
 
     def _call(self, method, params) -> Reply:
         msg = self.rpc.request(method, params)
         start = time.monotonic()
-        try:
-            self._write(msg)
-        except (BrokenPipeError, OSError):
-            return Reply(error="the server has exited")
         deadline = start + self.target.timeout_s
+        timed_out = Reply(error=f"no answer within {self.target.timeout_s} s", latency_ms=int(self.target.timeout_s * 1000))
+        try:
+            self._write(msg, deadline)
+        except TimeoutError:
+            return timed_out
+        except OSError:
+            return self._exited()
         while True:
             left = deadline - time.monotonic()
             if left <= 0:
-                return Reply(error=f"no answer within {self.target.timeout_s} s", latency_ms=int(self.target.timeout_s * 1000))
+                return timed_out
             try:
                 line = self.lines.get(timeout=left)
             except queue.Empty:
                 continue
+            ms = int((time.monotonic() - start) * 1000)
             if line is None:
-                return Reply(error="the server has exited", latency_ms=int((time.monotonic() - start) * 1000))
+                return self._exited(ms)
+            if isinstance(line, _Oversized):
+                return Reply(error=f"the answer is larger than {self.target.max_response_bytes} bytes", latency_ms=ms)
             try:
                 answer = json.loads(line)
             except ValueError:
                 continue   # a server that logs to stdout; not ours to answer
             if isinstance(answer, dict) and answer.get("method") and "id" in answer:   # a request from the server
-                self._write({"jsonrpc": "2.0", "id": answer["id"], "error": {"code": -32601, "message": "the playground declines server requests"}})
+                try:
+                    self._write({"jsonrpc": "2.0", "id": answer["id"], "error": {"code": -32601, "message": "the playground declines server requests"}}, deadline)
+                except TimeoutError:
+                    return timed_out
+                except OSError:
+                    return self._exited(ms)
                 continue
             if isinstance(answer, dict) and answer.get("id") == msg["id"]:
-                return tool_reply(answer, int((time.monotonic() - start) * 1000))
+                return tool_reply(answer, ms)
 
     def raw(self, method: str, params) -> Reply:
         """Any method, with any params: the tool probes send malformed calls on purpose."""
@@ -329,21 +493,18 @@ class McpStdioAdapter(Adapter):
         return self._call(method, params)
 
     def tools(self):
-        r = self.raw("tools/list", {})
-        if r.error:
-            raise RuntimeError(f"tools/list failed: {r.error}")
-        return (json.loads(r.raw).get("result") or {}).get("tools") or []
+        return listed_tools(self.raw("tools/list", {}))
 
     def call_tool(self, name, arguments):
         return self.raw("tools/call", {"name": name, "arguments": arguments})
 
     @staticmethod
     def _release(proc):
-        for pipe in (proc.stdin, proc.stdout):
-            try:
-                pipe.close()
-            except (OSError, ValueError):
-                pass
+        # stdout and stderr belong to their reader threads, which close them at end of file
+        try:
+            proc.stdin.close()
+        except (OSError, ValueError):
+            pass
 
     def close(self):
         if not self.proc:
@@ -352,7 +513,7 @@ class McpStdioAdapter(Adapter):
             try:
                 self.proc.stdin.close()
                 self.proc.wait(timeout=3)
-            except (OSError, subprocess.TimeoutExpired):
+            except (OSError, ValueError, subprocess.TimeoutExpired):
                 self.proc.kill()
                 self.proc.wait(timeout=3)
         self._release(self.proc)
@@ -371,23 +532,38 @@ class McpHttpAdapter(Adapter):
     def _post(self, msg) -> Reply:
         t = self.target
         try:
+            # only the target's own header templates are resolved; nothing from a call's arguments is
             headers = C.resolve_secrets({"Content-Type": "application/json", "Accept": "application/json, text/event-stream", **t.headers})
         except C.ConfigError as e:
             return Reply(error=str(e))
         if self.session:
             headers["Mcp-Session-Id"] = self.session
         start = time.monotonic()
-        req = urllib.request.Request(t.url, data=json.dumps(msg).encode("utf-8"), method="POST", headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=t.timeout_s) as resp:
+            req = urllib.request.Request(t.url, data=json.dumps(msg).encode("utf-8"), method="POST", headers=headers)
+            with _OPENER.open(req, timeout=t.timeout_s) as resp:
                 self.session = resp.headers.get("Mcp-Session-Id") or self.session
-                raw = resp.read(t.max_response_bytes + 1).decode("utf-8", "replace")
+                body = resp.read(t.max_response_bytes + 1)
+                status = resp.status
                 ctype = resp.headers.get("Content-Type", "")
         except urllib.error.HTTPError as e:
-            return Reply(status=e.code, error=f"HTTP {e.code}", text=e.read(2048).decode("utf-8", "replace"), latency_ms=int((time.monotonic() - start) * 1000))
+            ms = int((time.monotonic() - start) * 1000)
+            with e:
+                if 300 <= e.code < 400:
+                    return redirect_reply(e, t.url, ms)
+                try:
+                    text = e.read(2048).decode("utf-8", "replace")
+                except (OSError, http.client.HTTPException):
+                    text = ""
+            return Reply(status=e.code, error=f"HTTP {e.code}", text=text, latency_ms=ms)
         except (urllib.error.URLError, OSError) as e:
             return Reply(error=f"unreachable: {getattr(e, 'reason', e)}"[:300])
+        except (ValueError, http.client.HTTPException) as e:
+            return send_failed(e, int((time.monotonic() - start) * 1000))
         ms = int((time.monotonic() - start) * 1000)
+        if len(body) > t.max_response_bytes:
+            return Reply(status=status, error=f"the answer is larger than {t.max_response_bytes} bytes", latency_ms=ms)
+        raw = body.decode("utf-8", "replace")
         if "id" not in msg:
             return Reply(status=202, latency_ms=ms)
         bodies = [l[5:].strip() for l in raw.splitlines() if l.startswith("data:")] if "event-stream" in ctype else [raw]
@@ -411,10 +587,7 @@ class McpHttpAdapter(Adapter):
         return self._post(self.rpc.request(method, params))
 
     def tools(self):
-        r = self.raw("tools/list", {})
-        if r.error:
-            raise RuntimeError(f"tools/list failed: {r.error}")
-        return (json.loads(r.raw).get("result") or {}).get("tools") or []
+        return listed_tools(self.raw("tools/list", {}))
 
     def call_tool(self, name, arguments):
         return self.raw("tools/call", {"name": name, "arguments": arguments})

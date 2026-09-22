@@ -4,18 +4,24 @@
 
 The function is called with the keyword arguments it accepts out of prompt, system and context (a function that
 takes one positional argument gets the prompt). It may return a string, or a dict with `output` (or `text`),
-`tool_calls` and `citations`. The answer is one JSON line on stdout; the function's own printing goes to stderr so
-it cannot be mistaken for the answer.
+`tool_calls` and `citations`. The answer is one JSON line on stdout; everything else written to stdout goes to
+stderr so it cannot be mistaken for the answer: the function's `print`, and also what reaches file descriptor 1
+directly (`os.write(1, ...)`, a C extension, a child process), because descriptor 1 itself is pointed at stderr and the
+answer is written to a saved copy of the original.
 """
 import contextlib
 import importlib
 import inspect
 import json
+import os
 import sys
 
 
 def main() -> int:
     directory, target = sys.argv[1], sys.argv[2]
+    sys.stdout.flush()
+    answer_fd = os.dup(1)      # the real stdout, kept for the answer only (not inherited by child processes)
+    os.dup2(2, 1)              # from here on, anything written to fd 1 lands on stderr
     module_name, _, func_name = target.partition(":")
     sys.path.insert(0, directory)
     request = json.loads(sys.stdin.readline() or "{}")
@@ -31,7 +37,9 @@ def main() -> int:
         result = {"output": result}
     elif not isinstance(result, dict):
         result = {"output": json.dumps(result, default=str)}
-    sys.stdout.write(json.dumps(result, default=str) + "\n")
+    sys.stdout.flush()
+    with os.fdopen(answer_fd, "w", encoding="utf-8") as out:
+        out.write(json.dumps(result, default=str) + "\n")
     return 0
 
 

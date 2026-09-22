@@ -17,7 +17,8 @@ KINDS = ("http", "command", "python", "mcp-stdio", "mcp-http", "demo")
 ENVIRONMENTS = ("sandbox", "dev", "test", "staging")
 LOOPBACK = ("127.0.0.1", "localhost", "::1")
 SECRET_REF = re.compile(r"\$\{env:([A-Z_][A-Z0-9_]*)\}")
-NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}\Z")      # \Z, not $: `$` also matches before a trailing newline
+ENV_NAME = re.compile(r"^[A-Z_][A-Z0-9_]*\Z")
 
 # Request and response shapes of the common chat APIs, so a target file names a preset instead of a body.
 PRESETS = {
@@ -97,12 +98,17 @@ class Target:
 
 
 def resolve_secrets(value, env=None):
-    """Replace every `${env:NAME}` in a string, list or dict; a missing variable is an error naming it."""
+    """Replace every `${env:NAME}` in a string, list or dict; a missing variable is an error naming it. Only a
+    target's own templates (headers, body) go through here, never text filled in from a prompt. A value holding a
+    line break is refused by name: it would split a header, and the error the HTTP library raises prints the value."""
     env = os.environ if env is None else env
     if isinstance(value, str):
         def sub(m):
             if m.group(1) not in env:
                 raise ConfigError(f"the environment variable {m.group(1)} is not set (the target reads a credential from it)")
+            if "\r" in env[m.group(1)] or "\n" in env[m.group(1)]:
+                raise ConfigError(f"the environment variable {m.group(1)} contains a line break; remove it "
+                                  "(a .env file saved with Windows line endings leaves one at the end)")
             return env[m.group(1)]
         return SECRET_REF.sub(sub, value)
     if isinstance(value, list):
@@ -154,7 +160,7 @@ def load(source) -> Target:
     for req in ("name", "kind", "environment"):
         if not raw.get(req):
             raise ConfigError(f"`{req}` is required")
-    if not NAME.match(str(raw["name"])):
+    if not NAME.fullmatch(str(raw["name"])):
         raise ConfigError("`name` is lower case letters, digits, dot, dash or underscore, at most 64")
     if raw["kind"] not in KINDS:
         raise ConfigError(f"`kind` is one of {', '.join(KINDS)}")
@@ -193,7 +199,7 @@ def load(source) -> Target:
             raise ConfigError(f"`path` is not a directory: {t.path}")
     if t.kind == "demo" and t.demo not in ("safe", "vulnerable"):
         raise ConfigError("`demo` is safe or vulnerable")
-    if not all(isinstance(e, str) and re.match(r"^[A-Z_][A-Z0-9_]*$", e) for e in t.env):
+    if not all(isinstance(e, str) and ENV_NAME.fullmatch(e) for e in t.env):
         raise ConfigError("`env` lists environment variable names")
     if not (0 < float(t.timeout_s) <= 600):
         raise ConfigError("`timeout_s` is between 0 and 600")
