@@ -70,9 +70,10 @@ class ChatProbes(unittest.TestCase):
                 pass
 
             def do_POST(self):
-                self.rfile.read(int(self.headers["Content-Length"]))
-                body = b'{"error": "refused by the input guard"}'
-                self.send_response(422)
+                raw = self.rfile.read(int(self.headers["Content-Length"]))
+                shaped = b"ignore" in raw.lower()   # a harmless question of the same size is answered
+                body = b'{"error": "refused by the input guard"}' if shaped else b'{"output": "Blue."}'
+                self.send_response(422 if shaped else 200)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)

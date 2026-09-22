@@ -31,8 +31,20 @@ NOT_A_REFUSAL = (401, 404, 407, 408, 429)   # unauthorised, not found, proxy, ti
 SOURCE_MARK = re.compile(r"\[(?:doc|source|src|ref)\s*:|§", re.I)   # a citation, not the word "source"
 
 
+RESERVED_NAMES = {"contract"} | {"security", "robustness", "quality", "all", "none"}   # result ids and probe groups use them
+
+
 class SuiteError(ValueError):
     pass
+
+
+def check_name(name: str) -> None:
+    """A suite's cases report as `<name>/<id>`: a name must not collide with the contract check's ids
+    (`contract/tests`), a probe group, or add a path segment of its own."""
+    if name.strip().lower() in RESERVED_NAMES:
+        raise SuiteError(f"the suite name {name!r} is reserved (reserved: {', '.join(sorted(RESERVED_NAMES))}); name the suite after what it tests")
+    if "/" in name or name != name.strip():
+        raise SuiteError(f"the suite name {name!r} has a `/` or surrounding spaces; case ids are reported as <name>/<id>")
 
 
 def load(source) -> dict:
@@ -48,6 +60,7 @@ def load(source) -> dict:
             raise SuiteError(f"the suite is not JSON: line {e.lineno}: {e.msg}") from None
     if not isinstance(raw, dict) or not isinstance(raw.get("name"), str) or not raw["name"]:
         raise SuiteError("a suite is an object with a `name` and `cases`")
+    check_name(raw["name"])
     cases = raw.get("cases")
     if not isinstance(cases, list) or not cases:
         raise SuiteError(f"{raw['name']}: `cases` is a non-empty list")
@@ -69,6 +82,14 @@ def load(source) -> dict:
             raise SuiteError(f"{where} ({c['id']}): unknown expectation(s): {', '.join(sorted(unknown))}")
         _check_types(f"{where} ({c['id']})", c, expect)
     return raw
+
+
+def check_distinct(suites) -> None:
+    """Suites in one run have different names: their cases' result ids (`<name>/<id>`) would collide otherwise."""
+    names = [s["name"] for s in suites]
+    twice = sorted({n for n in names if names.count(n) > 1})
+    if twice:
+        raise SuiteError(f"two suites in one run have the same name: {', '.join(twice)}; rename one")
 
 
 def _check_types(where: str, c: dict, expect: dict) -> None:

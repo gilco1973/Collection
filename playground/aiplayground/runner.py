@@ -30,10 +30,7 @@ def smoke(adapter, secrets=()) -> str | None:
         if r.error:
             status = r.status if isinstance(r.status, int) else None
             said = " ".join((r.text or "").split())[:200]
-            for s in secrets:
-                if s:
-                    said = said.replace(s, "[secret]")
-            detail = r.error + (f": {said}" if said and said not in r.error else "")
+            detail = scrub(r.error + (f": {said}" if said and said not in r.error else ""), secrets)
             if status is not None and 400 <= status < 500:
                 return f"the solution refused a plain question: {detail}"
             return f"the solution did not answer a plain question: {detail}"
@@ -41,8 +38,15 @@ def smoke(adapter, secrets=()) -> str | None:
     try:
         adapter.tools()
     except (RuntimeError, OSError, ValueError) as e:
-        return f"the tool server did not list its tools: {e}"
+        return scrub(f"the tool server did not list its tools: {e}", secrets)
     return None
+
+
+def scrub(text: str, secrets=()) -> str:
+    """The text with every secret value replaced, longest first (so a value inside another is not left half-shown)."""
+    for s in sorted((s for s in secrets if s), key=len, reverse=True):
+        text = text.replace(s, "[secret]")
+    return text
 
 
 def run(target: C.Target | None = None, *, probes: str | list | None = None, suites: list = (), component_dir: str | None = None,
@@ -54,6 +58,7 @@ def run(target: C.Target | None = None, *, probes: str | list | None = None, sui
         raise ValueError("name a target, a component directory, or both")
     started = Rp.now()
     loaded = [S.load(s) for s in suites]
+    S.check_distinct(loaded)
     chosen = P.select(DEFAULT_PROBES[role] if probes is None else probes, target) if target else []
     total = (len(chosen) + sum(len(s["cases"]) for s in loaded) if target else 0) + (1 if component_dir else 0)
     done = [0]
