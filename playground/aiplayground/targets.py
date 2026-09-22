@@ -125,6 +125,52 @@ def child_env(names) -> dict:
     return keep
 
 
+SECRET_MARK = "[secret]"
+MIN_FRAGMENT = 8   # the shortest piece of a credential scrubbed where text was cut; shorter pieces are ordinary text
+
+
+def scrub_text(text: str, secrets) -> str:
+    """The text with every credential value replaced by [secret], longest first (a value inside another is not left
+    half-shown), and, defensively, a piece of a credential of at least MIN_FRAGMENT characters that sits at an edge
+    of the text: the text starts with the end of a value, or ends with its start, where something cut it."""
+    if not text or not secrets:
+        return text
+    values = sorted({s for s in secrets if isinstance(s, str) and s}, key=len, reverse=True)
+    for s in values:
+        text = text.replace(s, SECRET_MARK)
+    for s in values:
+        for n in range(len(s) - 1, MIN_FRAGMENT - 1, -1):     # the longest piece first
+            if text.startswith(s[-n:]):
+                text = SECRET_MARK + text[n:]
+                break
+        for n in range(len(s) - 1, MIN_FRAGMENT - 1, -1):
+            if text.endswith(s[:n]):
+                text = text[:-n] + SECRET_MARK
+                break
+    return text
+
+
+def clip(text: str, limit: int, secrets, *, tail: bool = False) -> str:
+    """At most `limit` characters of the text (its start, or its end with `tail`), scrubbed BEFORE the cut, so a cut
+    never leaves part of a credential that no longer matches the whole value."""
+    text = scrub_text(text or "", secrets)
+    if len(text) > limit:
+        text = scrub_text(text[-limit:] if tail else text[:limit], secrets)
+    return text
+
+
+def clip_bytes(data: bytes, limit: int, secrets, *, tail: bool = False) -> str:
+    """At most `limit` bytes of output (its start, or its end with `tail`) as text, scrubbed before the cut: a margin
+    as long as the longest credential is read past the limit, so a value that straddles it is still whole."""
+    margin = max((len(s.encode("utf-8")) for s in secrets or () if isinstance(s, str)), default=0)
+    part = data[-(limit + margin):] if tail else data[: limit + margin]
+    text = scrub_text(part.decode("utf-8", "replace"), secrets)
+    enc = text.encode("utf-8")
+    if len(enc) > limit:
+        text = scrub_text((enc[-limit:] if tail else enc[:limit]).decode("utf-8", "ignore"), secrets)
+    return text
+
+
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     """Refuses every redirect: following one would send the request (and its Authorization header) to a host that
     was never checked against `allow_hosts`, and judge that host's answer as the solution's."""
@@ -158,6 +204,9 @@ class Adapter:
 
     def __init__(self, target: C.Target):
         self.target = target
+        # The values behind the target's credential names, read once: every error, text and raw an adapter returns is
+        # scrubbed of them before it is cut, so no cut leaves part of a value behind (the report scrubs whole values).
+        self.secrets = C.secret_values(target)
 
     def ask(self, prompt: str, *, system: str = "", context: str = "") -> Reply:
         return Reply(error=f"a {self.target.kind} target is not asked questions")
@@ -170,6 +219,10 @@ class Adapter:
 
     def close(self) -> None:
         pass
+
+    def _margin(self) -> int:
+        """How far past a byte limit to read so a credential that straddles it is still whole when it is scrubbed."""
+        return max((len(s.encode("utf-8")) for s in self.secrets), default=0)
 
 
 class HttpAdapter(Adapter):
@@ -203,13 +256,14 @@ class HttpAdapter(Adapter):
                 if 300 <= e.code < 400:
                     return redirect_reply(e, t.url, ms)
                 try:
-                    raw = e.read(4096)
+                    raw = e.read(4096 + self._margin())
                 except (OSError, http.client.HTTPException):
                     raw = b""
-            return Reply(status=e.code, error=f"HTTP {e.code}", text=raw.decode("utf-8", "replace"), raw=raw[:4096].decode("utf-8", "replace"), latency_ms=ms)
+            body = clip_bytes(raw, 4096, self.secrets)
+            return Reply(status=e.code, error=f"HTTP {e.code}", text=body, raw=body, latency_ms=ms)
         except (urllib.error.URLError, OSError) as e:
             reason = getattr(e, "reason", e)
-            return Reply(error=f"unreachable: {type(reason).__name__}: {reason}"[:300], latency_ms=int((time.monotonic() - start) * 1000))
+            return Reply(error=clip(f"unreachable: {type(reason).__name__}: {reason}", 300, self.secrets), latency_ms=int((time.monotonic() - start) * 1000))
         except (ValueError, http.client.HTTPException) as e:
             return send_failed(e, int((time.monotonic() - start) * 1000))
         ms = int((time.monotonic() - start) * 1000)
@@ -219,17 +273,19 @@ class HttpAdapter(Adapter):
         try:
             data = json.loads(text)
         except ValueError:
-            return Reply(status=status, text=text, raw=text[:4096], latency_ms=ms)
+            return Reply(status=status, text=scrub_text(text, self.secrets), raw=clip(text, 4096, self.secrets), latency_ms=ms)
         r = t.response
         usage = {k: pick(data, r[k]) for k in ("usage_in", "usage_out") if r.get(k) and pick(data, r[k]) is not None}
-        return Reply(status=status, text=as_text(pick(data, r.get("text", ""))), tool_calls=normalise_tool_calls(pick(data, r.get("tool_calls", ""))),
-                     citations=pick(data, r.get("citations", "")) or [], latency_ms=ms, usage=usage, raw=text[:4096])
+        return Reply(status=status, text=scrub_text(as_text(pick(data, r.get("text", ""))), self.secrets),
+                     tool_calls=normalise_tool_calls(pick(data, r.get("tool_calls", ""))),
+                     citations=pick(data, r.get("citations", "")) or [], latency_ms=ms, usage=usage, raw=clip(text, 4096, self.secrets))
 
 
 class CommandAdapter(Adapter):
     """One process per question: a JSON line on stdin ({prompt, system, context}), the answer on stdout: a JSON object
-    with `output`, `text` or `tool_calls` (the last such line wins; log lines around it are ignored), or plain text
-    (all of stdout is the answer then)."""
+    with `output` or `text` (the last such line wins; log lines around it are ignored), or plain text (then the
+    lines of stdout that are not JSON are the answer, and a line carrying only `tool_calls`, a trace of the step,
+    adds its tool calls). See command_answer."""
 
     def argv(self) -> list:
         return list(self.target.command)
@@ -245,47 +301,81 @@ class CommandAdapter(Adapter):
         except OSError as e:
             return Reply(error=f"cannot start the command: {e.strerror}")
         ms = int((time.monotonic() - start) * 1000)
-        out = p.stdout[: t.max_response_bytes].decode("utf-8", "replace").strip()
+        # scrubbed before anything is cut: the response cap here, 300 characters of stderr, 4 KB of raw
+        out = clip_bytes(p.stdout, int(t.max_response_bytes), self.secrets).strip()
         if p.returncode != 0:
-            return Reply(status=p.returncode, error=f"exit {p.returncode}: {p.stderr.decode('utf-8', 'replace').strip()[-300:]}", text=out, latency_ms=ms)
-        data = answer_line(out)
-        if data is None:
-            try:
-                whole = json.loads(out)
-            except ValueError:
-                whole = None
-            if isinstance(whole, (str, int, float, list)) and not isinstance(whole, bool):
-                return Reply(status=0, text=as_text(whole), raw=out[:4096], latency_ms=ms)
-            # Not an answer object anywhere: the whole output is the text, so a marker in it is still found.
-            return Reply(status=0, text=out, raw=out[:4096], latency_ms=ms)
-        return Reply(status=0, text=as_text(data.get("output", data.get("text"))), tool_calls=normalise_tool_calls(data.get("tool_calls")),
-                     citations=data.get("citations") or [], raw=out[:4096], latency_ms=ms)
+            err = scrub_text(p.stderr.decode("utf-8", "replace"), self.secrets).strip()
+            return Reply(status=p.returncode, error=f"exit {p.returncode}: {clip(err, 300, self.secrets, tail=True)}", text=out, latency_ms=ms)
+        raw = clip(out, 4096, self.secrets)
+        ans = command_answer(out)
+        return Reply(status=0, text=ans["text"], tool_calls=ans["tool_calls"], citations=ans["citations"], raw=raw, latency_ms=ms)
 
     def cwd(self):
         return None
 
 
-ANSWER_KEYS = ("output", "text", "tool_calls")
+ANSWER_KEYS = ("output", "text")        # an object carrying one of these is the answer
+TOOL_KEY = "tool_calls"                 # an object carrying only this (a step's trace) adds its tool calls
 
 
-def answer_line(out: str):
-    """The answer object in a command's output: the last line (or the whole output, pretty-printed) that parses to
-    a JSON object carrying `output`, `text` or `tool_calls`. A line after it (a structured log record, `{"level":
-    "info", ...}`) and a line before it (progress, a child process) are noise, never the answer: reading a trailing
-    log line as the answer would hide the answer's text and tool calls from every probe. None when there is no such
-    object; the caller then reads the whole output as text."""
-    for line in reversed([line for line in out.splitlines() if line.strip()]):
-        try:
-            data = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(data, dict) and any(k in data for k in ANSWER_KEYS):
-            return data
+def _answer_text(data: dict) -> str:
+    return as_text(data["output"] if data.get("output") is not None else data.get("text"))
+
+
+def _unique_calls(calls: list) -> list:
+    seen, out = set(), []
+    for c in calls:
+        key = json.dumps(c, sort_keys=True, default=str)
+        if key not in seen:
+            seen.add(key)
+            out.append(c)
+    return out
+
+
+def command_answer(out: str) -> dict:
+    """{text, tool_calls, citations} from a command's stdout.
+
+    - The whole output is one JSON value: an object with `output`, `text` or `tool_calls` is read as such; a string,
+      number or list is the text; anything else (an object without those keys) leaves the whole output as the text.
+    - Otherwise, line by line: the answer object is the LAST line that parses to a JSON object carrying `output` or
+      `text`; lines before and after it (progress, a structured log record `{"level": "info", ...}`) are never the
+      answer. A line carrying `tool_calls` but no text (a trace of the step, `{"step": "final", "tool_calls": []}`)
+      is not the answer either: it adds its tool calls. The text is the answer object's; when there is none, or it
+      is empty, the text is the lines of stdout that are not JSON objects or lists, so a plain-text answer followed
+      by a trace line is still read (and a marker in it still found). With neither an answer object nor a trace
+      line, the whole output is the text."""
+    empty = {"text": "", "tool_calls": [], "citations": []}
     try:
-        data = json.loads(out)
+        whole = json.loads(out)
     except ValueError:
-        return None
-    return data if isinstance(data, dict) and any(k in data for k in ANSWER_KEYS) else None
+        whole = ValueError
+    if whole is not ValueError:
+        if isinstance(whole, dict):
+            if any(k in whole for k in ANSWER_KEYS + (TOOL_KEY,)):
+                return {"text": _answer_text(whole), "tool_calls": normalise_tool_calls(whole.get(TOOL_KEY)),
+                        "citations": whole.get("citations") or []}
+            return dict(empty, text=out)
+        if isinstance(whole, (str, int, float, list)) and not isinstance(whole, bool):
+            return dict(empty, text=as_text(whole))
+        return dict(empty, text=out)
+    lines = out.splitlines()
+    parsed = []
+    for line in lines:
+        try:
+            parsed.append(json.loads(line) if line.strip() else None)
+        except ValueError:
+            parsed.append(None)
+    answer = next((d for d in reversed(parsed) if isinstance(d, dict) and any(k in d for k in ANSWER_KEYS)), None)
+    traces = [d for d in parsed if isinstance(d, dict) and TOOL_KEY in d and not any(k in d for k in ANSWER_KEYS)]
+    if answer is None and not traces:
+        return dict(empty, text=out)   # no answer object anywhere: the whole output is the text
+    plain = "\n".join(line for line, d in zip(lines, parsed) if not isinstance(d, (dict, list))).strip()
+    calls = []
+    for d in traces + ([answer] if answer is not None else []):
+        calls += normalise_tool_calls(d.get(TOOL_KEY))
+    text = _answer_text(answer) if answer is not None else ""
+    citations = (answer or {}).get("citations") or next((d.get("citations") for d in reversed(traces) if d.get("citations")), None) or []
+    return {"text": text if text.strip() else plain, "tool_calls": _unique_calls(calls), "citations": citations}
 
 
 class PythonAdapter(CommandAdapter):
@@ -310,15 +400,17 @@ class _Rpc:
         return {"jsonrpc": "2.0", "id": self.next_id, "method": method, "params": params or {}}
 
 
-def tool_reply(msg: dict, ms: int) -> Reply:
+def tool_reply(msg: dict, ms: int, secrets=()) -> Reply:
+    """A JSON-RPC answer as a Reply; error, text and raw are scrubbed of `secrets` before they are cut."""
     if "error" in msg:
         err = msg["error"] if isinstance(msg["error"], dict) else {"message": str(msg["error"])}
-        return Reply(status=err.get("code"), error=f"JSON-RPC {err.get('code')}: {str(err.get('message'))[:300]}", raw=json.dumps(msg)[:4096], latency_ms=ms)
+        return Reply(status=err.get("code"), error=f"JSON-RPC {err.get('code')}: {clip(str(err.get('message')), 300, secrets)}",
+                     raw=clip(json.dumps(msg), 4096, secrets), latency_ms=ms)
     result = msg.get("result") or {}
-    text = as_text(result.get("content")) if isinstance(result, dict) else as_text(result)
-    r = Reply(status=0, text=text, raw=json.dumps(msg)[:4096], latency_ms=ms, result=result)
+    text = scrub_text(as_text(result.get("content")) if isinstance(result, dict) else as_text(result), secrets)
+    r = Reply(status=0, text=text, raw=clip(json.dumps(msg), 4096, secrets), latency_ms=ms, result=result)
     if isinstance(result, dict) and result.get("isError"):
-        r.error = "tool error: " + text[:300]
+        r.error = "tool error: " + clip(text, 300, secrets)
     return r
 
 
@@ -420,8 +512,10 @@ class McpStdioAdapter(Adapter):
     def _stderr_line(self) -> str:
         if self.stderr_reader is not None:
             self.stderr_reader.join(0.5)   # the server has exited: let the last of its stderr arrive
-        lines = [line.strip() for line in bytes(self.stderr_tail).decode("utf-8", "replace").splitlines() if line.strip()]
-        return lines[-1][-200:] if lines else ""
+        # the kept tail starts wherever the last STDERR_KEEP bytes began: scrubbed (edges too) before the line is cut
+        tail = scrub_text(bytes(self.stderr_tail).decode("utf-8", "replace"), self.secrets)
+        lines = [line.strip() for line in tail.splitlines() if line.strip()]
+        return clip(lines[-1], 200, self.secrets, tail=True) if lines else ""
 
     def _exited(self, ms: int = 0) -> Reply:
         last = self._stderr_line()
@@ -495,7 +589,7 @@ class McpStdioAdapter(Adapter):
                     return self._exited(ms)
                 continue
             if isinstance(answer, dict) and answer.get("id") == msg["id"]:
-                return tool_reply(answer, ms)
+                return tool_reply(answer, ms, self.secrets)
 
     def raw(self, method: str, params) -> Reply:
         """Any method, with any params: the tool probes send malformed calls on purpose."""
@@ -565,12 +659,12 @@ class McpHttpAdapter(Adapter):
                 if 300 <= e.code < 400:
                     return redirect_reply(e, t.url, ms)
                 try:
-                    text = e.read(2048).decode("utf-8", "replace")
+                    text = clip_bytes(e.read(2048 + self._margin()), 2048, self.secrets)
                 except (OSError, http.client.HTTPException):
                     text = ""
             return Reply(status=e.code, error=f"HTTP {e.code}", text=text, latency_ms=ms)
         except (urllib.error.URLError, OSError) as e:
-            return Reply(error=f"unreachable: {getattr(e, 'reason', e)}"[:300])
+            return Reply(error=clip(f"unreachable: {getattr(e, 'reason', e)}", 300, self.secrets))
         except (ValueError, http.client.HTTPException) as e:
             return send_failed(e, int((time.monotonic() - start) * 1000))
         ms = int((time.monotonic() - start) * 1000)
@@ -586,8 +680,8 @@ class McpHttpAdapter(Adapter):
             except ValueError:
                 continue
             if isinstance(answer, dict) and answer.get("id") == msg["id"]:
-                return tool_reply(answer, ms)
-        return Reply(error="no JSON-RPC answer to the call", raw=raw[:4096], latency_ms=ms)
+                return tool_reply(answer, ms, self.secrets)
+        return Reply(error="no JSON-RPC answer to the call", raw=clip(raw, 4096, self.secrets), latency_ms=ms)
 
     def raw(self, method, params):
         if not self.started:
@@ -618,7 +712,7 @@ class DemoAdapter(Adapter):
         start = time.monotonic()
         out = self.bot.answer(prompt, system="\n\n".join(s for s in (self.target.system, system) if s), context=context)
         return Reply(status=0, text=out.get("output", ""), tool_calls=normalise_tool_calls(out.get("tool_calls")), citations=out.get("citations") or [],
-                     latency_ms=int((time.monotonic() - start) * 1000) + 1, raw=json.dumps(out)[:4096])
+                     latency_ms=int((time.monotonic() - start) * 1000) + 1, raw=clip(json.dumps(out), 4096, self.secrets))
 
 
 def open_target(target: C.Target) -> Adapter:

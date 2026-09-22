@@ -18,6 +18,7 @@ container (`playground/deploy/Dockerfile`).
 from __future__ import annotations
 
 import ast
+import base64
 import json
 import os
 import re
@@ -28,8 +29,10 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.parse
 
 from .probes import Result
+from .targets import scrub_text
 
 # The shelf's vocabulary (tools/shelf.py): keep these in step with it.
 CATEGORIES = ("agent", "harness", "tool", "integration", "pattern", "skill")
@@ -52,7 +55,12 @@ README_HEADINGS = ("Five-minute start", "What is inside", "How to reuse it", "Ru
 README_REQUIRED = ("Five-minute start", "Known limits")
 README_MINOR = ("Rules it enforces", "What it is for")
 TIERS = ("R", "W1", "W2", "MONEY")
-SKIP_DIRS = {"__pycache__", "node_modules", ".git", ".venv", "venv", "dist", ".pytest_cache", ".mypy_cache"}
+# The playground's own report directory (its default --out) is never part of a component: a run from the
+# component's directory with `--out reports` or the default leaves reports inside it (see is_report).
+REPORT_DIR = "playground-reports"
+REPORT_KIND = "ai-playground-report"
+REPORT_MAX_BYTES = 64 * 1024 * 1024
+SKIP_DIRS = {"__pycache__", "node_modules", ".git", ".venv", "venv", "dist", ".pytest_cache", ".mypy_cache", REPORT_DIR}
 # Directories that hold test data, not code: a package-shaped directory in there does not make an import local.
 DATA_DIRS = {"fixtures", "fixture", "__fixtures__", "testdata", "test_data"}
 
@@ -108,15 +116,82 @@ def within(path: str, root: str) -> bool:
         return False
 
 
-def text_files(root: str):
-    """Every text file of the component; symlinks are skipped (they are reported by check_symlinks, never followed)."""
+def is_report_json(path: str) -> bool:
+    """A playground report: a JSON file (not a link) whose object says "kind": "ai-playground-report"."""
+    if not path.lower().endswith(".json") or os.path.islink(path) or not os.path.isfile(path):
+        return False
+    try:
+        if os.path.getsize(path) > REPORT_MAX_BYTES:
+            return False
+        with open(path, "rb") as f:
+            data = f.read()
+        if REPORT_KIND.encode() not in data:
+            return False
+        rep = json.loads(data.decode("utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(rep, dict) and rep.get("kind") == REPORT_KIND
+
+
+def is_report(path: str) -> bool:
+    """A file the playground wrote, not the component: a report's JSON, or its .md / .html rendering (a pg-<id>
+    file with a report JSON of the same name beside it)."""
+    stem, ext = os.path.splitext(path)
+    ext = ext.lower()
+    if ext == ".json":
+        return is_report_json(path)
+    if ext in (".md", ".html") and os.path.basename(stem).startswith("pg-"):
+        return is_report_json(stem + ".json")
+    return False
+
+
+class Exclusions:
+    """What the scans and the throwaway copy leave out besides SKIP_DIRS: playground reports (is_report) and the
+    paths named in `exclude` (the report directory the CLI writes to). An excluded path that is the component
+    itself, or contains it, is ignored: the reports in it are still left out as reports."""
+
+    def __init__(self, root: str, exclude=()):
+        root_real = os.path.realpath(root)
+        self.paths = []
+        for p in exclude or ():
+            if not p:
+                continue
+            real = os.path.realpath(os.fspath(p))
+            if not within(root_real, real):
+                self.paths.append(real)
+
+    def path(self, path: str) -> bool:
+        return bool(self.paths) and any(within(os.path.realpath(path), p) for p in self.paths)
+
+    def dir(self, path: str) -> bool:
+        return os.path.basename(path) in SKIP_DIRS or self.path(path)
+
+    def file(self, path: str) -> bool:
+        return self.path(path) or is_report(path)
+
+    def ignore(self, skip_dirs=SKIP_DIRS):
+        """A copytree `ignore` callable: the names in `skip_dirs`, the excluded paths and the reports."""
+        def ignored(directory, names):
+            out = set()
+            for n in names:
+                path = os.path.join(directory, n)
+                if n in skip_dirs or self.path(path) or (not os.path.isdir(path) and is_report(path)):
+                    out.add(n)
+            return out
+        return ignored
+
+
+def text_files(root: str, exclude: "Exclusions | None" = None):
+    """Every text file of the component; symlinks are skipped (they are reported by check_symlinks, never followed),
+    and so are playground reports and excluded paths (Exclusions)."""
+    ex = exclude or Exclusions(root)
     for dirpath, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(dirpath, d))]
+        dirs[:] = [d for d in dirs if not ex.dir(os.path.join(dirpath, d)) and not os.path.islink(os.path.join(dirpath, d))]
         for f in files:
             if f in GENERATED:
                 continue
             path = os.path.join(dirpath, f)
-            if os.path.islink(path) or not os.path.isfile(path):
+            if os.path.islink(path) or not os.path.isfile(path) or ex.file(path):
                 continue
             if (os.path.splitext(f)[1].lower() in TEXT_EXT or f.startswith(".env")) and os.path.getsize(path) <= 1_000_000:
                 yield path
@@ -127,8 +202,10 @@ def R(id, title, severity, status, summary, evidence=(), recommendation="", metr
 
 
 def checkout(start: str) -> str | None:
-    """The root of the collection's checkout the candidate sits in (the directory with tools/kb-taxonomy.json), if any."""
-    d = os.path.abspath(start)
+    """The root of the collection's checkout the candidate `start` sits in (the directory with tools/kb-taxonomy.json),
+    if any. The walk up starts at the candidate's PARENT: a candidate that ships its own tools/kb-taxonomy.json is
+    not a checkout of the collection, and must not have its made-up tags checked against its own list."""
+    d = os.path.dirname(os.path.abspath(start))
     for _ in range(6):
         if os.path.exists(os.path.join(d, "tools", "kb-taxonomy.json")):
             return d
@@ -291,7 +368,9 @@ def manifest_problems(m, root: str) -> tuple:
         elif not isinstance(sp["requirements"], list) or not all(isinstance(r, str) and REQUIREMENT_ID.fullmatch(r) for r in sp["requirements"]):
             p.append("spec.requirements are PLT-<family>-<n> ids")
     allowed = taxonomy(root)
-    if isinstance(m.get("tags"), list) and allowed:
+    if isinstance(m.get("tags"), list) and m["tags"] and allowed is None:
+        notes.append("tags not checked (outside a checkout of the collection)")
+    elif isinstance(m.get("tags"), list) and allowed:
         bad = [t for t in m["tags"] if not isinstance(t, str) or t not in allowed]
         if bad:
             p.append(f"tags not in the knowledge base's taxonomy: {', '.join(sorted(map(str, bad)))}")
@@ -368,15 +447,16 @@ def check_signoffs(m: dict | None) -> Result:
              ". Confirm each was recorded by the person named, through the shelf tool.", [{"signoff": m["signoff"]}], rec)
 
 
-def local_modules(root: str) -> set:
+def local_modules(root: str, exclude: "Exclusions | None" = None) -> set:
     """Top-level names the component's own code can import: packages (directories with __init__.py) and modules
-    (.py files), anywhere in the tree except test-data directories and symlinks."""
+    (.py files), anywhere in the tree except test-data directories, excluded paths and symlinks."""
+    ex = exclude or Exclusions(root)
     local = set()
     for dirpath, dirs, files in os.walk(root):
         if set(os.path.relpath(dirpath, root).split(os.sep)) & DATA_DIRS:
             dirs[:] = []
             continue
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(dirpath, d))]
+        dirs[:] = [d for d in dirs if not ex.dir(os.path.join(dirpath, d)) and not os.path.islink(os.path.join(dirpath, d))]
         local |= {d for d in dirs if d not in DATA_DIRS and os.path.isfile(os.path.join(dirpath, d, "__init__.py"))}
         local |= {f[:-3] for f in files if f.endswith(".py") and not os.path.islink(os.path.join(dirpath, f))}
     return local
@@ -404,7 +484,7 @@ def dynamic_import(node: ast.Call):
     return True, None
 
 
-def check_self_contained(root: str, m: dict | None) -> Result:
+def check_self_contained(root: str, m: dict | None, exclude: "Exclusions | None" = None) -> Result:
     rec = "Import only the standard library, the component's own files, and what `requires` declares; vendor shared files with `vendored`."
     root = os.path.abspath(root)
     requires = set()
@@ -413,14 +493,15 @@ def check_self_contained(root: str, m: dict | None) -> Result:
         if isinstance(r, str) and r.strip():
             dist = re.split(r"[<>=!~\[ (;]", r.strip())[0].lower().replace("-", "_")
             requires |= {dist, IMPORT_NAMES.get(dist, dist)}
-    local = local_modules(root)
+    ex = exclude or Exclusions(root)
+    local = local_modules(root, ex)
     stdlib = set(getattr(sys, "stdlib_module_names", ())) | {"__future__"}
 
     def allowed(n: str) -> bool:
         return not n or n in stdlib or n in local or n.lower() in requires
 
     outside, dynamic, parse_errors = [], [], []
-    for path in text_files(root):
+    for path in text_files(root, ex):
         rel = os.path.relpath(path, root)
         if path.endswith(".py"):
             try:
@@ -499,9 +580,9 @@ def secret_hits(rel: str, line: str, bare: bool) -> list:
     return out
 
 
-def check_secrets(root: str) -> list:
+def check_secrets(root: str, exclude: "Exclusions | None" = None) -> list:
     hits, guids, urls = [], [], {}
-    for path in text_files(root):
+    for path in text_files(root, exclude):
         rel = os.path.relpath(path, root)
         name = os.path.basename(path)
         bare = name.startswith(".env") or os.path.splitext(name)[1].lower() in BARE_VALUE_EXT
@@ -535,12 +616,13 @@ def check_secrets(root: str) -> list:
     return out
 
 
-def check_symlinks(root: str) -> Result:
+def check_symlinks(root: str, exclude: "Exclusions | None" = None) -> Result:
     """Symlinks are never followed by the scans; one that points outside the component is shown to a person."""
     root = os.path.realpath(root)
+    ex = exclude or Exclusions(root)
     outside, count = [], 0
     for dirpath, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        dirs[:] = [d for d in dirs if not ex.dir(os.path.join(dirpath, d))]
         for n in dirs + files:
             path = os.path.join(dirpath, n)
             if not os.path.islink(path):
@@ -579,6 +661,47 @@ def run_env(work: str) -> dict:
     env.update(dirs)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return env
+
+
+URL_USERINFO = re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)([^\s/@]+)@")
+
+
+def _network_var(name: str) -> bool:
+    return name in NETWORK_VARS or name.lower().startswith(("npm_config_", "pip_"))
+
+
+def network_secrets(env) -> list:
+    """What must not reach the evidence of the network settings a command is handed: for every URL-valued
+    NETWORK_VARS entry (and PIP_*, npm_config_* URLs) that carries a credential (`scheme://user:password@host`),
+    the whole value, the `user:password` and the password (as written and percent-decoded), and the Basic
+    credential a client sends to a proxy (`curl -v` prints it)."""
+    out = set()
+    for name, value in (env or {}).items():
+        if not _network_var(name) or not isinstance(value, str):
+            continue
+        for mt in URL_USERINFO.finditer(value):
+            info = mt.group(2)
+            out |= {value, info}
+            user, _, password = info.partition(":")
+            for v in {password, urllib.parse.unquote(password)}:
+                if len(v) >= 4:
+                    out.add(v)
+            plain = urllib.parse.unquote(user) + ":" + urllib.parse.unquote(password)
+            out |= {plain, base64.b64encode(plain.encode("utf-8")).decode("ascii")}
+    return sorted((v for v in out if v), key=len, reverse=True)
+
+
+def scrub_network(value, hidden: list):
+    """`value` (text, or lists and dicts of it) with the credentials of network_secrets replaced by [secret], and the
+    userinfo of any URL (`user:password@`) replaced by `[secret]@`."""
+    if isinstance(value, str):
+        value = scrub_text(value, hidden) if hidden else value
+        return URL_USERINFO.sub(lambda mt: mt.group(1) + "[secret]@" if ":" in mt.group(2) else mt.group(0), value)
+    if isinstance(value, (list, tuple)):
+        return [scrub_network(v, hidden) for v in value]
+    if isinstance(value, dict):
+        return {k: scrub_network(v, hidden) for k, v in value.items()}
+    return value
 
 
 def kill_group(p: subprocess.Popen) -> None:
@@ -642,7 +765,7 @@ def kill_marked(marker: str) -> None:
 CHECKOUT_PARTS = ("components", "tools")
 
 
-def place_copy(root: str, work: str) -> str:
+def place_copy(root: str, work: str, exclude: "Exclusions | None" = None) -> str:
     """Copy the candidate into the throwaway directory and return the copy's path.
 
     Outside a checkout of the collection: `<work>/<directory name>`. Inside one (see checkout()): a component may
@@ -658,7 +781,8 @@ def place_copy(root: str, work: str) -> str:
     those two parts are mirrored; anything else of the checkout (hub/, services/) is not visible to the command.
     """
     root = os.path.abspath(root)
-    candidate_ignore = shutil.ignore_patterns(*SKIP_DIRS - {"dist"})
+    ex = exclude or Exclusions(root)
+    candidate_ignore = ex.ignore(SKIP_DIRS - {"dist"})   # and the playground's reports, and the excluded paths
     home = checkout(root)
     rel = os.path.relpath(root, home) if home else None
     if not rel or rel == os.curdir or rel.startswith(os.pardir):
@@ -685,16 +809,19 @@ def place_copy(root: str, work: str) -> str:
     return copy
 
 
-def run_in_copy(root: str, command: str, timeout: int) -> tuple:
+def run_in_copy(root: str, command: str, timeout: int, exclude: "Exclusions | None" = None) -> tuple:
     """Run a command in a throwaway copy of the component; (exit code or None on timeout, seconds, last lines).
+    The lines are scrubbed of the proxy and registry credentials the command was handed (network_secrets), before
+    they are cut.
 
     Not a sandbox: see the module's docstring."""
     work = tempfile.mkdtemp(prefix="playground-")
     start = time.monotonic()
-    code, out = None, ""
+    code, out, hidden = None, "", []
     try:
-        copy = place_copy(root, work)
+        copy = place_copy(root, work, exclude)
         env = run_env(work)
+        hidden = network_secrets(env)
         marker = secrets.token_hex(12)
         env[RUN_MARKER] = marker
         with tempfile.TemporaryFile(dir=work) as log:
@@ -708,26 +835,27 @@ def run_in_copy(root: str, command: str, timeout: int) -> tuple:
                 kill_group(p)           # on the time limit, and after a clean exit: nothing it started outlives the check
                 kill_marked(marker)
             size = log.seek(0, os.SEEK_END)
-            log.seek(max(0, size - OUTPUT_TAIL_BYTES))
-            out = log.read().decode("utf-8", "replace")
+            margin = max((len(v.encode("utf-8")) for v in hidden), default=0)   # a value straddling the cut stays whole
+            log.seek(max(0, size - OUTPUT_TAIL_BYTES - margin))
+            out = scrub_network(log.read().decode("utf-8", "replace"), hidden)
     finally:
         shutil.rmtree(work, ignore_errors=True)
-    return code, round(time.monotonic() - start, 1), "\n".join(out.strip().splitlines()[-25:])
+    return code, round(time.monotonic() - start, 1), scrub_network("\n".join(out.strip().splitlines()[-25:]), hidden)
 
 
-def check_runs(root: str, m: dict | None, timeout: int = 300) -> list:
+def check_runs(root: str, m: dict | None, timeout: int = 300, exclude: "Exclusions | None" = None) -> list:
     out = []
     if not m:
         return out
     if m.get("test"):
-        code, secs, tail = run_in_copy(root, str(m["test"]), timeout)
+        code, secs, tail = run_in_copy(root, str(m["test"]), timeout, exclude)
         status = "pass" if code == 0 else "fail"
         why = "the tests pass" if code == 0 else ("the tests did not finish in time" if code is None else f"the tests fail (exit {code})")
         out.append(R("tests", "Tests green", "high", status, f"{why}: `{m['test']}` in {secs} s", [{"command": m["test"], "output": tail}],
                      "Every component proves itself with one command; fix the failures before asking for a sign-off.", {"seconds": secs}))
     ex = m.get("example") if isinstance(m.get("example"), dict) else {}
     if ex.get("run"):
-        code, secs, tail = run_in_copy(root, str(ex["run"]), timeout)
+        code, secs, tail = run_in_copy(root, str(ex["run"]), timeout, exclude)
         status = "pass" if code == 0 else "fail"
         why = "the live example runs" if code == 0 else ("the example did not finish in time" if code is None else f"the example fails (exit {code})")
         out.append(R("example", "The live example runs", "high", status, f"{why}: `{ex['run']}` in {secs} s", [{"command": ex["run"], "output": tail}],
@@ -768,20 +896,28 @@ def check_agent(root: str, m: dict | None) -> list:
     return out
 
 
-def check(root: str, run: bool = True, timeout: int = 300) -> list:
-    """Every contract check on the directory, in the order a reviewer reads them."""
+def check(root: str, run: bool = True, timeout: int = 300, exclude=()) -> list:
+    """Every contract check on the directory, in the order a reviewer reads them.
+
+    `exclude`: paths the scans and the throwaway copy leave out (the directory the reports are written to, when it
+    sits inside the component). Playground reports and `playground-reports/` are left out whatever it says."""
     root = os.path.abspath(root)
     if not os.path.isdir(root):
         return [R("manifest", "A manifest", "high", "error", f"not a directory: {root}")]
+    ex = Exclusions(root, exclude)
     m, manifest = check_manifest(root)
-    results = [manifest, check_readme(root), check_signoffs(m), check_self_contained(root, m)]
-    results += check_secrets(root)
-    results.append(check_symlinks(root))
+    results = [manifest, check_readme(root), check_signoffs(m), check_self_contained(root, m, ex)]
+    results += check_secrets(root, ex)
+    results.append(check_symlinks(root, ex))
     results += check_agent(root, m)
     if run:
-        results += check_runs(root, m, timeout)
+        results += check_runs(root, m, timeout, ex)
     else:
         results.append(R("tests", "Tests green", "high", "skipped", "not run (--no-run)"))
+    hidden = network_secrets(os.environ)
+    for r in results:                 # all the evidence the check writes, not only the command output
+        r.summary = scrub_network(r.summary, hidden)
+        r.evidence = scrub_network(r.evidence, hidden)
     return results
 
 
