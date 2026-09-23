@@ -34,6 +34,10 @@ python3 -m aiplayground serve
 Each run prints the verdict, the findings, and the path of an HTML report under `./playground-reports/` (with the
 same report as Markdown and JSON beside it).
 
+To show someone the playground without running it, open `pages/explainer.html` (how a run is judged, in
+pictures) and `pages/interface.html` (this interface replaying a recorded session). Both open as files, with no
+server and nothing loaded from outside.
+
 ## What it checks
 
 | Part | What | Where |
@@ -136,6 +140,8 @@ contract check of that component, so a second run does not scan the first one's 
 | `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |
 | `tests/` | `python3 -m unittest discover -s tests -t .` |
 | `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |
+| `pages/` | `explainer.html` and `interface.html`, the two pages to share |
+| `tools/pages/` | `record.py` records the session `interface.html` replays; `build.py` builds it from `static/` |
 
 ## Known limits
 

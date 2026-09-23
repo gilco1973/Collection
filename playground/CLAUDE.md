@@ -17,5 +17,8 @@ overview, `WALKTHROUGH.md` the two people's paths, `PROBES.md` the generated pro
 - A probe judges by something it planted (a marker, a canary, a fake card); where only a person can judge, the
   status is `review`. Never make a probe pass or fail on wording alone.
 - The page (`aiplayground/static/`) shows a solution's answers with `textContent` only; keep it that way.
+- `pages/interface.html` is built, never edited: after changing `static/`, the probes or the API, run
+  `python3 tools/pages/record.py && python3 tools/pages/build.py`; `tests/test_pages.py` refuses a stale page.
+  `pages/explainer.html` is written by hand; keep it true to the code and free of outside links.
 - The contract check must agree with `tools/shelf.py`: a component on the shelf must not fail the manifest check.
 - Never put a secret, a real id or a real address in an example or a test; build secret-shaped fixtures at runtime.

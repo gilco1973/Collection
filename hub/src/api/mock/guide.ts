@@ -754,7 +754,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "python3 -m aiplayground serve\n```\n\nEach run prints the verdict, the findings, and the path of an HTML report under `./playground-reports/` (with the\nsame report as Markdown and JSON beside it)."
+  "text": "python3 -m aiplayground serve\n```\n\nEach run prints the verdict, the findings, and the path of an HTML report under `./playground-reports/` (with the\nsame report as Markdown and JSON beside it).\n\nTo show someone the playground without running it, open `pages/explainer.html` (how a run is judged, in\npictures) and `pages/interface.html` (this interface replaying a recorded session). Both open as files, with no\nserver and nothing loaded from outside."
  },
  {
   "id": "playground/README.md#5",
@@ -842,7 +842,7 @@ export const COLLECTION_GUIDE: GuidePassage[] = [
    "engineer"
   ],
   "kind": "page",
-  "text": "| Path | What |\n| --- | --- |\n| `aiplayground/config.py` | The target file: kinds, presets, environments, the host allow-list, `${env:NAME}` |\n| `aiplayground/targets.py` | One adapter per kind; every failure becomes a reply with `error` set |\n| `aiplayground/probes.py` | The probe library and how probes are chosen |\n| `aiplayground/suites.py` | Your cases and their expectations |\n| `aiplayground/component.py` | The collection's contract on a directory |\n| `aiplayground/runner.py` | One run: contract, probes, suites, into one report |\n| `aiplayground/report.py` | Verdicts, triage, and the JSON, Markdown and HTML reports |\n| `aiplayground/store.py`, `server.py`, `static/` | The browser interface and its record (`~/.aiplayground` by default) |\n| `aiplayground/demo.py` | The safe and vulnerable demos, as a chat API and an MCP server |\n| `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |\n| `tests/` | `python3 -m unittest discover -s tests -t .` |\n| `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |"
+  "text": "| Path | What |\n| --- | --- |\n| `aiplayground/config.py` | The target file: kinds, presets, environments, the host allow-list, `${env:NAME}` |\n| `aiplayground/targets.py` | One adapter per kind; every failure becomes a reply with `error` set |\n| `aiplayground/probes.py` | The probe library and how probes are chosen |\n| `aiplayground/suites.py` | Your cases and their expectations |\n| `aiplayground/component.py` | The collection's contract on a directory |\n| `aiplayground/runner.py` | One run: contract, probes, suites, into one report |\n| `aiplayground/report.py` | Verdicts, triage, and the JSON, Markdown and HTML reports |\n| `aiplayground/store.py`, `server.py`, `static/` | The browser interface and its record (`~/.aiplayground` by default) |\n| `aiplayground/demo.py` | The safe and vulnerable demos, as a chat API and an MCP server |\n| `examples/` | Target files, suites, and `runbook-answerer`, a sample candidate component |\n| `tests/` | `python3 -m unittest discover -s tests -t .` |\n| `tools/uitest.cjs` | The browser check (`scripts/smoke-playground-browser.sh` from the repository root) |\n| `pages/` | `explainer.html` and `interface.html`, the two pages to share |\n| `tools/pages/` | `record.py` records the session `interface.html` replays; `build.py` builds it from `static/` |"
  },
  {
   "id": "playground/README.md#13",
